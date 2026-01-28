@@ -22,7 +22,7 @@ st.markdown("Search by **name or ticker**, allocate capital, and run portfolio s
 # ============================
 # ✅ Premium AI Config
 # ============================
-API_URL = "http://localhost:8000"  # change to your deployed backend URL later
+API_URL = "https://universal-market-app.onrender.com"  # change to your deployed backend URL later
 
 def user_id_from_email(email: str) -> str:
     return hashlib.md5(email.strip().lower().encode()).hexdigest()
