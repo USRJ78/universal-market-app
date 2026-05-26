@@ -115,7 +115,10 @@ if aligned_data is None or aligned_data.empty:
         st.write("Error listing root:", ex)
     st.write("Helper workspace_dir:", helper.workspace_dir)
     try:
-        st.write("Files in workspace_dir:", sorted([f for f in os.listdir(helper.workspace_dir) if f.endswith('.xlsx')]))
+        if os.path.exists(helper.workspace_dir):
+            st.write("Files in workspace_dir:", sorted([f for f in os.listdir(helper.workspace_dir) if f.endswith('.xlsx')]))
+        else:
+            st.write("workspace_dir does not exist:", helper.workspace_dir)
     except Exception as ex:
         st.write("Error listing workspace_dir:", ex)
     st.stop()
