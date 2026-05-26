@@ -71,10 +71,10 @@ st.markdown("Analyze individual strategy performance, run dynamic weighted portf
 
 # Initialize strategy helper
 @st.cache_resource
-def get_helper():
+def get_strategy_helper_instance():
     return StrategyHelper()
 
-helper = get_helper()
+helper = get_strategy_helper_instance()
 available_strategies = list(helper.strategies.keys())
 
 # Sidebar Controls
@@ -99,10 +99,10 @@ st.sidebar.info(f"Analyzing trades and equity curves from **{start_cutoff.strfti
 
 # Pre-load aligned daily returns to establish active strategy list
 @st.cache_data
-def get_cached_aligned_returns(strategies_list):
+def get_strategy_aligned_returns_cached(strategies_list):
     return helper.get_aligned_strategy_returns(strategies_list)
 
-aligned_data = get_cached_aligned_returns(available_strategies)
+aligned_data = get_strategy_aligned_returns_cached(available_strategies)
 
 if aligned_data is None or aligned_data.empty:
     import os
