@@ -105,7 +105,19 @@ def get_cached_aligned_returns(strategies_list):
 aligned_data = get_cached_aligned_returns(available_strategies)
 
 if aligned_data is None or aligned_data.empty:
+    import os
     st.error("❌ Error loading strategy backtest files. Please verify the files are present in the workspace.")
+    st.markdown("### 🔍 Diagnostic Debug Info (Streamlit Cloud)")
+    st.write("Current Directory:", os.getcwd())
+    try:
+        st.write("Files in Root:", sorted([f for f in os.listdir('.') if f.endswith('.xlsx') or f.endswith('.py') or f.endswith('.csv')]))
+    except Exception as ex:
+        st.write("Error listing root:", ex)
+    st.write("Helper workspace_dir:", helper.workspace_dir)
+    try:
+        st.write("Files in workspace_dir:", sorted([f for f in os.listdir(helper.workspace_dir) if f.endswith('.xlsx')]))
+    except Exception as ex:
+        st.write("Error listing workspace_dir:", ex)
     st.stop()
 
 # Filter by selected date range
