@@ -438,7 +438,8 @@ with tabs[2]:
         st.markdown("##### 💡 Key Diversification Insights")
         # Find lowest correlation pair (ignoring diagonals)
         corr_vals = corr_matrix.copy()
-        np.fill_diagonal(corr_vals.values, np.nan)
+        for col in corr_vals.columns:
+            corr_vals.loc[col, col] = np.nan
         flat_corr = corr_vals.unstack().dropna()
         sorted_corr = flat_corr.sort_values()
         
