@@ -36,9 +36,27 @@ ETF_MAP = {
 
 @st.cache_data(ttl=3600, show_spinner=False)
 def load_nse_stock_list():
-    url = "https://archives.nseindia.com/content/equities/EQUITY_L.csv"
+    import os
+    import urllib.request
+    
+    local_path = "EQUITY_L.csv"
+    if os.path.exists(local_path):
+        df = pd.read_csv(local_path)
+    elif os.path.exists("data/EQUITY_L.csv"):
+        df = pd.read_csv("data/EQUITY_L.csv")
+    else:
+        url = "https://archives.nseindia.com/content/equities/EQUITY_L.csv"
+        req = urllib.request.Request(
+            url, 
+            headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'}
+        )
+        try:
+            with urllib.request.urlopen(req) as response:
+                df = pd.read_csv(response)
+        except Exception:
+            return {}
+            
     try:
-        df = pd.read_csv(url)
         df["SYMBOL"] = df["SYMBOL"].astype(str).str.upper().str.strip() + ".NS"
         df["NAME OF COMPANY"] = df["NAME OF COMPANY"].astype(str).str.upper().str.strip()
         return dict(zip(df["NAME OF COMPANY"], df["SYMBOL"]))
