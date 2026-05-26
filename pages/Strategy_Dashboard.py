@@ -6,8 +6,10 @@ import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime, timedelta
 import sys
-
-# Ensure UTF-8 and import StrategyHelper
+import importlib
+import strategy_helper
+# Force Python to reload the updated module from disk to bypass in-memory caching
+importlib.reload(strategy_helper)
 from strategy_helper import StrategyHelper
 
 st.set_page_config(
@@ -71,10 +73,10 @@ st.markdown("Analyze individual strategy performance, run dynamic weighted portf
 
 # Initialize strategy helper
 @st.cache_resource
-def get_strategy_helper_instance():
+def get_strategy_helper_fresh():
     return StrategyHelper()
 
-helper = get_strategy_helper_instance()
+helper = get_strategy_helper_fresh()
 available_strategies = list(helper.strategies.keys())
 
 # Sidebar Controls
@@ -99,10 +101,10 @@ st.sidebar.info(f"Analyzing trades and equity curves from **{start_cutoff.strfti
 
 # Pre-load aligned daily returns to establish active strategy list
 @st.cache_data
-def get_strategy_aligned_returns_cached(strategies_list):
+def get_strategy_aligned_returns_fresh(strategies_list):
     return helper.get_aligned_strategy_returns(strategies_list)
 
-aligned_data = get_strategy_aligned_returns_cached(available_strategies)
+aligned_data = get_strategy_aligned_returns_fresh(available_strategies)
 
 if aligned_data is None or aligned_data.empty:
     import os
