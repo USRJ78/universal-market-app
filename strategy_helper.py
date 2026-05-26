@@ -10,11 +10,9 @@ sys.stdout.reconfigure(encoding='utf-8')
 class StrategyHelper:
     def __init__(self, workspace_dir=None):
         if workspace_dir is None:
-            # Check if running in a directory containing the files (like Streamlit Cloud or local workspace root)
-            if os.path.exists("DSS2BEST.xlsx"):
-                self.workspace_dir = "."
-            else:
-                self.workspace_dir = "c:/Users/USER/OneDrive/Documents/universal-market-app"
+            # Dynamically resolve repository root based on the location of this file
+            # Since strategy_helper.py is in the root of the repository, its directory is the workspace dir!
+            self.workspace_dir = os.path.dirname(os.path.abspath(__file__))
         else:
             self.workspace_dir = workspace_dir
         self.strategies = {
