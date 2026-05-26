@@ -410,12 +410,15 @@ class StrategyHelper:
         drawdowns = (equity - peak) / peak * 100.0
         max_dd = drawdowns.min()
         
+        # Calculate Ending Capital relative to starting initial capital over timeframe
+        ending_capital = initial_capital * (equity[-1] / equity[0]) if equity[0] != 0 else equity[-1]
+        
         return {
             "CAGR": cagr,
             "Sharpe": sharpe,
             "Max_DD": max_dd,
             "Total_Return": total_return,
-            "Ending_Capital": equity[-1]
+            "Ending_Capital": ending_capital
         }
 
     def simulate_combined_portfolio(self, selected_strategies, weights, initial_capital=100000.0):
