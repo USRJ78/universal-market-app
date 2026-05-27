@@ -1,9 +1,15 @@
-# funding_arb_bot.py
-import os
 import sys
+import os
 import time
 import json
 import logging
+
+# Reconfigure stdout to use UTF-8 to prevent UnicodeEncodeError on Windows terminals when printing emojis
+if hasattr(sys.stdout, 'reconfigure'):
+    try:
+        sys.stdout.reconfigure(encoding='utf-8')
+    except Exception:
+        pass
 from datetime import datetime
 import pandas as pd
 import numpy as np
