@@ -143,10 +143,19 @@ class LiveArbBot:
                 p2_ask = tickers["ETH/BTC"]['ask']
                 p3_bid = tickers["ETH/USDT"]['bid']
             else:
-                # Simulated Feed fallback if offline/no ccxt
-                p1_ask = 65000.0 + np.random.normal(0, 10)
-                p2_ask = 0.052 + np.random.normal(0, 0.0001)
-                p3_bid = p1_ask * p2_ask + np.random.normal(-0.5, 0.2) # introduce micro-spreads
+                # Simulated Feed fallback with dynamic volatility waves to generate active opportunities
+                # Every ~12 cycles, inject a high-volatility spread burst (+0.25% to +0.55%)
+                # Every ~5 cycles, inject a micro-arbitrage spread (+0.08% to +0.18%)
+                if self.cycles_scanned % 12 == 0:
+                    spread_sim = np.random.uniform(0.0025, 0.0055)
+                elif self.cycles_scanned % 5 == 0:
+                    spread_sim = np.random.uniform(0.0008, 0.0018)
+                else:
+                    spread_sim = np.random.uniform(-0.0005, 0.0002)
+                
+                p1_ask = 65000.0 + np.random.normal(0, 15)
+                p2_ask = 0.0524 + np.random.normal(0, 0.0001)
+                p3_bid = p1_ask * p2_ask * (1.0 + spread_sim)
             
             if not (p1_ask and p2_ask and p3_bid):
                 return

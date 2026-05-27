@@ -203,20 +203,47 @@ class FundingArbBot:
                         "rate": raw_funding
                     }
             else:
-                # Simulation Feed fallback
-                import numpy as np
+                # High-fidelity Market Regime Cycle Simulator
+                # Cycles shift every 15 iterations (~30 seconds) to demonstrate active portfolio turnovers
+                regime_cycle = (self.cycles_scanned // 15) % 3
+                
                 mock_baselines = {"BTC": 68000.0, "ETH": 3800.0, "SOL": 165.0, "ADA": 0.48, "XRP": 0.52}
-                mock_aprs = {
-                    "BTC": 11.2 + np.random.normal(0, 0.4),
-                    "ETH": 9.5 + np.random.normal(0, 0.5),
-                    "SOL": 14.8 + np.random.normal(0, 1.2),  # highly volatile funding
-                    "ADA": 5.4 + np.random.normal(0, 0.2),
-                    "XRP": 4.1 + np.random.normal(0, 0.1)
-                }
+                mock_aprs = {}
+                
+                if regime_cycle == 0:
+                    # Regime 0: Bull Market (Sky-High Funding Rates) -> Triggers Opens across BTC, ETH, SOL, ADA
+                    mock_aprs = {
+                        "BTC": 16.5 + np.random.normal(0, 0.5),
+                        "ETH": 14.2 + np.random.normal(0, 0.4),
+                        "SOL": 22.8 + np.random.normal(0, 1.0),
+                        "ADA": 9.4 + np.random.normal(0, 0.3),
+                        "XRP": 5.1 + np.random.normal(0, 0.2)
+                    }
+                elif regime_cycle == 1:
+                    # Regime 1: Neutral/Sideways Market (Moderate Rates) -> ADA / XRP unwind
+                    mock_aprs = {
+                        "BTC": 7.2 + np.random.normal(0, 0.3),
+                        "ETH": 6.1 + np.random.normal(0, 0.2),
+                        "SOL": 9.8 + np.random.normal(0, 0.5),
+                        "ADA": 1.4 + np.random.normal(0, 0.1), # drops below stop trigger
+                        "XRP": 0.8 + np.random.normal(0, 0.1)  # drops below stop trigger
+                    }
+                else:
+                    # Regime 2: Bear Market (Near Zero / Negative Funding) -> Unwinds all assets completely!
+                    mock_aprs = {
+                        "BTC": 0.8 + np.random.normal(0, 0.1),  # drops below stop trigger
+                        "ETH": -1.5 + np.random.normal(0, 0.2), # negative funding / unwind
+                        "SOL": 1.1 + np.random.normal(0, 0.1),  # drops below stop trigger
+                        "ADA": -0.8 + np.random.normal(0, 0.1),
+                        "XRP": -0.4 + np.random.normal(0, 0.1)
+                    }
+                
                 for asset in assets:
                     base = mock_baselines[asset]
+                    # Induce slight spot vs perp spread differences to generate basis profits on close
                     spot_p = base + np.random.normal(0, base * 0.0005)
-                    perp_p = spot_p + np.random.normal(0, base * 0.0001)
+                    # Perp price is spot * (1.0 + random basis spread)
+                    perp_p = spot_p * (1.0 + np.random.normal(0.0008, 0.0002))
                     apr = mock_aprs[asset]
                     
                     live_data[asset] = {
