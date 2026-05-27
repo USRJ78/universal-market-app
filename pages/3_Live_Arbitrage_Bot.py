@@ -200,6 +200,11 @@ with col_wallet:
             <div style="font-size: 18px; font-weight: 700; color: #38bdf8; margin-top: 6px;">${total_profit:+.4f}</div>
             <div style="font-size: 10px; color: #34d399; margin-top: 4px; font-weight: 600;">{win_rate:.1f}% Win Rate</div>
         </div>
+        <div style="flex: 1; min-width: 140px; background: rgba(30, 41, 59, 0.45); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 12px; text-align: center; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);">
+            <div style="font-size: 11px; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Total Trades</div>
+            <div style="font-size: 18px; font-weight: 700; color: #c084fc; margin-top: 6px;">{total_trades}</div>
+            <div style="font-size: 10px; color: #64748b; margin-top: 4px;">Executed Cycles</div>
+        </div>
     </div>
     """, unsafe_allow_html=True)
 
