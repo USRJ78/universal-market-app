@@ -49,9 +49,12 @@ class LiveArbBot:
         self.cycles_scanned = 0
         self.trades = []
         self.status = "stopped"
-        
-        # Cumulative simulated fees & slippage paid
         self.total_fees_paid = 0.0
+        
+        # New trials and trade limit properties
+        self.trials = []
+        self.limit_trades = False
+        self.max_trades_limit = 0
         
         # Load existing state if available
         self.load_state()
@@ -72,6 +75,9 @@ class LiveArbBot:
                 self.trades = state.get("trades", [])
                 self.status = state.get("status", "stopped")
                 self.total_fees_paid = state.get("total_fees_paid", 0.0)
+                self.trials = state.get("trials", [])
+                self.limit_trades = state.get("limit_trades", False)
+                self.max_trades_limit = state.get("max_trades_limit", 0)
                 logger.info("Bot state successfully loaded from JSON.")
             except Exception as e:
                 logger.error(f"Error loading bot state: {e}")
@@ -89,6 +95,9 @@ class LiveArbBot:
             "trades": self.trades[-50:], # Cache only last 50 trades in JSON for speed
             "status": self.status,
             "total_fees_paid": self.total_fees_paid,
+            "trials": self.trials,
+            "limit_trades": self.limit_trades,
+            "max_trades_limit": self.max_trades_limit,
             "last_updated": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         }
         try:
@@ -96,6 +105,49 @@ class LiveArbBot:
                 json.dump(state, f, indent=4)
         except Exception as e:
             logger.error(f"Error saving bot state: {e}")
+
+    def archive_current_trial(self, stop_reason="Manual Halt"):
+        if self.cycles_scanned == 0 and self.total_trades == 0:
+            return
+            
+        if not hasattr(self, "trials") or self.trials is None:
+            self.trials = []
+            
+        # Avoid duplicate archiving if already archived
+        end_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        start_time = getattr(self, "last_updated", end_time)
+        
+        if self.trials:
+            last = self.trials[-1]
+            if last.get("cycles_scanned") == self.cycles_scanned and last.get("total_trades") == self.total_trades and last.get("net_profit") == round(self.total_profit, 4):
+                logger.info("Current trial was already archived. Skipping duplicate archive.")
+                return
+                
+        trial_record = {
+            "trial_id": len(self.trials) + 1,
+            "start_time": start_time,
+            "end_time": end_time,
+            "initial_capital": round(self.capital, 2),
+            "final_balance": round(self.balance_usdt, 2),
+            "net_profit": round(self.total_profit, 4),
+            "total_trades": self.total_trades,
+            "total_fees_paid": round(self.total_fees_paid, 4),
+            "win_rate": round(self.win_rate, 1),
+            "cycles_scanned": self.cycles_scanned,
+            "stop_reason": stop_reason
+        }
+        self.trials.append(trial_record)
+        logger.info(f"📊 Trial #{trial_record['trial_id']} archived successfully: PnL: {trial_record['net_profit']:+,.4f}, Trades: {trial_record['total_trades']}.")
+
+    def reset_active_portfolio(self):
+        self.balance_usdt = self.capital
+        self.total_trades = 0
+        self.total_profit = 0.0
+        self.win_rate = 0.0
+        self.cycles_scanned = 0
+        self.trades = []
+        self.total_fees_paid = 0.0
+        logger.info("Active paper portfolio successfully reset to zero/starting capital.")
 
     def add_trade(self, expected_return, net_pnl, fee_paid=0.0):
         self.total_trades += 1
@@ -230,6 +282,7 @@ def run_paper_bot():
     
     logger.info(f"Paper Bot RUNNING | Start Capital: ${bot.capital:,.2f} | Allocated trade size: ${bot.trade_size:,.2f} | Trigger: {bot.min_profit_pct}%")
     
+    stop_reason_to_use = "Manual Halt"
     while True:
         # Check command loop state from json
         if os.path.exists(STATE_FILE):
@@ -238,15 +291,23 @@ def run_paper_bot():
                     state = json.load(f)
                 if state.get("status") == "stopped":
                     logger.info("Halt command intercepted. Stopping paper trading loop cleanly...")
+                    stop_reason_to_use = "Manual Halt"
                     break
             except Exception:
                 pass
                 
+        # Check max trades limit
+        if bot.limit_trades and bot.max_trades_limit > 0 and bot.total_trades >= bot.max_trades_limit:
+            logger.info(f"🎯 Max trades limit ({bot.max_trades_limit}) reached! Automatically stopping...")
+            stop_reason_to_use = "Max Trades Reached"
+            break
+            
         bot.run_one_cycle(exchange)
         bot.save_state()
         time.sleep(2.0) # Standard scanning refresh rate (2 seconds)
         
     bot.status = "stopped"
+    bot.archive_current_trial(stop_reason=stop_reason_to_use)
     bot.save_state()
     logger.info("Paper trading daemon safely stopped.")
 

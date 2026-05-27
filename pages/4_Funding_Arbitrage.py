@@ -126,11 +126,33 @@ stop_apr_trigger = st.sidebar.slider(
     help="APR threshold below which active positions are unwound cleanly."
 )
 
+# New sidebar trade limits configuration
+limit_trades = st.sidebar.checkbox(
+    "Limit Number of Trades",
+    value=state_data.get("limit_trades", False),
+    disabled=is_daemon_active,
+    help="Automatically stop the bot after a certain number of trades."
+)
+
+max_trades_limit = 0
+if limit_trades:
+    max_trades_limit = st.sidebar.number_input(
+        "Max Trades Limit",
+        min_value=1,
+        max_value=1000,
+        value=int(state_data.get("max_trades_limit", 5)),
+        step=1,
+        disabled=is_daemon_active,
+        help="The bot will halt once it executes this many trades."
+    )
+
 # Save configurations live if not running
 if not is_daemon_active:
     state_data["capital"] = starting_capital
     state_data["balance_usdt"] = state_data.get("balance_usdt", starting_capital)
     state_data["position_allocation"] = position_allocation
+    state_data["limit_trades"] = limit_trades
+    state_data["max_trades_limit"] = max_trades_limit
 
 state_data["min_apr_trigger"] = min_apr_trigger
 state_data["stop_apr_trigger"] = stop_apr_trigger
@@ -164,7 +186,32 @@ with col_ctrl:
                 with open(LOG_FILE, "w", encoding="utf-8") as f:
                     f.write("")
                     
+            # Auto-archive previous run if active stats have trades/cycles
+            if state_data.get("total_trades", 0) > 0 or state_data.get("cycles_scanned", 0) > 0:
+                from funding_arb_bot import FundingArbBot
+                temp_bot = FundingArbBot()
+                temp_bot.archive_current_trial(stop_reason="Start Reset")
+                temp_bot.reset_active_portfolio()
+                # Reload local state_data from file to sync resets
+                if os.path.exists(STATE_FILE):
+                    try:
+                        with open(STATE_FILE, "r", encoding="utf-8") as f:
+                            state_data = json.load(f)
+                    except Exception:
+                        pass
+                        
             state_data["status"] = "running"
+            state_data["capital"] = starting_capital
+            state_data["balance_usdt"] = starting_capital
+            state_data["total_trades"] = 0
+            state_data["total_yield"] = 0.0
+            state_data["cycles_scanned"] = 0
+            state_data["positions"] = []
+            state_data["trades"] = []
+            state_data["total_fees_paid"] = 0.0
+            state_data["limit_trades"] = limit_trades
+            state_data["max_trades_limit"] = max_trades_limit
+            
             with open(STATE_FILE, "w", encoding="utf-8") as f:
                 json.dump(state_data, f, indent=4)
                 
@@ -174,6 +221,19 @@ with col_ctrl:
             st.toast("Delta-Neutral Funding Arbitrage daemon successfully launched!")
             time.sleep(1.0)
             st.rerun()
+            
+        # Display Save & Reset button if there is any active trade history
+        if state_data.get("total_trades", 0) > 0 or state_data.get("cycles_scanned", 0) > 0:
+            st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
+            if st.button("📥 Save Trial & Reset Portfolio", use_container_width=True, type="secondary", help="Archive current run to history and reset active stats to zero."):
+                from funding_arb_bot import FundingArbBot
+                temp_bot = FundingArbBot()
+                temp_bot.archive_current_trial(stop_reason="Manual Save & Reset")
+                temp_bot.reset_active_portfolio()
+                temp_bot.save_state()
+                st.toast("Current run archived and active portfolio reset to zero!")
+                time.sleep(1.0)
+                st.rerun()
 
 with col_wallet:
     st.subheader("💰 Paper Wallet Portfolio Audit")
@@ -388,3 +448,36 @@ with col_ledger:
                     file_name="funding_arb_execution_log.xlsx",
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 )
+
+# Bottom Full-Width Section: Historical Trials Log
+st.markdown("---")
+st.subheader("📜 Historical Trials Journal")
+trials_list = state_data.get("trials", [])
+if not trials_list:
+    st.info("No completed trials logged in database yet. Set a trade limit or start & stop the bot to create a trial!")
+else:
+    trials_df = pd.DataFrame(trials_list)
+    cols_display = {
+        "trial_id": "Trial ID",
+        "start_time": "Start Time",
+        "end_time": "End Time",
+        "initial_capital": "Initial Capital ($)",
+        "final_balance": "Final Balance ($)",
+        "net_profit": "Net PnL ($)",
+        "total_trades": "Trades Executed",
+        "total_fees_paid": "Fees Paid ($)",
+        "cycles_scanned": "Cycles Scanned",
+        "stop_reason": "Stop Reason"
+    }
+    cols_present = [c for c in cols_display.keys() if c in trials_df.columns]
+    trials_df_display = trials_df[cols_present].rename(columns=cols_display)
+    st.dataframe(trials_df_display.sort_index(ascending=False), use_container_width=True)
+    
+    # Database Clear Tool
+    if st.button("🗑️ Clear Trials History Log", use_container_width=True):
+        state_data["trials"] = []
+        with open(STATE_FILE, "w", encoding="utf-8") as f:
+            json.dump(state_data, f, indent=4)
+        st.toast("Trials database cleanly wiped!")
+        time.sleep(1.0)
+        st.rerun()

@@ -56,6 +56,11 @@ class FundingArbBot:
         self.stop_apr_trigger = stop_apr_trigger # 2% APR to close/unwind
         self.position_allocation = 250.0 # allocation size per active asset ($)
         
+        # New trials and trade limit properties
+        self.trials = []
+        self.limit_trades = False
+        self.max_trades_limit = 0
+        
         # Load state if available
         self.load_state()
 
@@ -76,6 +81,9 @@ class FundingArbBot:
                 self.stop_apr_trigger = state.get("stop_apr_trigger", 2.0)
                 self.position_allocation = state.get("position_allocation", 250.0)
                 self.total_fees_paid = state.get("total_fees_paid", 0.0)
+                self.trials = state.get("trials", [])
+                self.limit_trades = state.get("limit_trades", False)
+                self.max_trades_limit = state.get("max_trades_limit", 0)
                 logger.info("Funding bot state successfully loaded from JSON.")
             except Exception as e:
                 logger.error(f"Error loading bot state: {e}")
@@ -94,6 +102,9 @@ class FundingArbBot:
             "stop_apr_trigger": self.stop_apr_trigger,
             "position_allocation": self.position_allocation,
             "total_fees_paid": getattr(self, "total_fees_paid", 0.0),
+            "trials": self.trials,
+            "limit_trades": self.limit_trades,
+            "max_trades_limit": self.max_trades_limit,
             "last_updated": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         }
         try:
@@ -101,6 +112,55 @@ class FundingArbBot:
                 json.dump(state, f, indent=4)
         except Exception as e:
             logger.error(f"Error saving bot state: {e}")
+
+    def archive_current_trial(self, stop_reason="Manual Halt"):
+        if self.cycles_scanned == 0 and self.total_trades == 0:
+            return
+            
+        if not hasattr(self, "trials") or self.trials is None:
+            self.trials = []
+            
+        # Calculate active positions net equity
+        active_positions_count = len(self.positions)
+        invested_margin = active_positions_count * self.position_allocation
+        total_equity = self.balance_usdt + invested_margin
+        
+        # Avoid duplicate archiving if already archived
+        end_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        start_time = getattr(self, "last_updated", end_time)
+        
+        net_profit = self.total_yield - getattr(self, "total_fees_paid", 0.0)
+        
+        if self.trials:
+            last = self.trials[-1]
+            if last.get("cycles_scanned") == self.cycles_scanned and last.get("total_trades") == self.total_trades and last.get("net_profit") == round(net_profit, 4):
+                logger.info("Current funding trial was already archived. Skipping duplicate archive.")
+                return
+                
+        trial_record = {
+            "trial_id": len(self.trials) + 1,
+            "start_time": start_time,
+            "end_time": end_time,
+            "initial_capital": round(self.capital, 2),
+            "final_balance": round(total_equity, 2),
+            "net_profit": round(net_profit, 4),
+            "total_trades": self.total_trades,
+            "total_fees_paid": round(getattr(self, "total_fees_paid", 0.0), 4),
+            "cycles_scanned": self.cycles_scanned,
+            "stop_reason": stop_reason
+        }
+        self.trials.append(trial_record)
+        logger.info(f"📊 Funding Trial #{trial_record['trial_id']} archived successfully: Net Equity: ${trial_record['final_balance']:,.2f}, Trades: {trial_record['total_trades']}.")
+
+    def reset_active_portfolio(self):
+        self.balance_usdt = self.capital
+        self.total_trades = 0
+        self.total_yield = 0.0
+        self.cycles_scanned = 0
+        self.positions = []
+        self.trades = []
+        self.total_fees_paid = 0.0
+        logger.info("Active paper funding portfolio successfully reset to zero/starting capital.")
 
     def open_position(self, asset, spot_price, perp_price, apr):
         # Calculate entry transaction fee (0.075% total = 0.1% spot fee + 0.05% perp fee split on half-allocations)
@@ -361,6 +421,7 @@ def run_funding_bot():
     
     logger.info(f"Funding Bot RUNNING | Start Capital: ${bot.capital:,.2f} | Entry APR trigger: {bot.min_apr_trigger}% | Exit APR trigger: {bot.stop_apr_trigger}%")
     
+    stop_reason_to_use = "Manual Halt"
     while True:
         # Check command loop state from json
         if os.path.exists(STATE_FILE):
@@ -369,15 +430,23 @@ def run_funding_bot():
                     state = json.load(f)
                 if state.get("status") == "stopped":
                     logger.info("Halt command intercepted. Stopping funding arbitrage loop cleanly...")
+                    stop_reason_to_use = "Manual Halt"
                     break
             except Exception:
                 pass
                 
+        # Check max trades limit
+        if bot.limit_trades and bot.max_trades_limit > 0 and bot.total_trades >= bot.max_trades_limit:
+            logger.info(f"🎯 Max trades limit ({bot.max_trades_limit}) reached! Automatically stopping...")
+            stop_reason_to_use = "Max Trades Reached"
+            break
+            
         bot.run_one_cycle(exchange)
         bot.save_state()
         time.sleep(2.0) # 2 seconds scan refresh rate
         
     bot.status = "stopped"
+    bot.archive_current_trial(stop_reason=stop_reason_to_use)
     bot.save_state()
     logger.info("Funding trading daemon safely stopped.")
 
