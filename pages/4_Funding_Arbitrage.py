@@ -190,12 +190,31 @@ with col_wallet:
     # Total Portfolio Equity = Cash Balance + Invested Capital
     total_equity = cash_bal + invested_margin
     
-    # Premium, crystal-clear breakdown
-    m1, m2, m3, m4 = st.columns(4)
-    m1.metric("Net Account Equity", f"${total_equity:,.4f}", help="Total portfolio liquidation value: Cash + Invested Capital.")
-    m2.metric("Liquid Cash (USDT)", f"${cash_bal:,.2f}", help="Unallocated, ready-to-invest cash balance.")
-    m3.metric("Invested Capital", f"${invested_margin:,.2f}", f"{active_positions_count} Active Positions", help="Simulated capital currently locked in delta-neutral positions.")
-    m4.metric("Accrued Yield Captured", f"${total_yield:.6f}", f"${total_fees_paid:.4f} Total Fees", help="Dynamic real-time funding fees harvested vs. exchange commission fees paid.")
+    # Premium, crystal-clear non-truncating breakdown
+    st.markdown(f"""
+    <div style="display: flex; flex-wrap: wrap; gap: 12px; margin-top: 10px; width: 100%;">
+        <div style="flex: 1; min-width: 140px; background: rgba(30, 41, 59, 0.45); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 12px; text-align: center; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);">
+            <div style="font-size: 11px; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Net Equity</div>
+            <div style="font-size: 18px; font-weight: 700; color: #38bdf8; margin-top: 6px;">${total_equity:,.4f}</div>
+            <div style="font-size: 10px; color: #64748b; margin-top: 4px;">Liquidation Value</div>
+        </div>
+        <div style="flex: 1; min-width: 140px; background: rgba(30, 41, 59, 0.45); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 12px; text-align: center; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);">
+            <div style="font-size: 11px; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Liquid Cash</div>
+            <div style="font-size: 18px; font-weight: 700; color: #f8fafc; margin-top: 6px;">${cash_bal:,.2f}</div>
+            <div style="font-size: 10px; color: #64748b; margin-top: 4px;">Available USDT</div>
+        </div>
+        <div style="flex: 1; min-width: 140px; background: rgba(30, 41, 59, 0.45); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 12px; text-align: center; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);">
+            <div style="font-size: 11px; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Invested Capital</div>
+            <div style="font-size: 18px; font-weight: 700; color: #e2e8f0; margin-top: 6px;">${invested_margin:,.2f}</div>
+            <div style="font-size: 10px; color: #38bdf8; margin-top: 4px; font-weight: 600;">{active_positions_count} Active Positions</div>
+        </div>
+        <div style="flex: 1; min-width: 140px; background: rgba(30, 41, 59, 0.45); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 12px; text-align: center; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);">
+            <div style="font-size: 11px; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Accrued Yield</div>
+            <div style="font-size: 18px; font-weight: 700; color: #34d399; margin-top: 6px;">${total_yield:.6f}</div>
+            <div style="font-size: 10px; color: #f87171; margin-top: 4px; font-weight: 600;">${total_fees_paid:.4f} Total Fees</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
 st.markdown("---")
 
@@ -274,8 +293,12 @@ if not trades_list:
 else:
     try:
         chart_df = pd.DataFrame(trades_list)
-        chart_df['cumulative_profit'] = chart_df['profit'].cumsum()
-        chart_df['cumulative_fee'] = chart_df['fee'].cumsum()
+        if 'fee' not in chart_df.columns:
+            chart_df['fee'] = 0.0
+        if 'profit' not in chart_df.columns:
+            chart_df['profit'] = 0.0
+        chart_df['cumulative_profit'] = chart_df['profit'].fillna(0.0).cumsum()
+        chart_df['cumulative_fee'] = chart_df['fee'].fillna(0.0).cumsum()
         
         import plotly.graph_objects as go
         fig = go.Figure()
