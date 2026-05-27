@@ -47,6 +47,10 @@ class FundingArbBot:
         self.trades = []
         self.status = "stopped"
         
+        # Local cache for swap funding rates to prevent API DDOS/Rate limiting
+        self.funding_cache = {}
+        self.last_funding_fetch = 0.0
+        
         # Configuration thresholds
         self.min_apr_trigger = min_apr_trigger # 8% APR to open
         self.stop_apr_trigger = stop_apr_trigger # 2% APR to close/unwind
@@ -181,27 +185,47 @@ class FundingArbBot:
         live_data = {}
         try:
             if exchange:
-                # CCXT Swap markets
+                # Bulk fetch Spot tickers in 1 single API call
+                spot_symbols = [f"{asset}/USDT" for asset in assets]
+                spot_tickers = exchange.fetch_tickers(spot_symbols)
+                
+                # Bulk fetch Perp tickers in 1 single API call
+                perp_symbols = [f"{asset}/USDT:USDT" for asset in assets]
+                perp_tickers = exchange.fetch_tickers(perp_symbols)
+                
+                # Fetch/Cache funding rates in bulk (only once every 60 seconds)
+                now = time.time()
+                if not hasattr(self, 'funding_cache') or not self.funding_cache or (now - self.last_funding_fetch > 60.0):
+                    try:
+                        # Binance fetchFundingRates retrieves all swap funding rates in bulk!
+                        raw_rates = exchange.fetch_funding_rates(perp_symbols)
+                        self.funding_cache = {}
+                        for symbol, info in raw_rates.items():
+                            self.funding_cache[symbol] = info.get("fundingRate", 0.0)
+                        self.last_funding_fetch = now
+                        logger.info("Bulk funding rates updated from Binance API.")
+                    except Exception as fe:
+                        logger.warning(f"Failed to fetch bulk funding rates: {fe}. Using fallback/cached rates.")
+                        if not self.funding_cache:
+                            self.funding_cache = {s: 0.0001 for s in perp_symbols} # 0.01% standard default
+                
                 for asset in assets:
-                    spot_symbol = f"{asset}/USDT"
-                    perp_symbol = f"{asset}/USDT:USDT"
+                    s_sym = f"{asset}/USDT"
+                    p_sym = f"{asset}/USDT:USDT"
                     
-                    spot_ticker = exchange.fetch_ticker(spot_symbol)
-                    perp_ticker = exchange.fetch_ticker(perp_symbol)
+                    spot_close = spot_tickers.get(s_sym, {}).get("close")
+                    perp_close = perp_tickers.get(p_sym, {}).get("close")
                     
-                    # Fetch swap funding rate
-                    funding_info = exchange.fetch_funding_rate(perp_symbol)
-                    raw_funding = funding_info.get("fundingRate", 0.0)
-                    
-                    # Annualize APR: rate * 3 * 365 * 100
+                    raw_funding = self.funding_cache.get(p_sym, 0.0001)
                     apr = raw_funding * 3 * 365 * 100.0
                     
-                    live_data[asset] = {
-                        "spot": spot_ticker["close"],
-                        "perp": perp_ticker["close"],
-                        "apr": apr,
-                        "rate": raw_funding
-                    }
+                    if spot_close and perp_close:
+                        live_data[asset] = {
+                            "spot": spot_close,
+                            "perp": perp_close,
+                            "apr": apr,
+                            "rate": raw_funding
+                        }
             else:
                 # High-fidelity Market Regime Cycle Simulator
                 # Cycles shift every 15 iterations (~30 seconds) to demonstrate active portfolio turnovers
