@@ -1,0 +1,481 @@
+# live_l2_arb_bot.py
+import sys
+import os
+import time
+import json
+import logging
+from datetime import datetime
+import pandas as pd
+import numpy as np
+
+# Reconfigure stdout to use UTF-8 to prevent UnicodeEncodeError on Windows terminals when logging emojis
+if hasattr(sys.stdout, 'reconfigure'):
+    try:
+        sys.stdout.reconfigure(encoding='utf-8')
+    except Exception:
+        pass
+
+# Try to import ccxt safely
+try:
+    import ccxt
+except ImportError:
+    ccxt = None
+
+STATE_FILE = "l2_arb_state.json"
+LOG_FILE = "l2_arb_bot.log"
+EXCEL_FILE = "live_l2_execution_log.xlsx"
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    datefmt="%H:%M:%S",
+    handlers=[
+        logging.FileHandler(LOG_FILE, mode='a', encoding='utf-8'),
+        logging.StreamHandler(sys.stdout)
+    ]
+)
+logger = logging.getLogger("LiveL2ArbBot")
+
+class LiveL2ArbBot:
+    def __init__(self, start_capital_inr=100000.0, trade_size_inr=10000.0, taker_fee_pct=0.10, usd_inr_rate=85.0, min_profit=0.05):
+        # Configuration properties
+        self.capital = start_capital_inr # Starting capital in ₹ (INR)
+        self.balance_inr = start_capital_inr # Active cash balance in ₹ (INR)
+        self.trade_size = trade_size_inr # Allocation size per attempt in ₹ (INR)
+        self.taker_fee_pct = taker_fee_pct # Exchange commission Taker fee per leg (0.10% default)
+        self.usd_inr_rate = usd_inr_rate # USDT to INR exchange rate (default ₹85.0)
+        self.min_profit_pct = min_profit # Minimum net spread trigger (default 0.05%)
+        
+        # Operational variables
+        self.total_trades = 0
+        self.total_profit_inr = 0.0
+        self.win_rate = 0.0
+        self.cycles_scanned = 0
+        self.trades = []
+        self.status = "stopped"
+        self.total_fees_paid_inr = 0.0
+        self.total_slippage_drag_inr = 0.0
+        self.trials = []
+        self.limit_trades = False
+        self.max_trades_limit = 0
+        
+        # Load existing state if available
+        self.load_state()
+
+    def load_state(self):
+        if os.path.exists(STATE_FILE):
+            try:
+                with open(STATE_FILE, "r", encoding="utf-8") as f:
+                    state = json.load(f)
+                self.capital = state.get("capital", 100000.0)
+                self.balance_inr = state.get("balance_inr", 100000.0)
+                self.trade_size = state.get("trade_size", 10000.0)
+                self.taker_fee_pct = state.get("taker_fee_pct", 0.10)
+                self.usd_inr_rate = state.get("usd_inr_rate", 85.0)
+                self.min_profit_pct = state.get("min_profit_pct", 0.05)
+                self.total_trades = state.get("total_trades", 0)
+                self.total_profit_inr = state.get("total_profit_inr", 0.0)
+                self.win_rate = state.get("win_rate", 0.0)
+                self.cycles_scanned = state.get("cycles_scanned", 0)
+                self.trades = state.get("trades", [])
+                self.status = state.get("status", "stopped")
+                self.total_fees_paid_inr = state.get("total_fees_paid_inr", 0.0)
+                self.total_slippage_drag_inr = state.get("total_slippage_drag_inr", 0.0)
+                self.trials = state.get("trials", [])
+                self.limit_trades = state.get("limit_trades", False)
+                self.max_trades_limit = state.get("max_trades_limit", 0)
+                logger.info("L2 Bot state successfully loaded from JSON.")
+            except Exception as e:
+                logger.error(f"Error loading bot state: {e}")
+
+    def save_state(self):
+        state = {
+            "capital": self.capital,
+            "balance_inr": self.balance_inr,
+            "trade_size": self.trade_size,
+            "taker_fee_pct": self.taker_fee_pct,
+            "usd_inr_rate": self.usd_inr_rate,
+            "min_profit_pct": self.min_profit_pct,
+            "total_trades": self.total_trades,
+            "total_profit_inr": self.total_profit_inr,
+            "win_rate": self.win_rate,
+            "cycles_scanned": self.cycles_scanned,
+            "trades": self.trades[-50:], # Cache only last 50 trades in JSON for speed
+            "status": self.status,
+            "total_fees_paid_inr": self.total_fees_paid_inr,
+            "total_slippage_drag_inr": self.total_slippage_drag_inr,
+            "trials": self.trials,
+            "limit_trades": self.limit_trades,
+            "max_trades_limit": self.max_trades_limit,
+            "last_updated": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        }
+        try:
+            with open(STATE_FILE, "w", encoding="utf-8") as f:
+                json.dump(state, f, indent=4)
+        except Exception as e:
+            logger.error(f"Error saving bot state: {e}")
+
+    def archive_current_trial(self, stop_reason="Manual Halt"):
+        if self.cycles_scanned == 0 and self.total_trades == 0:
+            return
+            
+        if not hasattr(self, "trials") or self.trials is None:
+            self.trials = []
+            
+        # Avoid duplicate archiving if already archived
+        end_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        start_time = getattr(self, "last_updated", end_time)
+        
+        if self.trials:
+            last = self.trials[-1]
+            if last.get("cycles_scanned") == self.cycles_scanned and last.get("total_trades") == self.total_trades and last.get("net_profit") == round(self.total_profit_inr, 2):
+                logger.info("Current L2 trial was already archived. Skipping duplicate archive.")
+                return
+                
+        trial_record = {
+            "trial_id": len(self.trials) + 1,
+            "start_time": start_time,
+            "end_time": end_time,
+            "initial_capital": round(self.capital, 2),
+            "final_balance": round(self.balance_inr, 2),
+            "net_profit": round(self.total_profit_inr, 2),
+            "total_trades": self.total_trades,
+            "total_fees_paid": round(self.total_fees_paid_inr, 2),
+            "win_rate": round(self.win_rate, 1),
+            "cycles_scanned": self.cycles_scanned,
+            "stop_reason": stop_reason
+        }
+        self.trials.append(trial_record)
+        logger.info(f"📊 L2 Trial #{trial_record['trial_id']} archived successfully: PnL: ₹{trial_record['net_profit']:+,.2f}, Trades: {trial_record['total_trades']}.")
+
+    def reset_active_portfolio(self):
+        self.balance_inr = self.capital
+        self.total_trades = 0
+        self.total_profit_inr = 0.0
+        self.win_rate = 0.0
+        self.cycles_scanned = 0
+        self.trades = []
+        self.total_fees_paid_inr = 0.0
+        self.total_slippage_drag_inr = 0.0
+        logger.info("Active L2 Rupees paper portfolio successfully reset to zero.")
+
+    def add_trade(self, expected_return_pct, net_pnl_inr, fee_paid_inr, slippage_drag_inr):
+        self.total_trades += 1
+        self.total_profit_inr += net_pnl_inr
+        self.balance_inr += net_pnl_inr
+        self.total_fees_paid_inr += fee_paid_inr
+        self.total_slippage_drag_inr += slippage_drag_inr
+        
+        # Win rate recalculation
+        winning_trades = len([t for t in self.trades if t.get("profit", 0.0) > 0])
+        if net_pnl_inr > 0:
+            winning_trades += 1
+        self.win_rate = (winning_trades / self.total_trades) * 100.0
+        
+        trade_record = {
+            "timestamp": datetime.now().strftime("%H:%M:%S"),
+            "cycle": self.cycles_scanned,
+            "expected_return": round(expected_return_pct, 4), # net return %
+            "profit": round(net_pnl_inr, 2),
+            "fee": round(fee_paid_inr, 2),
+            "slippage": round(slippage_drag_inr, 2),
+            "balance": round(self.balance_inr, 2)
+        }
+        self.trades.append(trade_record)
+        
+        # Log to Excel audit trail
+        self.log_to_excel()
+
+    def log_to_excel(self):
+        try:
+            summary_df = pd.DataFrame(self.trades)
+            param_df = pd.DataFrame([
+                {"Parameter": "Starting Capital (₹)", "Value": self.capital},
+                {"Parameter": "Active Balance (₹)", "Value": self.balance_inr},
+                {"Parameter": "Allocated Size (₹)", "Value": self.trade_size},
+                {"Parameter": "Taker Fee Rate (%)", "Value": self.taker_fee_pct},
+                {"Parameter": "USDT/INR Exchange Rate", "Value": self.usd_inr_rate},
+                {"Parameter": "Min Profit Trigger (%)", "Value": self.min_profit_pct}
+            ])
+            with pd.ExcelWriter(EXCEL_FILE, engine="openpyxl") as writer:
+                summary_df.to_excel(writer, sheet_name="L2_Paper_Trades", index=False)
+                param_df.to_excel(writer, sheet_name="L2_Bot_Config", index=False)
+        except Exception as e:
+            logger.error(f"Error exporting L2 trades to Excel: {e}")
+
+    # ---------------------------------------------------------
+    # L2 ORDER BOOK DEPTH-WALKING MATCHING ENGINE
+    # ---------------------------------------------------------
+    def walk_asks(self, asks, target_cost_usdt):
+        """
+        Simulates buying target_cost_usdt worth of base asset from asks.
+        Walks asks level-by-level to calculate depth-adjusted filled quantity.
+        """
+        cumulative_cost = 0.0
+        cumulative_qty = 0.0
+        
+        for price, amount in asks:
+            cost_at_level = price * amount
+            if cumulative_cost + cost_at_level <= target_cost_usdt:
+                cumulative_cost += cost_at_level
+                cumulative_qty += amount
+            else:
+                cost_needed = target_cost_usdt - cumulative_cost
+                amount_filled = cost_needed / price
+                cumulative_cost += cost_needed
+                cumulative_qty += amount_filled
+                break
+                
+        # Handle cases where book is too thin or empty
+        if cumulative_qty == 0:
+            return 0.0, 0.0
+            
+        avg_price = target_cost_usdt / cumulative_qty
+        return cumulative_qty, avg_price
+
+    def walk_cross_asks(self, asks, target_cost_btc):
+        """
+        Simulates buying ETH asks using target_cost_btc worth of BTC.
+        In ETH/BTC, price is BTC per ETH. Cost in BTC = price * ETH amount.
+        """
+        cumulative_cost = 0.0
+        cumulative_qty = 0.0
+        
+        for price, amount in asks:
+            cost_at_level = price * amount
+            if cumulative_cost + cost_at_level <= target_cost_btc:
+                cumulative_cost += cost_at_level
+                cumulative_qty += amount
+            else:
+                cost_needed = target_cost_btc - cumulative_cost
+                amount_filled = cost_needed / price
+                cumulative_cost += cost_needed
+                cumulative_qty += amount_filled
+                break
+                
+        if cumulative_qty == 0:
+            return 0.0, 0.0
+            
+        avg_price = target_cost_btc / cumulative_qty
+        return cumulative_qty, avg_price
+
+    def walk_bids(self, bids, target_amount_eth):
+        """
+        Simulates selling target_amount_eth of ETH into bids to receive USDT.
+        """
+        cumulative_sold = 0.0
+        cumulative_usdt_received = 0.0
+        
+        for price, amount in bids:
+            if cumulative_sold + amount <= target_amount_eth:
+                cumulative_sold += amount
+                cumulative_usdt_received += amount * price
+            else:
+                amount_needed = target_amount_eth - cumulative_sold
+                cumulative_sold += amount_needed
+                cumulative_usdt_received += amount_needed * price
+                break
+                
+        if target_amount_eth == 0:
+            return 0.0, 0.0
+            
+        avg_price = cumulative_usdt_received / target_amount_eth
+        return cumulative_usdt_received, avg_price
+
+    def run_one_cycle(self, exchange):
+        self.cycles_scanned += 1
+        symbols = ["BTC/USDT", "ETH/BTC", "ETH/USDT"]
+        
+        # Convert INR trade size to USDT for order book calculations
+        trade_size_usdt = self.trade_size / self.usd_inr_rate
+        
+        live_books = {}
+        use_fallback = False
+        
+        # 1. Poll live L2 Order Books from Exchange L2 APIs
+        if exchange:
+            try:
+                for sym in symbols:
+                    # Fetch L2 order book (depth 20)
+                    book = exchange.fetch_order_book(sym, limit=20)
+                    live_books[sym] = {
+                        "bids": [[float(b[0]), float(b[1])] for b in book.get("bids", [])],
+                        "asks": [[float(a[0]), float(a[1])] for a in book.get("asks", [])]
+                    }
+            except Exception as ce:
+                logger.warning(f"⚠️ Live CCXT L2 Order Book fetch failed: {ce}. Geoblock or API rate limit active. Falling back to high-fidelity L2 simulation...")
+                use_fallback = True
+                
+        if not exchange or use_fallback:
+            # Generate high-fidelity mock L2 Order Books based on simulated market waves
+            # Every 12 scans we inject a high-volatility spread anomaly
+            if self.cycles_scanned % 12 == 0:
+                spread_sim = np.random.uniform(0.0035, 0.0065)
+            elif self.cycles_scanned % 5 == 0:
+                spread_sim = np.random.uniform(0.0012, 0.0022)
+            else:
+                spread_sim = np.random.uniform(-0.0003, 0.0003)
+                
+            p_btc = 68500.0 + np.random.normal(0, 15)
+            p_eth_btc = 0.0525 + np.random.normal(0, 0.00005)
+            p_eth = p_btc * p_eth_btc * (1.0 + spread_sim)
+            
+            mock_prices = {
+                "BTC/USDT": {"bid": p_btc - 0.5, "ask": p_btc + 0.5},
+                "ETH/BTC": {"bid": p_eth_btc - 0.00002, "ask": p_eth_btc + 0.00002},
+                "ETH/USDT": {"bid": p_eth - 0.1, "ask": p_eth + 0.1}
+            }
+            
+            for sym, p in mock_prices.items():
+                # Populate mock order books with 20 levels of depth and random liquidity sizes
+                bids = []
+                asks = []
+                for i in range(1, 21):
+                    # Higher spread as we go deeper into order book matching
+                    spread_increment = i * (p["bid"] * 0.0001)
+                    bid_p = p["bid"] - spread_increment
+                    ask_p = p["ask"] + spread_increment
+                    
+                    # Randomize volumes at each depth level
+                    # Higher sizes for BTC, moderate for ETH
+                    vol_mult = 1.0 if "BTC" in sym else 12.0
+                    bids.append([bid_p, np.random.uniform(0.05, 1.2) * vol_mult])
+                    asks.append([ask_p, np.random.uniform(0.05, 1.2) * vol_mult])
+                live_books[sym] = {"bids": bids, "asks": asks}
+
+        # Validate that order books were retrieved or successfully simulated
+        for sym in symbols:
+            if sym not in live_books or not live_books[sym]["bids"] or not live_books[sym]["asks"]:
+                return
+
+        # ---------------------------------------------------------
+        # EXECUTE L2 DEPTH-WALK TRADE PIPELINE
+        # ---------------------------------------------------------
+        fee_rate = self.taker_fee_pct / 100.0
+        
+        # Ticker Toplevel baseline prices (for display comparison)
+        ticker_btc_ask = live_books["BTC/USDT"]["asks"][0][0]
+        ticker_eth_btc_ask = live_books["ETH/BTC"]["asks"][0][0]
+        ticker_eth_usdt_bid = live_books["ETH/USDT"]["bids"][0][0]
+        ticker_gross = (1.0 / ticker_btc_ask) * (1.0 / ticker_eth_btc_ask) * ticker_eth_usdt_bid
+        ticker_spread_pct = (ticker_gross - 1.0) * 100.0
+
+        # --- LEG 1: Buy BTC with USDT ---
+        # Cost: trade_size_usdt
+        # Asks: live_books["BTC/USDT"]["asks"]
+        btc_acquired, l1_execution_price = self.walk_asks(live_books["BTC/USDT"]["asks"], trade_size_usdt)
+        # Deduct exchange fee in BTC (in-kind)
+        btc_net = btc_acquired * (1.0 - fee_rate)
+        l1_fee_usdt = (btc_acquired * fee_rate) * l1_execution_price
+        
+        # --- LEG 2: Buy ETH with BTC ---
+        # Cost: btc_net
+        # Asks: live_books["ETH/BTC"]["asks"]
+        eth_acquired, l2_execution_price = self.walk_cross_asks(live_books["ETH/BTC"]["asks"], btc_net)
+        # Deduct exchange fee in ETH (in-kind)
+        eth_net = eth_acquired * (1.0 - fee_rate)
+        l2_fee_usdt = (eth_acquired * fee_rate) * l2_execution_price * l1_execution_price
+
+        # --- LEG 3: Sell ETH for USDT ---
+        # Amount: eth_net
+        # Bids: live_books["ETH/USDT"]["bids"]
+        usdt_received, l3_execution_price = self.walk_bids(live_books["ETH/USDT"]["bids"], eth_net)
+        # Deduct exchange fee in USDT
+        usdt_net = usdt_received * (1.0 - fee_rate)
+        l3_fee_usdt = usdt_received * fee_rate
+
+        # --- ARBITRAGE STATS ---
+        # Net Return and Gross Return metrics
+        total_fee_usdt = l1_fee_usdt + l2_fee_usdt + l3_fee_usdt
+        expected_net_multiple = usdt_net / trade_size_usdt
+        net_spread_pct = (expected_net_multiple - 1.0) * 100.0
+        
+        # Slippage calculations (Difference between L2 average prices and best top ticker prices)
+        slippage_drag_usdt = (trade_size_usdt * (ticker_gross - 1.0)) - (usdt_received - trade_size_usdt)
+        slippage_drag_usdt = max(0.0, slippage_drag_usdt) # slip cannot be negative
+
+        # Convert calculated stats back to ₹ (INR) for local tracking
+        fee_paid_inr = total_fee_usdt * self.usd_inr_rate
+        slippage_drag_inr = slippage_drag_usdt * self.usd_inr_rate
+        net_pnl_inr = (usdt_net - trade_size_usdt) * self.usd_inr_rate
+
+        # Print scan stats every 5 cycles
+        if self.cycles_scanned % 5 == 0:
+            logger.info(
+                f"L2 Scan #{self.cycles_scanned} | Trade Size: ₹{self.trade_size:,.0f} (${trade_size_usdt:,.1f}) | "
+                f"Ticker Spread: {ticker_spread_pct:+.4f}% | Actual L2 Net Spread: {net_spread_pct:+.4f}%"
+            )
+            logger.info(
+                f"  L2 Avg Executions -> L1 (BTC): ${l1_execution_price:,.2f} | L2 (ETH/BTC): {l2_execution_price:.5f} | "
+                f"L3 (ETH): ${l3_execution_price:,.2f}"
+            )
+            
+        # 3. Check Profit Trigger (Net Return exceeds trigger threshold)
+        if net_spread_pct >= self.min_profit_pct:
+            logger.info(f"💥 L2 DEPTH ARBITRAGE TRIGGERED! Volume-Weighted Net Spread: {net_spread_pct:+.4f}%. Executing paper trades...")
+            self.add_trade(net_spread_pct, net_pnl_inr, fee_paid_inr, slippage_drag_inr)
+            logger.info(
+                f"✓ Leg matching completed! Realized Net PnL: ₹{net_pnl_inr:+.2f} | "
+                f"Commission Fees Paid: ₹{fee_paid_inr:.2f} | Slippage Cost: ₹{slippage_drag_inr:.2f}"
+            )
+            time.sleep(2)
+
+def run_l2_paper_bot():
+    logger.info("Initializing Live L2 Depth-Adjusted Rupees Arbitrage Daemon...")
+    
+    exchange = None
+    if ccxt:
+        try:
+            exchange = ccxt.binance({
+                'enableRateLimit': True,
+                'options': {'defaultType': 'spot'}
+            })
+            exchange.load_markets()
+            logger.info("CCXT Spot client connected and markets loaded successfully.")
+        except Exception as e:
+            logger.warning(f"Failed to connect CCXT Spot client: {e}. Bot will operate in L2 simulation fallback.")
+            exchange = None
+    else:
+        logger.warning("CCXT missing. Bot will operate in L2 simulation fallback.")
+        
+    bot = LiveL2ArbBot()
+    bot.status = "running"
+    bot.save_state()
+    
+    logger.info(
+        f"L2 Bot RUNNING | Capital: ₹{bot.capital:,.2f} | Size: ₹{bot.trade_size:,.2f} | "
+        f"USDT/INR: ₹{bot.usd_inr_rate:.2f} | Trigger: {bot.min_profit_pct}%"
+    )
+    
+    stop_reason_to_use = "Manual Halt"
+    while True:
+        # Check command loop state from json
+        if os.path.exists(STATE_FILE):
+            try:
+                with open(STATE_FILE, "r", encoding="utf-8") as f:
+                    state = json.load(f)
+                if state.get("status") == "stopped":
+                    logger.info("Halt command intercepted. Stopping L2 loop cleanly...")
+                    stop_reason_to_use = "Manual Halt"
+                    break
+            except Exception:
+                pass
+                
+        # Check max trades limit
+        if bot.limit_trades and bot.max_trades_limit > 0 and bot.total_trades >= bot.max_trades_limit:
+            logger.info(f"🎯 Max trades limit ({bot.max_trades_limit}) reached! Automatically stopping L2 bot...")
+            stop_reason_to_use = "Max Trades Reached"
+            break
+            
+        bot.run_one_cycle(exchange)
+        bot.save_state()
+        time.sleep(2.0)
+        
+    bot.status = "stopped"
+    bot.archive_current_trial(stop_reason=stop_reason_to_use)
+    bot.save_state()
+    logger.info("L2 paper trading daemon safely stopped.")
+
+if __name__ == "__main__":
+    run_l2_paper_bot()
