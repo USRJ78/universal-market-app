@@ -196,12 +196,18 @@ class LiveArbBot:
         
         try:
             # 1. Price Polling Layer
+            use_fallback = False
             if exchange:
-                tickers = exchange.fetch_tickers(symbols)
-                p1_ask = tickers["BTC/USDT"]['ask']
-                p2_ask = tickers["ETH/BTC"]['ask']
-                p3_bid = tickers["ETH/USDT"]['bid']
-            else:
+                try:
+                    tickers = exchange.fetch_tickers(symbols)
+                    p1_ask = tickers["BTC/USDT"]['ask']
+                    p2_ask = tickers["ETH/BTC"]['ask']
+                    p3_bid = tickers["ETH/USDT"]['bid']
+                except Exception as ce:
+                    logger.warning(f"⚠️ Live Spot CCXT tickers fetch failed: {ce}. Geoblock or API rate limit active. Falling back to simulation...")
+                    use_fallback = True
+            
+            if not exchange or use_fallback:
                 # Simulated Feed fallback with dynamic volatility waves to generate active opportunities
                 # Every ~12 cycles, inject a high-volatility spread burst (+0.25% to +0.55%)
                 # Every ~5 cycles, inject a micro-arbitrage spread (+0.08% to +0.18%)

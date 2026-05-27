@@ -255,50 +255,57 @@ class FundingArbBot:
         
         # 1. Fetch Price Tickers and Funding Rates
         live_data = {}
+        use_fallback = False
+        
         try:
             if exchange:
-                # Bulk fetch Spot tickers in 1 single API call
-                spot_symbols = [f"{asset}/USDT" for asset in assets]
-                spot_tickers = exchange.fetch_tickers(spot_symbols)
-                
-                # Bulk fetch Perp tickers in 1 single API call
-                perp_symbols = [f"{asset}/USDT:USDT" for asset in assets]
-                perp_tickers = exchange.fetch_tickers(perp_symbols)
-                
-                # Fetch/Cache funding rates in bulk (only once every 60 seconds)
-                now = time.time()
-                if not hasattr(self, 'funding_cache') or not self.funding_cache or (now - self.last_funding_fetch > 60.0):
-                    try:
-                        # Binance fetchFundingRates retrieves all swap funding rates in bulk!
-                        raw_rates = exchange.fetch_funding_rates(perp_symbols)
-                        self.funding_cache = {}
-                        for symbol, info in raw_rates.items():
-                            self.funding_cache[symbol] = info.get("fundingRate", 0.0)
-                        self.last_funding_fetch = now
-                        logger.info("Bulk funding rates updated from Binance API.")
-                    except Exception as fe:
-                        logger.warning(f"Failed to fetch bulk funding rates: {fe}. Using fallback/cached rates.")
-                        if not self.funding_cache:
-                            self.funding_cache = {s: 0.0001 for s in perp_symbols} # 0.01% standard default
-                
-                for asset in assets:
-                    s_sym = f"{asset}/USDT"
-                    p_sym = f"{asset}/USDT:USDT"
+                try:
+                    # Bulk fetch Spot tickers in 1 single API call
+                    spot_symbols = [f"{asset}/USDT" for asset in assets]
+                    spot_tickers = exchange.fetch_tickers(spot_symbols)
                     
-                    spot_close = spot_tickers.get(s_sym, {}).get("close")
-                    perp_close = perp_tickers.get(p_sym, {}).get("close")
+                    # Bulk fetch Perp tickers in 1 single API call
+                    perp_symbols = [f"{asset}/USDT:USDT" for asset in assets]
+                    perp_tickers = exchange.fetch_tickers(perp_symbols)
                     
-                    raw_funding = self.funding_cache.get(p_sym, 0.0001)
-                    apr = raw_funding * 3 * 365 * 100.0
+                    # Fetch/Cache funding rates in bulk (only once every 60 seconds)
+                    now = time.time()
+                    if not hasattr(self, 'funding_cache') or not self.funding_cache or (now - self.last_funding_fetch > 60.0):
+                        try:
+                            # Binance fetchFundingRates retrieves all swap funding rates in bulk!
+                            raw_rates = exchange.fetch_funding_rates(perp_symbols)
+                            self.funding_cache = {}
+                            for symbol, info in raw_rates.items():
+                                self.funding_cache[symbol] = info.get("fundingRate", 0.0)
+                            self.last_funding_fetch = now
+                            logger.info("Bulk funding rates updated from Binance API.")
+                        except Exception as fe:
+                            logger.warning(f"Failed to fetch bulk funding rates: {fe}. Using fallback/cached rates.")
+                            if not self.funding_cache:
+                                self.funding_cache = {s: 0.0001 for s in perp_symbols} # 0.01% standard default
                     
-                    if spot_close and perp_close:
-                        live_data[asset] = {
-                            "spot": spot_close,
-                            "perp": perp_close,
-                            "apr": apr,
-                            "rate": raw_funding
-                        }
-            else:
+                    for asset in assets:
+                        s_sym = f"{asset}/USDT"
+                        p_sym = f"{asset}/USDT:USDT"
+                        
+                        spot_close = spot_tickers.get(s_sym, {}).get("close")
+                        perp_close = perp_tickers.get(p_sym, {}).get("close")
+                        
+                        raw_funding = self.funding_cache.get(p_sym, 0.0001)
+                        apr = raw_funding * 3 * 365 * 100.0
+                        
+                        if spot_close and perp_close:
+                            live_data[asset] = {
+                                "spot": spot_close,
+                                "perp": perp_close,
+                                "apr": apr,
+                                "rate": raw_funding
+                            }
+                except Exception as ce:
+                    logger.warning(f"⚠️ Live CCXT scan failed: {ce}. Geoblock or API rate limit active. Falling back to high-fidelity simulation...")
+                    use_fallback = True
+                    
+            if not exchange or use_fallback:
                 # High-fidelity Market Regime Cycle Simulator
                 # Cycles shift every 15 iterations (~30 seconds) to demonstrate active portfolio turnovers
                 regime_cycle = (self.cycles_scanned // 15) % 3
