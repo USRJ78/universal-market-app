@@ -38,12 +38,12 @@ logging.basicConfig(
 logger = logging.getLogger("LiveL2ArbBot")
 
 class LiveL2ArbBot:
-    def __init__(self, start_capital_inr=100000.0, trade_size_inr=10000.0, taker_fee_pct=0.10, usd_inr_rate=85.0, min_profit=0.05):
+    def __init__(self, start_capital_inr=100000.0, trade_size_inr=10000.0, taker_fee_pct=0.20, usd_inr_rate=85.0, min_profit=0.05):
         # Configuration properties
         self.capital = start_capital_inr # Starting capital in ₹ (INR)
         self.balance_inr = start_capital_inr # Active cash balance in ₹ (INR)
         self.trade_size = trade_size_inr # Allocation size per attempt in ₹ (INR)
-        self.taker_fee_pct = taker_fee_pct # Exchange commission Taker fee per leg (0.10% default)
+        self.taker_fee_pct = taker_fee_pct # CoinSwitch flat trading fee (0.20% default)
         self.usd_inr_rate = usd_inr_rate # USDT to INR exchange rate (default ₹85.0)
         self.min_profit_pct = min_profit # Minimum net spread trigger (default 0.05%)
         
@@ -71,7 +71,7 @@ class LiveL2ArbBot:
                 self.capital = state.get("capital", 100000.0)
                 self.balance_inr = state.get("balance_inr", 100000.0)
                 self.trade_size = state.get("trade_size", 10000.0)
-                self.taker_fee_pct = state.get("taker_fee_pct", 0.10)
+                self.taker_fee_pct = state.get("taker_fee_pct", 0.20)
                 self.usd_inr_rate = state.get("usd_inr_rate", 85.0)
                 self.min_profit_pct = state.get("min_profit_pct", 0.05)
                 self.total_trades = state.get("total_trades", 0)
@@ -85,7 +85,7 @@ class LiveL2ArbBot:
                 self.trials = state.get("trials", [])
                 self.limit_trades = state.get("limit_trades", False)
                 self.max_trades_limit = state.get("max_trades_limit", 0)
-                logger.info("L2 Bot state successfully loaded from JSON.")
+                logger.info("CoinSwitch L2 Bot state successfully loaded from JSON.")
             except Exception as e:
                 logger.error(f"Error loading bot state: {e}")
 
@@ -147,7 +147,7 @@ class LiveL2ArbBot:
             "stop_reason": stop_reason
         }
         self.trials.append(trial_record)
-        logger.info(f"📊 L2 Trial #{trial_record['trial_id']} archived successfully: PnL: ₹{trial_record['net_profit']:+,.2f}, Trades: {trial_record['total_trades']}.")
+        logger.info(f"📊 CoinSwitch L2 Trial #{trial_record['trial_id']} archived successfully: PnL: ₹{trial_record['net_profit']:+,.2f}, Trades: {trial_record['total_trades']}.")
 
     def reset_active_portfolio(self):
         self.balance_inr = self.capital
@@ -194,7 +194,7 @@ class LiveL2ArbBot:
                 {"Parameter": "Starting Capital (₹)", "Value": self.capital},
                 {"Parameter": "Active Balance (₹)", "Value": self.balance_inr},
                 {"Parameter": "Allocated Size (₹)", "Value": self.trade_size},
-                {"Parameter": "Taker Fee Rate (%)", "Value": self.taker_fee_pct},
+                {"Parameter": "CoinSwitch Fee Rate (%)", "Value": self.taker_fee_pct},
                 {"Parameter": "USDT/INR Exchange Rate", "Value": self.usd_inr_rate},
                 {"Parameter": "Min Profit Trigger (%)", "Value": self.min_profit_pct}
             ])
@@ -202,14 +202,14 @@ class LiveL2ArbBot:
                 summary_df.to_excel(writer, sheet_name="L2_Paper_Trades", index=False)
                 param_df.to_excel(writer, sheet_name="L2_Bot_Config", index=False)
         except Exception as e:
-            logger.error(f"Error exporting L2 trades to Excel: {e}")
+            logger.error(f"Error exporting CoinSwitch trades to Excel: {e}")
 
     # ---------------------------------------------------------
     # L2 ORDER BOOK DEPTH-WALKING MATCHING ENGINE
     # ---------------------------------------------------------
-    def walk_asks(self, asks, target_cost_usdt):
+    def walk_asks(self, asks, target_cost_inr):
         """
-        Simulates buying target_cost_usdt worth of base asset from asks.
+        Simulates buying target_cost_inr worth of base asset from asks.
         Walks asks level-by-level to calculate depth-adjusted filled quantity.
         """
         cumulative_cost = 0.0
@@ -217,11 +217,11 @@ class LiveL2ArbBot:
         
         for price, amount in asks:
             cost_at_level = price * amount
-            if cumulative_cost + cost_at_level <= target_cost_usdt:
+            if cumulative_cost + cost_at_level <= target_cost_inr:
                 cumulative_cost += cost_at_level
                 cumulative_qty += amount
             else:
-                cost_needed = target_cost_usdt - cumulative_cost
+                cost_needed = target_cost_inr - cumulative_cost
                 amount_filled = cost_needed / price
                 cumulative_cost += cost_needed
                 cumulative_qty += amount_filled
@@ -231,7 +231,7 @@ class LiveL2ArbBot:
         if cumulative_qty == 0:
             return 0.0, 0.0
             
-        avg_price = target_cost_usdt / cumulative_qty
+        avg_price = target_cost_inr / cumulative_qty
         return cumulative_qty, avg_price
 
     def walk_cross_asks(self, asks, target_cost_btc):
@@ -262,54 +262,48 @@ class LiveL2ArbBot:
 
     def walk_bids(self, bids, target_amount_eth):
         """
-        Simulates selling target_amount_eth of ETH into bids to receive USDT.
+        Simulates selling target_amount_eth of ETH into bids to receive INR.
         """
         cumulative_sold = 0.0
-        cumulative_usdt_received = 0.0
+        cumulative_inr_received = 0.0
         
         for price, amount in bids:
             if cumulative_sold + amount <= target_amount_eth:
                 cumulative_sold += amount
-                cumulative_usdt_received += amount * price
+                cumulative_inr_received += amount * price
             else:
                 amount_needed = target_amount_eth - cumulative_sold
                 cumulative_sold += amount_needed
-                cumulative_usdt_received += amount_needed * price
+                cumulative_inr_received += amount_needed * price
                 break
                 
         if target_amount_eth == 0:
             return 0.0, 0.0
             
-        avg_price = cumulative_usdt_received / target_amount_eth
-        return cumulative_usdt_received, avg_price
+        avg_price = cumulative_inr_received / target_amount_eth
+        return cumulative_inr_received, avg_price
 
     def run_one_cycle(self, exchange):
         self.cycles_scanned += 1
         symbols = ["BTC/USDT", "ETH/BTC", "ETH/USDT"]
         
-        # Convert INR trade size to USDT for order book calculations
-        trade_size_usdt = self.trade_size / self.usd_inr_rate
-        
         live_books = {}
         use_fallback = False
         
-        # 1. Poll live L2 Order Books from Exchange L2 APIs
+        # 1. Poll live L2 Order Books from Binance and scale quote to INR
         if exchange:
             try:
                 for sym in symbols:
-                    # Fetch L2 order book (depth 20)
                     book = exchange.fetch_order_book(sym, limit=20)
                     live_books[sym] = {
                         "bids": [[float(b[0]), float(b[1])] for b in book.get("bids", [])],
                         "asks": [[float(a[0]), float(a[1])] for a in book.get("asks", [])]
                     }
             except Exception as ce:
-                logger.warning(f"⚠️ Live CCXT L2 Order Book fetch failed: {ce}. Geoblock or API rate limit active. Falling back to high-fidelity L2 simulation...")
+                logger.warning(f"⚠️ CoinSwitch Live CCXT L2 Order Book fetch failed: {ce}. Geoblock or API rate limit active. Falling back to L2 simulation...")
                 use_fallback = True
                 
         if not exchange or use_fallback:
-            # Generate high-fidelity mock L2 Order Books based on simulated market waves
-            # Every 12 scans we inject a high-volatility spread anomaly
             if self.cycles_scanned % 12 == 0:
                 spread_sim = np.random.uniform(0.0035, 0.0065)
             elif self.cycles_scanned % 5 == 0:
@@ -328,101 +322,105 @@ class LiveL2ArbBot:
             }
             
             for sym, p in mock_prices.items():
-                # Populate mock order books with 20 levels of depth and random liquidity sizes
                 bids = []
                 asks = []
                 for i in range(1, 21):
-                    # Higher spread as we go deeper into order book matching
                     spread_increment = i * (p["bid"] * 0.0001)
                     bid_p = p["bid"] - spread_increment
                     ask_p = p["ask"] + spread_increment
-                    
-                    # Randomize volumes at each depth level
-                    # Higher sizes for BTC, moderate for ETH
                     vol_mult = 1.0 if "BTC" in sym else 12.0
                     bids.append([bid_p, np.random.uniform(0.05, 1.2) * vol_mult])
                     asks.append([ask_p, np.random.uniform(0.05, 1.2) * vol_mult])
                 live_books[sym] = {"bids": bids, "asks": asks}
 
-        # Validate that order books were retrieved or successfully simulated
         for sym in symbols:
             if sym not in live_books or not live_books[sym]["bids"] or not live_books[sym]["asks"]:
                 return
 
         # ---------------------------------------------------------
-        # EXECUTE L2 DEPTH-WALK TRADE PIPELINE
+        # SCALE BINANCE L2 ORDER BOOKS TO SYNTHESIZE COINSWITCH INR BOOKS
+        # ---------------------------------------------------------
+        # Scale prices of BTC/USDT asks & ETH/USDT bids by usd_inr_rate to get BTC/INR asks & ETH/INR bids!
+        coinswitch_books = {
+            "BTC/INR": {
+                "asks": [[level[0] * self.usd_inr_rate, level[1]] for level in live_books["BTC/USDT"]["asks"]]
+            },
+            "ETH/BTC": {
+                "asks": [[level[0], level[1]] for level in live_books["ETH/BTC"]["asks"]]
+            },
+            "ETH/INR": {
+                "bids": [[level[0] * self.usd_inr_rate, level[1]] for level in live_books["ETH/USDT"]["bids"]]
+            }
+        }
+
+        # ---------------------------------------------------------
+        # EXECUTE COINSWITCH L2 Triangular Arbitrage in INR
         # ---------------------------------------------------------
         fee_rate = self.taker_fee_pct / 100.0
         
-        # Ticker Toplevel baseline prices (for display comparison)
-        ticker_btc_ask = live_books["BTC/USDT"]["asks"][0][0]
-        ticker_eth_btc_ask = live_books["ETH/BTC"]["asks"][0][0]
-        ticker_eth_usdt_bid = live_books["ETH/USDT"]["bids"][0][0]
-        ticker_gross = (1.0 / ticker_btc_ask) * (1.0 / ticker_eth_btc_ask) * ticker_eth_usdt_bid
+        # Display top-level comparison ticker baseline in INR
+        ticker_btc_ask_inr = coinswitch_books["BTC/INR"]["asks"][0][0]
+        ticker_eth_btc_ask = coinswitch_books["ETH/BTC"]["asks"][0][0]
+        ticker_eth_inr_bid = coinswitch_books["ETH/INR"]["bids"][0][0]
+        ticker_gross = (1.0 / ticker_btc_ask_inr) * (1.0 / ticker_eth_btc_ask) * ticker_eth_inr_bid
         ticker_spread_pct = (ticker_gross - 1.0) * 100.0
 
-        # --- LEG 1: Buy BTC with USDT ---
-        # Cost: trade_size_usdt
-        # Asks: live_books["BTC/USDT"]["asks"]
-        btc_acquired, l1_execution_price = self.walk_asks(live_books["BTC/USDT"]["asks"], trade_size_usdt)
+        # --- LEG 1: Buy BTC with INR ---
+        # Cost: self.trade_size (in INR)
+        # Asks: coinswitch_books["BTC/INR"]["asks"]
+        btc_acquired, l1_execution_price_inr = self.walk_asks(coinswitch_books["BTC/INR"]["asks"], self.trade_size)
         # Deduct exchange fee in BTC (in-kind)
         btc_net = btc_acquired * (1.0 - fee_rate)
-        l1_fee_usdt = (btc_acquired * fee_rate) * l1_execution_price
+        l1_fee_inr = (btc_acquired * fee_rate) * l1_execution_price_inr
         
         # --- LEG 2: Buy ETH with BTC ---
         # Cost: btc_net
-        # Asks: live_books["ETH/BTC"]["asks"]
-        eth_acquired, l2_execution_price = self.walk_cross_asks(live_books["ETH/BTC"]["asks"], btc_net)
+        # Asks: coinswitch_books["ETH/BTC"]["asks"]
+        eth_acquired, l2_execution_price = self.walk_cross_asks(coinswitch_books["ETH/BTC"]["asks"], btc_net)
         # Deduct exchange fee in ETH (in-kind)
         eth_net = eth_acquired * (1.0 - fee_rate)
-        l2_fee_usdt = (eth_acquired * fee_rate) * l2_execution_price * l1_execution_price
+        l2_fee_inr = (eth_acquired * fee_rate) * l2_execution_price * l1_execution_price_inr
 
-        # --- LEG 3: Sell ETH for USDT ---
+        # --- LEG 3: Sell ETH for INR ---
         # Amount: eth_net
-        # Bids: live_books["ETH/USDT"]["bids"]
-        usdt_received, l3_execution_price = self.walk_bids(live_books["ETH/USDT"]["bids"], eth_net)
-        # Deduct exchange fee in USDT
-        usdt_net = usdt_received * (1.0 - fee_rate)
-        l3_fee_usdt = usdt_received * fee_rate
+        # Bids: coinswitch_books["ETH/INR"]["bids"]
+        inr_received, l3_execution_price_inr = self.walk_bids(coinswitch_books["ETH/INR"]["bids"], eth_net)
+        # Deduct exchange fee in INR
+        inr_net = inr_received * (1.0 - fee_rate)
+        l3_fee_inr = inr_received * fee_rate
 
         # --- ARBITRAGE STATS ---
-        # Net Return and Gross Return metrics
-        total_fee_usdt = l1_fee_usdt + l2_fee_usdt + l3_fee_usdt
-        expected_net_multiple = usdt_net / trade_size_usdt
+        total_fee_inr = l1_fee_inr + l2_fee_inr + l3_fee_inr
+        expected_net_multiple = inr_net / self.trade_size
         net_spread_pct = (expected_net_multiple - 1.0) * 100.0
         
-        # Slippage calculations (Difference between L2 average prices and best top ticker prices)
-        slippage_drag_usdt = (trade_size_usdt * (ticker_gross - 1.0)) - (usdt_received - trade_size_usdt)
-        slippage_drag_usdt = max(0.0, slippage_drag_usdt) # slip cannot be negative
-
-        # Convert calculated stats back to ₹ (INR) for local tracking
-        fee_paid_inr = total_fee_usdt * self.usd_inr_rate
-        slippage_drag_inr = slippage_drag_usdt * self.usd_inr_rate
-        net_pnl_inr = (usdt_net - trade_size_usdt) * self.usd_inr_rate
+        # Slippage calculations (Difference between L2 average prices and best top ticker prices in INR)
+        slippage_drag_inr = (self.trade_size * (ticker_gross - 1.0)) - (inr_received - self.trade_size)
+        slippage_drag_inr = max(0.0, slippage_drag_inr)
 
         # Print scan stats every 5 cycles
         if self.cycles_scanned % 5 == 0:
             logger.info(
-                f"L2 Scan #{self.cycles_scanned} | Trade Size: ₹{self.trade_size:,.0f} (${trade_size_usdt:,.1f}) | "
+                f"CoinSwitch Scan #{self.cycles_scanned} | Trade Size: ₹{self.trade_size:,.0f} | "
                 f"Ticker Spread: {ticker_spread_pct:+.4f}% | Actual L2 Net Spread: {net_spread_pct:+.4f}%"
             )
             logger.info(
-                f"  L2 Avg Executions -> L1 (BTC): ${l1_execution_price:,.2f} | L2 (ETH/BTC): {l2_execution_price:.5f} | "
-                f"L3 (ETH): ${l3_execution_price:,.2f}"
+                f"  L2 Avg Executions -> L1 (BTC/INR): ₹{l1_execution_price_inr:,.2f} | L2 (ETH/BTC): {l2_execution_price:.5f} | "
+                f"L3 (ETH/INR): ₹{l3_execution_price_inr:,.2f}"
             )
             
         # 3. Check Profit Trigger (Net Return exceeds trigger threshold)
         if net_spread_pct >= self.min_profit_pct:
-            logger.info(f"💥 L2 DEPTH ARBITRAGE TRIGGERED! Volume-Weighted Net Spread: {net_spread_pct:+.4f}%. Executing paper trades...")
-            self.add_trade(net_spread_pct, net_pnl_inr, fee_paid_inr, slippage_drag_inr)
+            logger.info(f"💥 COINSWITCH L2 TRIANGULAR ARBITRAGE TRIGGERED! Net Spread: {net_spread_pct:+.4f}%. Executing trade...")
+            self.add_trade(net_spread_pct, inr_net - self.trade_size, total_fee_inr, slippage_drag_inr)
             logger.info(
-                f"✓ Leg matching completed! Realized Net PnL: ₹{net_pnl_inr:+.2f} | "
-                f"Commission Fees Paid: ₹{fee_paid_inr:.2f} | Slippage Cost: ₹{slippage_drag_inr:.2f}"
+                f"✓ CoinSwitch cycle filled! Realized Net PnL: ₹{inr_net - self.trade_size:+.2f} | "
+                f"Taker Fees Deducted: ₹{total_fee_inr:.2f} | Slippage Cost: ₹{slippage_drag_inr:.2f}"
             )
             time.sleep(2)
 
 def run_l2_paper_bot():
-    logger.info("Initializing Live L2 Depth-Adjusted Rupees Arbitrage Daemon...")
+    logger.info("Initializing Live CoinSwitch INR Triangular Arbitrage Daemon...")
     
     exchange = None
     if ccxt:
@@ -432,9 +430,9 @@ def run_l2_paper_bot():
                 'options': {'defaultType': 'spot'}
             })
             exchange.load_markets()
-            logger.info("CCXT Spot client connected and markets loaded successfully.")
+            logger.info("CCXT Spot client connected successfully.")
         except Exception as e:
-            logger.warning(f"Failed to connect CCXT Spot client: {e}. Bot will operate in L2 simulation fallback.")
+            logger.warning(f"Failed to connect CCXT Spot: {e}. Bot will operate in L2 simulation fallback.")
             exchange = None
     else:
         logger.warning("CCXT missing. Bot will operate in L2 simulation fallback.")
@@ -444,7 +442,7 @@ def run_l2_paper_bot():
     bot.save_state()
     
     logger.info(
-        f"L2 Bot RUNNING | Capital: ₹{bot.capital:,.2f} | Size: ₹{bot.trade_size:,.2f} | "
+        f"CoinSwitch Bot RUNNING | Capital: ₹{bot.capital:,.2f} | Size: ₹{bot.trade_size:,.2f} | "
         f"USDT/INR: ₹{bot.usd_inr_rate:.2f} | Trigger: {bot.min_profit_pct}%"
     )
     
@@ -464,7 +462,7 @@ def run_l2_paper_bot():
                 
         # Check max trades limit
         if bot.limit_trades and bot.max_trades_limit > 0 and bot.total_trades >= bot.max_trades_limit:
-            logger.info(f"🎯 Max trades limit ({bot.max_trades_limit}) reached! Automatically stopping L2 bot...")
+            logger.info(f"🎯 Max trades limit ({bot.max_trades_limit}) reached! Automatically stopping CoinSwitch bot...")
             stop_reason_to_use = "Max Trades Reached"
             break
             
@@ -475,7 +473,7 @@ def run_l2_paper_bot():
     bot.status = "stopped"
     bot.archive_current_trial(stop_reason=stop_reason_to_use)
     bot.save_state()
-    logger.info("L2 paper trading daemon safely stopped.")
+    logger.info("CoinSwitch trading daemon safely stopped.")
 
 if __name__ == "__main__":
     run_l2_paper_bot()

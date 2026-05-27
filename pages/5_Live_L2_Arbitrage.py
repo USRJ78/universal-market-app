@@ -11,7 +11,7 @@ from datetime import datetime
 from live_l2_arb_bot import run_l2_paper_bot, STATE_FILE, LOG_FILE, EXCEL_FILE
 
 st.set_page_config(
-    page_title="L2 Rupees Spot Arbitrage Dashboard",
+    page_title="CoinSwitch INR spot Arbitrage Dashboard",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -54,8 +54,8 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-st.title("⚖️ Live L2 Depth-Adjusted Rupees Arbitrage")
-st.markdown("Monitor real-time volume-weighted triangular spreads directly against Binance Spot L2 Order Books. Test actual exchange slippage and taker fee scenarios scaled in **Indian Rupees (₹)**.")
+st.title("⚖️ CoinSwitch INR Triangular Arbitrage L2 Sandbox")
+st.markdown("Simulate high-fidelity triangular arbitrage directly against synthesized **CoinSwitch INR L2 Order Books** using actual flat CoinSwitch commission structures.")
 
 # ---------------------------------------------------------
 # GLOBAL STATE & THREAD MANAGEMENT
@@ -84,7 +84,7 @@ if state_data.get("status") != status_str:
         pass
 
 # Sidebar Configurations
-st.sidebar.header("⚙️ L2 Bot Configurations")
+st.sidebar.header("⚙️ CoinSwitch Configurations")
 
 starting_capital = st.sidebar.number_input(
     "Starting Capital (₹)",
@@ -93,7 +93,7 @@ starting_capital = st.sidebar.number_input(
     value=state_data.get("capital", 100000.0),
     step=1000.0,
     disabled=is_daemon_active,
-    help="Initial mock capital for this trial run."
+    help="Initial mock INR capital for this trial run."
 )
 
 allocated_trade_size = st.sidebar.slider(
@@ -103,7 +103,7 @@ allocated_trade_size = st.sidebar.slider(
     value=float(state_data.get("trade_size", 10000.0)),
     step=500.0,
     disabled=is_daemon_active,
-    help="INR value executed per triangular cycle."
+    help="Rupee value executed per triangular cycle."
 )
 
 usd_inr_rate = st.sidebar.number_input(
@@ -113,17 +113,17 @@ usd_inr_rate = st.sidebar.number_input(
     value=state_data.get("usd_inr_rate", 85.0),
     step=0.1,
     disabled=is_daemon_active,
-    help="USDT exchange rate used to walk USD-based live order books."
+    help="Exchange rate used to dynamically scale live global order books to INR."
 )
 
 taker_fee_rate = st.sidebar.slider(
-    "Taker Fee per Leg (%)",
+    "CoinSwitch Fee per Leg (%)",
     min_value=0.01,
     max_value=0.50,
-    value=float(state_data.get("taker_fee_pct", 0.10)),
+    value=float(state_data.get("taker_fee_pct", 0.20)),
     step=0.01,
     disabled=is_daemon_active,
-    help="Taker fee deducted per transaction leg (Binance Spot default: 0.10%)."
+    help="CoinSwitch standard trading taker fee per leg (Standard: 0.20%)."
 )
 
 min_profit_trigger = st.sidebar.slider(
@@ -179,17 +179,17 @@ col_ctrl, col_wallet = st.columns([1, 2])
 with col_ctrl:
     st.subheader("🕹️ Daemon Controller")
     if is_daemon_active:
-        st.markdown('<div class="status-active">🟢 L2 SCANNERS ACTIVE</div>', unsafe_allow_html=True)
-        if st.button("🔴 Stop L2 Paper Trader", use_container_width=True, type="primary"):
+        st.markdown('<div class="status-active">🟢 COINSWITCH DAEMON ACTIVE</div>', unsafe_allow_html=True)
+        if st.button("🔴 Stop CoinSwitch Bot", use_container_width=True, type="primary"):
             state_data["status"] = "stopped"
             with open(STATE_FILE, "w", encoding="utf-8") as f:
                 json.dump(state_data, f, indent=4)
-            st.toast("Halt command sent! L2 Daemon will exit on next cycle.")
+            st.toast("Halt command sent! CoinSwitch Daemon will exit on next cycle.")
             time.sleep(1.0)
             st.rerun()
     else:
-        st.markdown('<div class="status-stopped">🔴 BOT STOPPED / INACTIVE</div>', unsafe_allow_html=True)
-        if st.button("🟢 Start L2 Paper Trader", use_container_width=True):
+        st.markdown('<div class="status-stopped">🔴 DEACTIVATED / INACTIVE</div>', unsafe_allow_html=True)
+        if st.button("🟢 Start CoinSwitch Bot", use_container_width=True):
             if not os.path.exists(LOG_FILE):
                 with open(LOG_FILE, "w", encoding="utf-8") as f:
                     f.write("")
@@ -226,7 +226,7 @@ with col_ctrl:
             # Launch L2 background thread
             t = threading.Thread(target=run_l2_paper_bot, name="LiveL2ArbDaemon", daemon=True)
             t.start()
-            st.toast("L2 order book triangular arbitrage bot successfully launched!")
+            st.toast("CoinSwitch INR arbitrage bot successfully launched!")
             time.sleep(1.0)
             st.rerun()
             
@@ -238,7 +238,7 @@ with col_ctrl:
                 temp_bot.archive_current_trial(stop_reason="Manual Save & Reset")
                 temp_bot.reset_active_portfolio()
                 temp_bot.save_state()
-                st.toast("Current L2 run archived and active portfolio reset to zero!")
+                st.toast("Current CoinSwitch run archived and active portfolio reset to zero!")
                 time.sleep(1.0)
                 st.rerun()
 
@@ -262,9 +262,9 @@ with col_wallet:
             <div style="font-size: 10px; color: #64748b; margin-top: 4px;">Liquid INR</div>
         </div>
         <div style="flex: 1; min-width: 140px; background: rgba(30, 41, 59, 0.45); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 12px; text-align: center; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);">
-            <div style="font-size: 11px; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Exchange Fees</div>
+            <div style="font-size: 11px; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">CoinSwitch Fees</div>
             <div style="font-size: 18px; font-weight: 700; color: #f87171; margin-top: 6px;">₹{total_fees_paid:,.2f}</div>
-            <div style="font-size: 10px; color: #64748b; margin-top: 4px;">{taker_fee_rate * 3:.2f}% Taker Commission</div>
+            <div style="font-size: 10px; color: #64748b; margin-top: 4px;">{taker_fee_rate * 3:.2f}% Flat Commission</div>
         </div>
         <div style="flex: 1; min-width: 140px; background: rgba(30, 41, 59, 0.45); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 12px; text-align: center; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);">
             <div style="font-size: 11px; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Slippage Drag</div>
@@ -287,7 +287,7 @@ with col_wallet:
 st.markdown("---")
 
 # Middle Panel: L2 depth monitor
-st.subheader("⚡ Real-Time L2 Order Book Depth Walk (Binance Spot)")
+st.subheader("⚡ CoinSwitch Synthesized L2 Order Book Depth Walk")
 
 # Extract prices from logs or mock
 p_btc, p_eth_btc, p_eth = 0.0, 0.0, 0.0
@@ -299,33 +299,33 @@ if is_daemon_active and os.path.exists(LOG_FILE):
             lines = f.readlines()
         for l in reversed(lines[-20:]):
             if "Actual L2 Net Spread" in l:
-                # Format: L2 Scan #X | Trade Size: ₹X ($X) | Ticker Spread: X% | Actual L2 Net Spread: X%
+                # Format: CoinSwitch Scan #X | Trade Size: ₹X | Ticker Spread: X% | Actual L2 Net Spread: X%
                 parts = l.split("|")
                 ticker_spread = float(parts[2].split(":")[1].replace("%", "").strip())
                 implied_l2_spread = float(parts[3].split(":")[1].replace("%", "").strip())
                 
-                # Fetch next line containing average price executions
-                # Format: L2 Avg Executions -> L1 (BTC): $X | L2 (ETH/BTC): X | L3 (ETH): $X
+                # Format: L2 Avg Executions -> L1 (BTC/INR): ₹X | L2 (ETH/BTC): X | L3 (ETH/INR): ₹X
                 idx = lines.index(l)
                 if idx + 1 < len(lines):
                     exec_line = lines[idx + 1]
                     exec_parts = exec_line.split("|")
-                    p_btc = float(exec_parts[0].split("$")[1].replace(",", "").strip())
+                    p_btc = float(exec_parts[0].split("₹")[1].replace(",", "").strip())
                     p_eth_btc = float(exec_parts[1].split(":")[1].strip())
-                    p_eth = float(exec_parts[2].split("$")[1].replace(",", "").strip())
+                    p_eth = float(exec_parts[2].split("₹")[1].replace(",", "").strip())
                 break
     except Exception:
         pass
 
 if p_btc == 0.0:
-    # High-fidelity mock baseline calculations
     import numpy as np
-    p_btc = 68420.0 + np.random.normal(0, 5)
+    # scaled mock prices representing INR order book executions directly on screen!
+    base_btc = 68420.0 + np.random.normal(0, 5)
+    p_btc = base_btc * usd_inr_rate
     p_eth_btc = 0.0525 + np.random.normal(0, 0.00003)
-    p_eth = p_btc * p_eth_btc + np.random.normal(-0.1, 0.05)
+    p_eth = (base_btc * p_eth_btc + np.random.normal(-0.1, 0.05)) * usd_inr_rate
+    
     # Average L2 price accounts for trade-size slippage
-    # Larger size = worse fill prices
-    size_slip_factor = (allocated_trade_size / usd_inr_rate) * 0.000002
+    size_slip_factor = (allocated_trade_size / 85000.0) * 0.00005
     p_btc_l2 = p_btc * (1.0 + size_slip_factor)
     p_eth_btc_l2 = p_eth_btc * (1.0 + size_slip_factor)
     p_eth_l2 = p_eth * (1.0 - size_slip_factor)
@@ -334,7 +334,6 @@ if p_btc == 0.0:
     ticker_spread_pct = (ticker_gross - 1.0) * 100.0
     
     l2_gross = (1.0 / p_btc_l2) * (1.0 / p_eth_btc_l2) * p_eth_l2
-    # Subtract 3 taker fees
     fee_rate = taker_fee_rate / 100.0
     l2_net = l2_gross * ((1.0 - fee_rate) ** 3)
     implied_l2_spread = (l2_net - 1.0) * 100.0
@@ -345,11 +344,11 @@ else:
 
 col_t1, col_t2, col_t3, col_t4 = st.columns(4)
 with col_t1:
-    st.metric("Avg L1 Match (BTC/USDT)", f"${p_btc:,.2f}")
+    st.metric("Avg L1 Match (BTC/INR)", f"₹{p_btc:,.2f}")
 with col_t2:
     st.metric("Avg L2 Match (ETH/BTC)", f"{p_eth_btc:.5f}")
 with col_t3:
-    st.metric("Avg L3 Match (ETH/USDT)", f"${p_eth:,.2f}")
+    st.metric("Avg L3 Match (ETH/INR)", f"₹{p_eth:,.2f}")
 with col_t4:
     st.metric("Volume-Weighted Net Spread", f"{implied_l2_spread:+.4f}%",
               delta=f"{implied_l2_spread - min_profit_trigger:+.4f}% vs trigger",
@@ -360,33 +359,33 @@ st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
 comparison_data = [
     {
         "Metrics": "Gross Implied Spread (%)",
-        "Toplevel Ticker (Best Bid/Ask)": f"{ticker_spread + (taker_fee_rate * 3):+.4f}%",
+        "Top-level Ticker Spread": f"{ticker_spread + (taker_fee_rate * 3):+.4f}%",
         "Volume-Weighted L2 Depth": f"{implied_l2_spread + (taker_fee_rate * 3):+.4f}%",
         "Slippage / Commission Drag": f"-{((ticker_spread) - implied_l2_spread):.4f}%"
     },
     {
-        "Metrics": "Exchange Fees (%)",
-        "Toplevel Ticker (Best Bid/Ask)": "0.00% (assumed zero)",
+        "Metrics": "CoinSwitch Trading Fees (%)",
+        "Top-level Ticker Spread": "0.00% (assumed zero)",
         "Volume-Weighted L2 Depth": f"{taker_fee_rate * 3:.2f}%",
         "Slippage / Commission Drag": f"-{taker_fee_rate * 3:.2f}%"
     },
     {
-        "Metrics": "Net Trading Spread (%)",
-        "Toplevel Ticker (Best Bid/Ask)": f"{ticker_spread + (taker_fee_rate * 3):+.4f}%",
+        "Metrics": "Net Arbitrage Spread (%)",
+        "Top-level Ticker Spread": f"{ticker_spread + (taker_fee_rate * 3):+.4f}%",
         "Volume-Weighted L2 Depth": f"{implied_l2_spread:+.4f}%",
         "Slippage / Commission Drag": f"-{((ticker_spread + (taker_fee_rate * 3)) - implied_l2_spread):.4f}%"
     }
 ]
 st.table(pd.DataFrame(comparison_data).set_index("Metrics"))
-st.caption(f"Slippage and transaction fees represent actual exchange drag for executing an INR size of ₹{allocated_trade_size:,.0f} ($ {allocated_trade_size/usd_inr_rate:,.2f} USDT).")
+st.caption(f"Slippage and transaction fees represent actual exchange drag for executing an INR size of ₹{allocated_trade_size:,.0f} directly on CoinSwitch INR Order Books.")
 
 st.markdown("---")
 
 # Performance Curves in Rupees
-st.subheader("📈 L2 Paper Trading Realized Net PnL vs. Exchange Fee Curve (₹)")
+st.subheader("📈 Realized Net PnL vs. CoinSwitch Taker Fee Curve (₹)")
 trades_list = state_data.get("trades", [])
 if not trades_list:
-    st.info("Performance curve in Rupees will populate here once L2 paper trades are executed.")
+    st.info("Performance curve in Rupees will populate here once CoinSwitch paper trades are executed.")
 else:
     try:
         chart_df = pd.DataFrame(trades_list)
@@ -411,7 +410,7 @@ else:
             x=chart_df['timestamp'],
             y=chart_df['cumulative_fee'],
             mode='lines+markers',
-            name='Cumulative Exchange Fees (₹)',
+            name='Cumulative CoinSwitch Fees (₹)',
             line=dict(color='#e74c3c', width=2, dash='dash'),
             marker=dict(size=4, color='#c62828')
         ))
@@ -436,7 +435,7 @@ st.markdown("---")
 col_log, col_ledger = st.columns([1, 1])
 
 with col_log:
-    st.subheader("🖥️ Live L2 Daemon Running Logs (l2_arb_bot.log)")
+    st.subheader("🖥️ CoinSwitch Live Running Logs (l2_arb_bot.log)")
     log_text = ""
     if os.path.exists(LOG_FILE):
         try:
@@ -446,7 +445,7 @@ with col_log:
         except Exception as e:
             log_text = f"Error reading logs: {e}"
     else:
-        log_text = "L2 Bot inactive. Terminal logs will appear here once started."
+        log_text = "CoinSwitch Bot inactive. Terminal logs will appear here once started."
         
     st.markdown(f'<div class="terminal-box">{log_text.replace(chr(10), "<br>")}</div>', unsafe_allow_html=True)
     
@@ -457,10 +456,10 @@ with col_log:
         st.rerun()
 
 with col_ledger:
-    st.subheader("📑 Completed L2 Depth Arbitrage Ledger")
+    st.subheader("📑 Completed CoinSwitch Arbitrage Ledger")
     
     if not trades_list:
-        st.info("No L2 depth arbitrage trades executed yet. Walk the order books to scan...")
+        st.info("No arbitrage trades executed yet. Walk the order books to scan...")
     else:
         trades_df = pd.DataFrame(trades_list)
         # Columns: timestamp, cycle, expected_return, profit, fee, slippage, balance
@@ -471,7 +470,7 @@ with col_ledger:
         if os.path.exists(EXCEL_FILE):
             with open(EXCEL_FILE, "rb") as file:
                 st.download_button(
-                    label="📥 Download Excel L2 Audit Ledger",
+                    label="📥 Download Excel CoinSwitch Ledger",
                     data=file,
                     file_name="live_l2_execution_log.xlsx",
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
@@ -482,7 +481,7 @@ st.markdown("---")
 st.subheader("📜 Historical Trials Journal (₹)")
 trials_list = state_data.get("trials", [])
 if not trials_list:
-    st.info("No completed L2 trials logged in database yet. Set a trade limit or start & stop the L2 bot to create a trial!")
+    st.info("No completed CoinSwitch trials logged in database yet. Set a trade limit or start & stop the bot to create a trial!")
 else:
     trials_df = pd.DataFrame(trials_list)
     cols_display = {
@@ -507,6 +506,6 @@ else:
         state_data["trials"] = []
         with open(STATE_FILE, "w", encoding="utf-8") as f:
             json.dump(state_data, f, indent=4)
-        st.toast("L2 Trials database cleanly wiped!")
+        st.toast("Trials database cleanly wiped!")
         time.sleep(1.0)
         st.rerun()
