@@ -182,17 +182,20 @@ with col_wallet:
     cash_bal = state_data.get("balance_usdt", starting_capital)
     total_trades = state_data.get("total_trades", 0)
     total_yield = state_data.get("total_yield", 0.0)
-    active_positions_count = len(state_data.get("positions", []))
-    
-    # Calculate average active APR
+    total_fees_paid = state_data.get("total_fees_paid", 0.0)
     positions_list = state_data.get("positions", [])
-    avg_apr = sum(p["apr"] for p in positions_list) / len(positions_list) if positions_list else 0.0
+    active_positions_count = len(positions_list)
+    invested_margin = active_positions_count * position_allocation
     
+    # Total Portfolio Equity = Cash Balance + Invested Capital
+    total_equity = cash_bal + invested_margin
+    
+    # Premium, crystal-clear breakdown
     m1, m2, m3, m4 = st.columns(4)
-    m1.metric("Cash Balance (USDT)", f"${cash_bal:,.2f}")
-    m2.metric("Positions Held", f"{active_positions_count}")
-    m3.metric("Accrued Yield Captured", f"${total_yield:.6f}")
-    m4.metric("Avg Portfolio APR", f"{avg_apr:.2f}%", f"{total_trades} Completed Trades")
+    m1.metric("Net Account Equity", f"${total_equity:,.4f}", help="Total portfolio liquidation value: Cash + Invested Capital.")
+    m2.metric("Liquid Cash (USDT)", f"${cash_bal:,.2f}", help="Unallocated, ready-to-invest cash balance.")
+    m3.metric("Invested Capital", f"${invested_margin:,.2f}", f"{active_positions_count} Active Positions", help="Simulated capital currently locked in delta-neutral positions.")
+    m4.metric("Accrued Yield Captured", f"${total_yield:.6f}", f"${total_fees_paid:.4f} Total Fees", help="Dynamic real-time funding fees harvested vs. exchange commission fees paid.")
 
 st.markdown("---")
 
@@ -263,6 +266,56 @@ with col_positions:
 
 st.markdown("---")
 
+# Performance chart and cumulative fee curves
+st.subheader("📈 Paper Trading Net Profit & Exchange Fees Curve")
+trades_list = state_data.get("trades", [])
+if not trades_list:
+    st.info("Performance curve will populate here once paper trades are executed.")
+else:
+    try:
+        chart_df = pd.DataFrame(trades_list)
+        chart_df['cumulative_profit'] = chart_df['profit'].cumsum()
+        chart_df['cumulative_fee'] = chart_df['fee'].cumsum()
+        
+        import plotly.graph_objects as go
+        fig = go.Figure()
+        
+        # Net Profit Line
+        fig.add_trace(go.Scatter(
+            x=chart_df['timestamp'],
+            y=chart_df['cumulative_profit'],
+            mode='lines+markers',
+            name='Net Realized PnL ($)',
+            line=dict(color='#2ecc71', width=3),
+            marker=dict(size=6, color='#2e7d32')
+        ))
+        
+        # Cumulative Fees Line
+        fig.add_trace(go.Scatter(
+            x=chart_df['timestamp'],
+            y=chart_df['cumulative_fee'],
+            mode='lines+markers',
+            name='Cumulative Exchange Fees ($)',
+            line=dict(color='#e74c3c', width=2, dash='dash'),
+            marker=dict(size=4, color='#c62828')
+        ))
+        
+        fig.update_layout(
+            template="plotly_dark",
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
+            margin=dict(l=20, r=20, t=10, b=10),
+            height=250,
+            xaxis=dict(showgrid=False, title="Execution Timestamp"),
+            yaxis=dict(gridcolor="rgba(255,255,255,0.05)", title="Value ($)"),
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+        )
+        st.plotly_chart(fig, use_container_width=True)
+    except Exception as e:
+        st.warning(f"Error rendering performance chart: {e}")
+
+st.markdown("---")
+
 # Bottom Panel: Scrolling Terminal Logs & Ledger
 col_log, col_ledger = st.columns([1, 1])
 
@@ -290,15 +343,15 @@ with col_log:
 with col_ledger:
     st.subheader("📑 Completed Yield Arbitrage Ledger")
     
-    trades_list = state_data.get("trades", [])
     if not trades_list:
         st.info("No yield arbitrage cycles completed yet.")
     else:
         trades_df = pd.DataFrame(trades_list)
-        trades_df.columns = ["Time", "Asset", "Action", "Allocated Size ($)", "Captured APR (%)", "Net Profit ($)"]
+        # Rename columns to match new 7-column structure containing fees!
+        trades_df.columns = ["Time", "Asset", "Action", "Allocated Size ($)", "Captured APR (%)", "Net Profit ($)", "Fee Paid ($)"]
         st.dataframe(trades_df.sort_index(ascending=False), use_container_width=True)
         
-        # Download Excel audit button
+        # Download Excel audit workbook button
         if os.path.exists(EXCEL_FILE):
             with open(EXCEL_FILE, "rb") as file:
                 st.download_button(

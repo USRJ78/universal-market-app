@@ -175,12 +175,14 @@ with col_wallet:
     total_profit = state_data.get("total_profit", 0.0)
     win_rate = state_data.get("win_rate", 0.0)
     cycles_scanned = state_data.get("cycles_scanned", 0)
+    total_fees_paid = state_data.get("total_fees_paid", 0.0)
     
+    # Premium, crystal-clear breakdown
     m1, m2, m3, m4 = st.columns(4)
-    m1.metric("Cash Balance (USDT)", f"${cash_bal:,.2f}")
-    m2.metric("Cycles Scanned", f"{cycles_scanned}")
-    m3.metric("Paper Net Profit", f"${total_profit:+.4f}")
-    m4.metric("Win Rate", f"{win_rate:.2f}%", f"{total_trades} Trades")
+    m1.metric("Cash Balance (USDT)", f"${cash_bal:,.2f}", help="Total liquid capital in paper wallet.")
+    m2.metric("Gross Profit Captured", f"${(total_profit + total_fees_paid):+,.4f}", help="Total gross revenue before simulated fees.")
+    m3.metric("Total Fees & Drag", f"${total_fees_paid:,.4f}", help="Simulated 0.21% execution fee and slippage drag paid.")
+    m4.metric("Net Realized Profit", f"${total_profit:+.4f}", f"{win_rate:.1f}% Win Rate", help="Gross Profit minus Total Fees & Drag.")
 
 st.markdown("---")
 
@@ -234,6 +236,56 @@ with col_t4:
 
 st.markdown("---")
 
+# Performance chart and cumulative fee curves
+st.subheader("📈 Paper Trading Profit/Loss & Fee Drag Curve")
+trades_list = state_data.get("trades", [])
+if not trades_list:
+    st.info("Performance curve will populate here once paper trades are executed.")
+else:
+    try:
+        chart_df = pd.DataFrame(trades_list)
+        chart_df['cumulative_profit'] = chart_df['profit'].cumsum()
+        chart_df['cumulative_fee'] = chart_df['fee'].cumsum()
+        
+        import plotly.graph_objects as go
+        fig = go.Figure()
+        
+        # Net Profit Line
+        fig.add_trace(go.Scatter(
+            x=chart_df['timestamp'],
+            y=chart_df['cumulative_profit'],
+            mode='lines+markers',
+            name='Net Realized PnL ($)',
+            line=dict(color='#2ecc71', width=3),
+            marker=dict(size=6, color='#2e7d32')
+        ))
+        
+        # Cumulative Fees Line
+        fig.add_trace(go.Scatter(
+            x=chart_df['timestamp'],
+            y=chart_df['cumulative_fee'],
+            mode='lines+markers',
+            name='Cumulative Fees & Drag ($)',
+            line=dict(color='#e74c3c', width=2, dash='dash'),
+            marker=dict(size=4, color='#c62828')
+        ))
+        
+        fig.update_layout(
+            template="plotly_dark",
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
+            margin=dict(l=20, r=20, t=10, b=10),
+            height=250,
+            xaxis=dict(showgrid=False, title="Execution Timestamp"),
+            yaxis=dict(gridcolor="rgba(255,255,255,0.05)", title="Value ($)"),
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+        )
+        st.plotly_chart(fig, use_container_width=True)
+    except Exception as e:
+        st.warning(f"Error rendering performance chart: {e}")
+
+st.markdown("---")
+
 # Bottom Panel: Scrolling Terminal Logs & Ledger
 col_log, col_ledger = st.columns([1, 1])
 
@@ -261,13 +313,12 @@ with col_log:
 with col_ledger:
     st.subheader("📑 Completed Triangular Arbitrage Ledger")
     
-    trades_list = state_data.get("trades", [])
     if not trades_list:
         st.info("No arbitrage cycles executed yet. Scanning markets...")
     else:
         trades_df = pd.DataFrame(trades_list)
-        # Rename columns for visual premium styling
-        trades_df.columns = ["Time", "Scan Cycle", "Expected Return (%)", "Realized Profit ($)", "Mock Wallet USDT"]
+        # Rename columns to match new 6-column structure containing fees!
+        trades_df.columns = ["Time", "Scan Cycle", "Expected Return (%)", "Net Profit ($)", "Fee Paid ($)", "USDT Balance"]
         st.dataframe(trades_df.sort_index(ascending=False), use_container_width=True)
         
         # Download ledger button

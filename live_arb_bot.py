@@ -50,6 +50,9 @@ class LiveArbBot:
         self.trades = []
         self.status = "stopped"
         
+        # Cumulative simulated fees & slippage paid
+        self.total_fees_paid = 0.0
+        
         # Load existing state if available
         self.load_state()
 
@@ -68,6 +71,7 @@ class LiveArbBot:
                 self.cycles_scanned = state.get("cycles_scanned", 0)
                 self.trades = state.get("trades", [])
                 self.status = state.get("status", "stopped")
+                self.total_fees_paid = state.get("total_fees_paid", 0.0)
                 logger.info("Bot state successfully loaded from JSON.")
             except Exception as e:
                 logger.error(f"Error loading bot state: {e}")
@@ -84,6 +88,7 @@ class LiveArbBot:
             "cycles_scanned": self.cycles_scanned,
             "trades": self.trades[-50:], # Cache only last 50 trades in JSON for speed
             "status": self.status,
+            "total_fees_paid": self.total_fees_paid,
             "last_updated": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         }
         try:
@@ -92,13 +97,14 @@ class LiveArbBot:
         except Exception as e:
             logger.error(f"Error saving bot state: {e}")
 
-    def add_trade(self, expected_return, net_pnl):
+    def add_trade(self, expected_return, net_pnl, fee_paid=0.0):
         self.total_trades += 1
         self.total_profit += net_pnl
         self.balance_usdt += net_pnl
+        self.total_fees_paid = getattr(self, "total_fees_paid", 0.0) + fee_paid
         
         # Win rate recalculation
-        winning_trades = len([t for t in self.trades if t["profit"] > 0])
+        winning_trades = len([t for t in self.trades if t.get("profit", 0.0) > 0])
         if net_pnl > 0:
             winning_trades += 1
         self.win_rate = (winning_trades / self.total_trades) * 100.0
@@ -108,6 +114,7 @@ class LiveArbBot:
             "cycle": self.cycles_scanned,
             "expected_return": round((expected_return - 1.0) * 100.0, 4), # return %
             "profit": round(net_pnl, 4),
+            "fee": round(fee_paid, 4),
             "balance": round(self.balance_usdt, 2)
         }
         self.trades.append(trade_record)
@@ -186,8 +193,9 @@ class LiveArbBot:
                 # Executed Return
                 net_multiple = gross_multiple - total_drag
                 net_pnl = self.trade_size * (net_multiple - 1.0)
+                fee_paid = self.trade_size * total_drag
                 
-                self.add_trade(gross_multiple, net_pnl)
+                self.add_trade(gross_multiple, net_pnl, fee_paid)
                 logger.info(f"✓ Cycle complete! Realized Paper PnL: ${net_pnl:+.4f} (drag simulated: {total_drag*100:.3f}%)")
                 
                 # Let markets settle

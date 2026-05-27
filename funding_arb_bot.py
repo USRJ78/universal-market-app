@@ -75,6 +75,7 @@ class FundingArbBot:
                 self.min_apr_trigger = state.get("min_apr_trigger", 8.0)
                 self.stop_apr_trigger = state.get("stop_apr_trigger", 2.0)
                 self.position_allocation = state.get("position_allocation", 250.0)
+                self.total_fees_paid = state.get("total_fees_paid", 0.0)
                 logger.info("Funding bot state successfully loaded from JSON.")
             except Exception as e:
                 logger.error(f"Error loading bot state: {e}")
@@ -92,6 +93,7 @@ class FundingArbBot:
             "min_apr_trigger": self.min_apr_trigger,
             "stop_apr_trigger": self.stop_apr_trigger,
             "position_allocation": self.position_allocation,
+            "total_fees_paid": getattr(self, "total_fees_paid", 0.0),
             "last_updated": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         }
         try:
@@ -101,12 +103,17 @@ class FundingArbBot:
             logger.error(f"Error saving bot state: {e}")
 
     def open_position(self, asset, spot_price, perp_price, apr):
-        # Check if cash available
-        if self.balance_usdt < self.position_allocation:
-            logger.warning(f"Insufficient cash to allocate position in {asset}. Cash: ${self.balance_usdt:.2f}")
+        # Calculate entry transaction fee (0.075% total = 0.1% spot fee + 0.05% perp fee split on half-allocations)
+        # Spot is half of position size, Perp is half of position size
+        open_fee = self.position_allocation * 0.00075
+        
+        # Check if cash available (including allocation + fee)
+        if self.balance_usdt < (self.position_allocation + open_fee):
+            logger.warning(f"Insufficient cash to allocate position in {asset} + fee. Cash: ${self.balance_usdt:.2f}")
             return
             
-        self.balance_usdt -= self.position_allocation
+        self.balance_usdt -= (self.position_allocation + open_fee)
+        self.total_fees_paid = getattr(self, "total_fees_paid", 0.0) + open_fee
         self.total_trades += 1
         
         pos = {
@@ -126,26 +133,30 @@ class FundingArbBot:
             "action": "OPEN",
             "size": float(self.position_allocation),
             "apr": float(apr),
-            "profit": 0.0
+            "profit": 0.0,
+            "fee": round(open_fee, 4)
         }
         self.trades.append(trade)
-        logger.info(f"⚡ OPENED DELTA-NEUTRAL POSITION on {asset} | Size: ${self.position_allocation:.2f} | Entry Spot: ${spot_price:,.2f} | Entry Perp: ${perp_price:,.2f} | APR: {apr:.2f}%")
+        logger.info(f"⚡ OPENED DELTA-NEUTRAL POSITION on {asset} | Size: ${self.position_allocation:.2f} | Entry Spot: ${spot_price:,.2f} | Entry Perp: ${perp_price:,.2f} | APR: {apr:.2f}% | Fee: ${open_fee:.4f}")
         self.log_to_excel()
 
     def close_position(self, idx, current_spot, current_perp):
         pos = self.positions.pop(idx)
         final_yield = pos["yield_captured"]
         
+        # Calculate exit commission fee
+        close_fee = pos["size"] * 0.00075
+        self.total_fees_paid = getattr(self, "total_fees_paid", 0.0) + close_fee
+        
         # Calculate Spot vs Perp entry-exit basis difference (adds/subtracts slightly to profit)
-        # Entry spread: Perp_entry - Spot_entry
-        # Exit spread: Perp_exit - Spot_exit
         entry_spread_pct = (pos["perp_price"] - pos["spot_price"]) / pos["spot_price"]
         exit_spread_pct = (current_perp - current_spot) / current_spot
         basis_profit = pos["size"] * (entry_spread_pct - exit_spread_pct)
         
         # Net Trade Profit = Accrued Yield + Basis Profit
         net_profit = final_yield + basis_profit
-        self.balance_usdt += pos["size"] + net_profit
+        # Deduct exit fee upon liquidation
+        self.balance_usdt += pos["size"] + net_profit - close_fee
         
         trade = {
             "timestamp": datetime.now().strftime("%H:%M:%S"),
@@ -153,10 +164,11 @@ class FundingArbBot:
             "action": "CLOSE",
             "size": pos["size"],
             "apr": pos["apr"],
-            "profit": round(net_profit, 4)
+            "profit": round(net_profit, 4),
+            "fee": round(close_fee, 4)
         }
         self.trades.append(trade)
-        logger.info(f"🛡️ CLOSED DELTA-NEUTRAL POSITION on {pos['asset']} | Realized Yield: ${final_yield:+.4f} | Basis Profit: ${basis_profit:+.4f} | Net Trade Profit: ${net_profit:+.4f}")
+        logger.info(f"🛡️ CLOSED DELTA-NEUTRAL POSITION on {pos['asset']} | Realized Yield: ${final_yield:+.4f} | Basis Profit: ${basis_profit:+.4f} | Net Trade Profit: ${net_profit:+.4f} | Fee Paid: ${close_fee:.4f}")
         self.log_to_excel()
 
     def log_to_excel(self):
