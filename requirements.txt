@@ -7,3 +7,4 @@ plotly
 seaborn
 requests
 openpyxl
+ccxt
