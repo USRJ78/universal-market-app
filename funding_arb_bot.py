@@ -377,12 +377,11 @@ class FundingArbBot:
                 # Update APR in position dynamically
                 pos["apr"] = live_data[asset]["apr"]
 
-        # 3. Print operational status every 5 cycles
-        if self.cycles_scanned % 5 == 0:
-            active_assets = [p["asset"] for p in self.positions]
-            logger.info(f"Scan Loop #{self.cycles_scanned} | Active Positions: {active_assets} | Cumulative Yield: ${self.total_yield:.6f}")
-            for asset, d in live_data.items():
-                logger.info(f"  · {asset:<4} | Spot: ${d['spot']:,.2f} | Perp: ${d['perp']:,.2f} | Funding APR: {d['apr']:.2f}%")
+        # Print operational status on every cycle for live terminal transparency in sandbox mode
+        active_assets = [p["asset"] for p in self.positions]
+        logger.info(f"Scan Loop #{self.cycles_scanned} | Active Positions: {active_assets} | Cumulative Yield: ${self.total_yield:.6f}")
+        for asset, d in live_data.items():
+            logger.info(f"  · {asset:<4} | Spot: ${d['spot']:,.2f} | Perp: ${d['perp']:,.2f} | Funding APR: {d['apr']:.2f}%")
 
         # 4. Position Management Layer (Check Open/Close Triggers)
         # Check unwind first (close if APR falls below threshold)
@@ -448,8 +447,13 @@ def run_funding_bot():
             stop_reason_to_use = "Max Trades Reached"
             break
             
-        bot.run_one_cycle(exchange)
-        bot.save_state()
+        try:
+            bot.run_one_cycle(exchange)
+            bot.save_state()
+        except Exception as cycle_err:
+            logger.error(f"❌ Error encountered in scan cycle: {cycle_err}")
+            time.sleep(5.0)
+            
         time.sleep(2.0) # 2 seconds scan refresh rate
         
     bot.status = "stopped"

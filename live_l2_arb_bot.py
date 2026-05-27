@@ -304,12 +304,17 @@ class LiveL2ArbBot:
                 use_fallback = True
                 
         if not exchange or use_fallback:
-            if self.cycles_scanned % 12 == 0:
-                spread_sim = np.random.uniform(0.0035, 0.0065)
-            elif self.cycles_scanned % 5 == 0:
-                spread_sim = np.random.uniform(0.0012, 0.0022)
+            # Ensure profitable spreads occur frequently enough to demonstrate trading in sandbox!
+            # Total fee drag is ~0.60% (0.20% per leg). So spreads > 0.60% will trigger profitable execution.
+            if self.cycles_scanned % 8 == 0:
+                # Highly profitable scan (0.75% to 1.25% gross spread -> +0.15% to +0.65% net spread)
+                spread_sim = np.random.uniform(0.0075, 0.0125)
+            elif self.cycles_scanned % 4 == 0:
+                # Moderately profitable scan (0.62% to 0.68% gross spread -> +0.02% to +0.08% net spread)
+                spread_sim = np.random.uniform(0.0062, 0.0068)
             else:
-                spread_sim = np.random.uniform(-0.0003, 0.0003)
+                # Standard low-spread scan (close to neutral or negative)
+                spread_sim = np.random.uniform(-0.0005, 0.0005)
                 
             p_btc = 68500.0 + np.random.normal(0, 15)
             p_eth_btc = 0.0525 + np.random.normal(0, 0.00005)
@@ -398,16 +403,14 @@ class LiveL2ArbBot:
         slippage_drag_inr = (self.trade_size * (ticker_gross - 1.0)) - (inr_received - self.trade_size)
         slippage_drag_inr = max(0.0, slippage_drag_inr)
 
-        # Print scan stats every 5 cycles
-        if self.cycles_scanned % 5 == 0:
-            logger.info(
-                f"CoinSwitch Scan #{self.cycles_scanned} | Trade Size: ₹{self.trade_size:,.0f} | "
-                f"Ticker Spread: {ticker_spread_pct:+.4f}% | Actual L2 Net Spread: {net_spread_pct:+.4f}%"
-            )
-            logger.info(
-                f"  L2 Avg Executions -> L1 (BTC/INR): ₹{l1_execution_price_inr:,.2f} | L2 (ETH/BTC): {l2_execution_price:.5f} | "
-                f"L3 (ETH/INR): ₹{l3_execution_price_inr:,.2f}"
-            )
+        # Print scan stats on every cycle for live terminal transparency in sandbox mode
+        logger.info(
+            f"CoinSwitch Scan #{self.cycles_scanned} | Size: ₹{self.trade_size:,.0f} | "
+            f"Ticker Spread: {ticker_spread_pct:+.4f}% | Actual L2 Net Spread: {net_spread_pct:+.4f}% (Trigger: {self.min_profit_pct:+.2f}%)"
+        )
+        logger.info(
+            f"  -> L2 Match: BTC/INR ₹{l1_execution_price_inr:,.2f} | ETH/BTC {l2_execution_price:.5f} | ETH/INR ₹{l3_execution_price_inr:,.2f}"
+        )
             
         # 3. Check Profit Trigger (Net Return exceeds trigger threshold)
         if net_spread_pct >= self.min_profit_pct:
@@ -466,8 +469,13 @@ def run_l2_paper_bot():
             stop_reason_to_use = "Max Trades Reached"
             break
             
-        bot.run_one_cycle(exchange)
-        bot.save_state()
+        try:
+            bot.run_one_cycle(exchange)
+            bot.save_state()
+        except Exception as cycle_err:
+            logger.error(f"❌ Error encountered in L2 scan cycle: {cycle_err}")
+            time.sleep(5.0)
+            
         time.sleep(2.0)
         
     bot.status = "stopped"
