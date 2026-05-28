@@ -136,11 +136,14 @@ limit_trades = st.sidebar.checkbox(
 
 max_trades_limit = 0
 if limit_trades:
+    initial_limit_val = int(state_data.get("max_trades_limit", 5))
+    if initial_limit_val < 1:
+        initial_limit_val = 5
     max_trades_limit = st.sidebar.number_input(
         "Max Trades Limit",
         min_value=1,
         max_value=1000,
-        value=int(state_data.get("max_trades_limit", 5)),
+        value=initial_limit_val,
         step=1,
         disabled=is_daemon_active,
         help="The bot will halt once it executes this many trades."
