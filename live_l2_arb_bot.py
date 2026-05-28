@@ -363,7 +363,7 @@ class LiveL2ArbBot:
                 logger.warning(f"⚠️ CoinSwitch Live CCXT L2 Order Book fetch failed: {ce}. Geoblock or API rate limit active. Falling back to L2 simulation...")
                 use_fallback = True
                 
-        if not exchange or use_fallback:
+        if not exchange or use_fallback or getattr(self, "simulate_mock_spreads", False):
             # Ensure profitable spreads occur frequently enough to demonstrate trading in sandbox!
             # Total fee drag is ~0.60% (0.20% per leg). So spreads > 0.60% will trigger profitable execution.
             if self.cycles_scanned % 8 == 0:
