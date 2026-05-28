@@ -70,6 +70,8 @@ if os.path.exists(STATE_FILE):
     except Exception:
         pass
 
+usd_inr_rate = float(state_data.get("usd_inr_rate", 85.0))
+
 # Live Account Mode Prominent Safety Banner
 if state_data.get("execution_mode") == "live":
     st.warning("⚠️ **WARNING: Live Account Mode Active!** The bot is authorized to execute real market spot trades on your Binance account using available USDT. Please ensure you have sufficient USDT balance and understand the risks.")
@@ -91,6 +93,10 @@ if state_data.get("status") != status_str:
 api_key = st.secrets.get("BINANCE_API_KEY", "")
 if not api_key or "paste_your" in api_key:
     api_key = st.secrets.get("binance", {}).get("api_key", "")
+
+api_secret = st.secrets.get("BINANCE_API_SECRET", "")
+if not api_secret or "paste_your" in api_secret:
+    api_secret = st.secrets.get("binance", {}).get("api_secret", "")
     
 has_credentials = bool(api_key and "paste_your" not in api_key)
 
