@@ -163,15 +163,8 @@ usd_inr_rate = st.sidebar.number_input(
     help="Exchange rate used to dynamically scale live global order books to INR."
 )
 
-taker_fee_rate = st.sidebar.slider(
-    "Taker Fee per Leg (%)",
-    min_value=0.00,
-    max_value=0.50,
-    value=float(state_data.get("taker_fee_pct", 0.10)),
-    step=0.005,
-    disabled=is_daemon_active,
-    help="Specify the taker fee rate per leg. Standard Binance Spot is 0.10%. If you pay in BNB, set this to 0.075%. In paper trading, this models your transaction drag. In live trading, this coordinates your dashboard calculations with what Binance actually charges."
-)
+# Read dynamic Binance trading fees retrieved by daemon
+taker_fee_rate = float(state_data.get("taker_fee_pct", 0.10))
 
 min_profit_trigger = st.sidebar.slider(
     "Min Net Profit Trigger (%)",
@@ -208,7 +201,6 @@ if not is_daemon_active:
     state_data["capital"] = starting_capital
     state_data["balance_inr"] = state_data.get("balance_inr", starting_capital)
     state_data["trade_size"] = allocated_trade_size
-    state_data["taker_fee_pct"] = taker_fee_rate
     state_data["usd_inr_rate"] = usd_inr_rate
     state_data["limit_trades"] = limit_trades
     state_data["max_trades_limit"] = max_trades_limit
@@ -311,9 +303,9 @@ with col_wallet:
             <div style="font-size: 10px; color: #64748b; margin-top: 4px;">Liquid INR</div>
         </div>
         <div style="flex: 1; min-width: 140px; background: rgba(30, 41, 59, 0.45); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 12px; text-align: center; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);">
-            <div style="font-size: 11px; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">CoinSwitch Fees</div>
+            <div style="font-size: 11px; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Binance Fees</div>
             <div style="font-size: 18px; font-weight: 700; color: #f87171; margin-top: 6px;">₹{total_fees_paid:,.2f}</div>
-            <div style="font-size: 10px; color: #64748b; margin-top: 4px;">{taker_fee_rate * 3:.2f}% Flat Commission</div>
+            <div style="font-size: 10px; color: #64748b; margin-top: 4px;">{taker_fee_rate * 3:.3f}% Total Drag</div>
         </div>
         <div style="flex: 1; min-width: 140px; background: rgba(30, 41, 59, 0.45); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 12px; text-align: center; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);">
             <div style="font-size: 11px; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Slippage Drag</div>

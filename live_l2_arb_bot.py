@@ -38,12 +38,12 @@ logging.basicConfig(
 logger = logging.getLogger("LiveL2ArbBot")
 
 class LiveL2ArbBot:
-    def __init__(self, start_capital_inr=100000.0, trade_size_inr=10000.0, taker_fee_pct=0.20, usd_inr_rate=85.0, min_profit=0.05):
+    def __init__(self, start_capital_inr=100000.0, trade_size_inr=10000.0, taker_fee_pct=0.10, usd_inr_rate=85.0, min_profit=0.05):
         # Configuration properties
         self.capital = start_capital_inr # Starting capital in ₹ (INR)
         self.balance_inr = start_capital_inr # Active cash balance in ₹ (INR)
         self.trade_size = trade_size_inr # Allocation size per attempt in ₹ (INR)
-        self.taker_fee_pct = taker_fee_pct # CoinSwitch flat trading fee (0.20% default)
+        self.taker_fee_pct = taker_fee_pct # Average trading fee (0.10% default)
         self.usd_inr_rate = usd_inr_rate # USDT to INR exchange rate (default ₹85.0)
         self.min_profit_pct = min_profit # Minimum net spread trigger (default 0.05%)
         
@@ -62,6 +62,11 @@ class LiveL2ArbBot:
         self.execution_mode = "paper" # paper or live
         self.api_key = ""
         self.api_secret = ""
+        
+        # Dynamic leg-specific live Binance fee parameters
+        self.fee_l1 = 0.0010 # default 0.10% (BTC/USDT)
+        self.fee_l2 = 0.0010 # default 0.10% (ETH/BTC)
+        self.fee_l3 = 0.0010 # default 0.10% (ETH/USDT)
         
         # Safe self-containment import to read Streamlit secrets
         try:
@@ -85,7 +90,7 @@ class LiveL2ArbBot:
                 self.capital = state.get("capital", 100000.0)
                 self.balance_inr = state.get("balance_inr", 100000.0)
                 self.trade_size = state.get("trade_size", 10000.0)
-                self.taker_fee_pct = state.get("taker_fee_pct", 0.20)
+                self.taker_fee_pct = state.get("taker_fee_pct", 0.10)
                 self.usd_inr_rate = state.get("usd_inr_rate", 85.0)
                 self.min_profit_pct = state.get("min_profit_pct", 0.05)
                 self.total_trades = state.get("total_trades", 0)
@@ -100,6 +105,9 @@ class LiveL2ArbBot:
                 self.limit_trades = state.get("limit_trades", False)
                 self.max_trades_limit = state.get("max_trades_limit", 0)
                 self.execution_mode = state.get("execution_mode", "paper")
+                self.fee_l1 = state.get("fee_l1", 0.0010)
+                self.fee_l2 = state.get("fee_l2", 0.0010)
+                self.fee_l3 = state.get("fee_l3", 0.0010)
                 logger.info("CoinSwitch L2 Bot state successfully loaded from JSON.")
             except Exception as e:
                 logger.error(f"Error loading bot state: {e}")
@@ -124,6 +132,9 @@ class LiveL2ArbBot:
             "limit_trades": self.limit_trades,
             "max_trades_limit": self.max_trades_limit,
             "execution_mode": self.execution_mode,
+            "fee_l1": self.fee_l1,
+            "fee_l2": self.fee_l2,
+            "fee_l3": self.fee_l3,
             "last_updated": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         }
         try:
@@ -377,8 +388,6 @@ class LiveL2ArbBot:
         # ---------------------------------------------------------
         # EXECUTE COINSWITCH L2 Triangular Arbitrage in INR
         # ---------------------------------------------------------
-        fee_rate = self.taker_fee_pct / 100.0
-        
         # Display top-level comparison ticker baseline in INR
         ticker_btc_ask_inr = coinswitch_books["BTC/INR"]["asks"][0][0]
         ticker_eth_btc_ask = coinswitch_books["ETH/BTC"]["asks"][0][0]
@@ -390,25 +399,25 @@ class LiveL2ArbBot:
         # Cost: self.trade_size (in INR)
         # Asks: coinswitch_books["BTC/INR"]["asks"]
         btc_acquired, l1_execution_price_inr = self.walk_asks(coinswitch_books["BTC/INR"]["asks"], self.trade_size)
-        # Deduct exchange fee in BTC (in-kind)
-        btc_net = btc_acquired * (1.0 - fee_rate)
-        l1_fee_inr = (btc_acquired * fee_rate) * l1_execution_price_inr
+        # Deduct exchange fee in BTC (in-kind) using Leg 1 fee
+        btc_net = btc_acquired * (1.0 - self.fee_l1)
+        l1_fee_inr = (btc_acquired * self.fee_l1) * l1_execution_price_inr
         
         # --- LEG 2: Buy ETH with BTC ---
         # Cost: btc_net
         # Asks: coinswitch_books["ETH/BTC"]["asks"]
         eth_acquired, l2_execution_price = self.walk_cross_asks(coinswitch_books["ETH/BTC"]["asks"], btc_net)
-        # Deduct exchange fee in ETH (in-kind)
-        eth_net = eth_acquired * (1.0 - fee_rate)
-        l2_fee_inr = (eth_acquired * fee_rate) * l2_execution_price * l1_execution_price_inr
+        # Deduct exchange fee in ETH (in-kind) using Leg 2 fee
+        eth_net = eth_acquired * (1.0 - self.fee_l2)
+        l2_fee_inr = (eth_acquired * self.fee_l2) * l2_execution_price * l1_execution_price_inr
 
         # --- LEG 3: Sell ETH for INR ---
         # Amount: eth_net
         # Bids: coinswitch_books["ETH/INR"]["bids"]
         inr_received, l3_execution_price_inr = self.walk_bids(coinswitch_books["ETH/INR"]["bids"], eth_net)
-        # Deduct exchange fee in INR
-        inr_net = inr_received * (1.0 - fee_rate)
-        l3_fee_inr = inr_received * fee_rate
+        # Deduct exchange fee in INR using Leg 3 fee
+        inr_net = inr_received * (1.0 - self.fee_l3)
+        l3_fee_inr = inr_received * self.fee_l3
 
         # --- ARBITRAGE STATS ---
         total_fee_inr = l1_fee_inr + l2_fee_inr + l3_fee_inr
@@ -514,6 +523,28 @@ def run_l2_paper_bot():
     else:
         logger.warning("CCXT missing. Bot will operate in L2 simulation fallback.")
         
+    # Fetch real live trading fees from Binance API if authenticated
+    fee_l1, fee_l2, fee_l3 = 0.0010, 0.0010, 0.0010
+    if exchange and is_auth:
+        try:
+            logger.info("Retrieving account-specific trading fees from Binance API...")
+            fees = exchange.fetch_trading_fees()
+            if "BTC/USDT" in fees:
+                fee_l1 = fees["BTC/USDT"].get("taker", 0.0010)
+            if "ETH/BTC" in fees:
+                fee_l2 = fees["ETH/BTC"].get("taker", 0.0010)
+            if "ETH/USDT" in fees:
+                fee_l3 = fees["ETH/USDT"].get("taker", 0.0010)
+            logger.info(f"📊 Real Binance fees: BTC/USDT={fee_l1*100:.3f}%, ETH/BTC={fee_l2*100:.3f}%, ETH/USDT={fee_l3*100:.3f}%")
+        except Exception as fee_err:
+            logger.warning(f"Could not fetch private Binance fees: {fee_err}. Using default 0.10% Spot retail fee.")
+            
+    bot.fee_l1 = fee_l1
+    bot.fee_l2 = fee_l2
+    bot.fee_l3 = fee_l3
+    # taker_fee_pct will represent the cumulative average % fee across the 3 legs
+    bot.taker_fee_pct = (fee_l1 + fee_l2 + fee_l3) / 3.0 * 100.0
+    
     # Fetch live available balance if in live execution mode
     if getattr(bot, "execution_mode", "paper") == "live" and exchange and is_auth:
         try:
@@ -521,14 +552,15 @@ def run_l2_paper_bot():
             usdt_bal = balances.get('USDT', {}).get('free', 0.0)
             bot.balance_inr = usdt_bal * bot.usd_inr_rate
             bot.capital = bot.balance_inr
-            bot.save_state()
             logger.info(f"💰 Converted Live balance: ₹{bot.balance_inr:,.2f} (${usdt_bal:.2f} USDT free)")
         except Exception as bal_err:
             logger.error(f"Failed to fetch live Binance balance: {bal_err}")
             
+    bot.save_state()
+            
     logger.info(
         f"CoinSwitch Bot RUNNING | Mode: {bot.execution_mode.upper()} | Capital: ₹{bot.capital:,.2f} | Size: ₹{bot.trade_size:,.2f} | "
-        f"USDT/INR: ₹{bot.usd_inr_rate:.2f} | Trigger: {bot.min_profit_pct}%"
+        f"USDT/INR: ₹{bot.usd_inr_rate:.2f} | Average Fee Drag: {bot.taker_fee_pct:.3f}% | Trigger: {bot.min_profit_pct}%"
     )
     
     stop_reason_to_use = "Manual Halt"
