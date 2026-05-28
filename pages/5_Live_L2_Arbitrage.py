@@ -235,6 +235,13 @@ if limit_trades:
         help="The bot will halt once it executes this many trades."
     )
 
+# Force mock spreads toggle
+simulate_mock_spreads = st.sidebar.checkbox(
+    "Inject Mock Spreads (Sandbox)",
+    value=state_data.get("simulate_mock_spreads", False),
+    help="Force simulated arbitrage opportunities in the L2 sandbox to test order execution, ledger logging, and limits, instead of waiting for a real-world market spread to occur."
+)
+
 # Save settings dynamically
 if not is_daemon_active:
     state_data["execution_mode"] = execution_mode
@@ -245,6 +252,7 @@ if not is_daemon_active:
     state_data["max_trades_limit"] = max_trades_limit
 
 state_data["min_profit_pct"] = min_profit_trigger
+state_data["simulate_mock_spreads"] = simulate_mock_spreads
 
 try:
     with open(STATE_FILE, "w", encoding="utf-8") as f:

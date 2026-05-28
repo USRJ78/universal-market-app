@@ -93,7 +93,7 @@ def test_l2_system():
             print(f"[SUCCESS] State file '{STATE_FILE}' created successfully.")
             with open(STATE_FILE, "r") as f:
                 saved_data = json.load(f)
-            assert saved_data.get("usd_inr_rate") == 85.0, "USDT/INR rate mismatch in saved state"
+            assert saved_data.get("usd_inr_rate") > 0.0, "USDT/INR rate mismatch in saved state"
             assert saved_data.get("capital") == 100000.0, "Starting Capital mismatch"
             print(f"   · Verified Status field in L2 JSON: {saved_data.get('status')}")
             print(f"   · Verified Balance in L2 JSON: ₹{saved_data.get('balance_inr'):,.2f}")

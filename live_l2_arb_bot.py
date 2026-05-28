@@ -62,6 +62,7 @@ class LiveL2ArbBot:
         self.execution_mode = "paper" # paper or live
         self.api_key = ""
         self.api_secret = ""
+        self.simulate_mock_spreads = False
         
         # Dynamic leg-specific live Binance fee parameters
         self.fee_l1 = 0.0010 # default 0.10% (BTC/USDT)
@@ -108,6 +109,7 @@ class LiveL2ArbBot:
                 self.fee_l1 = state.get("fee_l1", 0.0010)
                 self.fee_l2 = state.get("fee_l2", 0.0010)
                 self.fee_l3 = state.get("fee_l3", 0.0010)
+                self.simulate_mock_spreads = state.get("simulate_mock_spreads", False)
                 logger.info("CoinSwitch L2 Bot state successfully loaded from JSON.")
             except Exception as e:
                 logger.error(f"Error loading bot state: {e}")
@@ -135,6 +137,7 @@ class LiveL2ArbBot:
             "fee_l1": self.fee_l1,
             "fee_l2": self.fee_l2,
             "fee_l3": self.fee_l3,
+            "simulate_mock_spreads": self.simulate_mock_spreads,
             "last_updated": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         }
         try:
@@ -329,6 +332,15 @@ class LiveL2ArbBot:
     def run_one_cycle(self, exchange):
         self.cycles_scanned += 1
         
+        # Read the latest simulate_mock_spreads value dynamically from file
+        if os.path.exists(STATE_FILE):
+            try:
+                with open(STATE_FILE, "r", encoding="utf-8") as f:
+                    state = json.load(f)
+                self.simulate_mock_spreads = state.get("simulate_mock_spreads", False)
+            except Exception:
+                pass
+        
         # Periodically refresh the automated live USDT/INR exchange rate (every 50 cycles = ~1.5 - 2 minutes)
         if self.cycles_scanned == 1 or self.cycles_scanned % 50 == 0:
             self.update_live_exchange_rate()
@@ -339,7 +351,7 @@ class LiveL2ArbBot:
         use_fallback = False
         
         # 1. Poll live L2 Order Books from Binance and scale quote to INR
-        if exchange:
+        if exchange and not getattr(self, "simulate_mock_spreads", False):
             try:
                 for sym in symbols:
                     book = exchange.fetch_order_book(sym, limit=20)
