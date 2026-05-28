@@ -176,6 +176,22 @@ class LiveL2ArbBot:
         self.trials.append(trial_record)
         logger.info(f"📊 CoinSwitch L2 Trial #{trial_record['trial_id']} archived successfully: PnL: ₹{trial_record['net_profit']:+,.2f}, Trades: {trial_record['total_trades']}.")
 
+    def update_live_exchange_rate(self):
+        try:
+            import urllib.request
+            import json
+            url = "https://api.wazirx.com/api/v2/tickers/usdtinr"
+            req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+            with urllib.request.urlopen(req, timeout=5) as response:
+                data = json.loads(response.read().decode())
+                rate = float(data["ticker"]["last"])
+                if 50.0 <= rate <= 150.0:
+                    self.usd_inr_rate = rate
+                    logger.info(f"📈 Automated Live exchange rate updated: ₹{self.usd_inr_rate:.2f}/USDT (fetched from WazirX Spot)")
+                    return
+        except Exception as e:
+            logger.warning(f"Could not fetch automated USDT/INR exchange rate: {e}. Keeping current: ₹{self.usd_inr_rate:.2f}")
+
     def reset_active_portfolio(self):
         self.balance_inr = self.capital
         self.total_trades = 0
@@ -312,6 +328,11 @@ class LiveL2ArbBot:
 
     def run_one_cycle(self, exchange):
         self.cycles_scanned += 1
+        
+        # Periodically refresh the automated live USDT/INR exchange rate (every 50 cycles = ~1.5 - 2 minutes)
+        if self.cycles_scanned == 1 or self.cycles_scanned % 50 == 0:
+            self.update_live_exchange_rate()
+            
         symbols = ["BTC/USDT", "ETH/BTC", "ETH/USDT"]
         
         live_books = {}

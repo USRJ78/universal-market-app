@@ -153,14 +153,12 @@ allocated_trade_size = st.sidebar.slider(
     help="Rupee value executed per triangular cycle."
 )
 
-usd_inr_rate = st.sidebar.number_input(
-    "USDT / INR Exchange Rate",
-    min_value=50.0,
-    max_value=120.0,
-    value=state_data.get("usd_inr_rate", 85.0),
-    step=0.1,
-    disabled=is_daemon_active,
-    help="Exchange rate used to dynamically scale live global order books to INR."
+# Read dynamic live USDT/INR exchange rate retrieved by daemon
+usd_inr_rate = float(state_data.get("usd_inr_rate", 85.0))
+st.sidebar.metric(
+    "Live USDT / INR Rate",
+    f"₹{usd_inr_rate:.2f}",
+    help="Automatically fetched in real-time straight from WazirX Spot USDT/INR market price."
 )
 
 # Read dynamic Binance trading fees retrieved by daemon
@@ -201,7 +199,6 @@ if not is_daemon_active:
     state_data["capital"] = starting_capital
     state_data["balance_inr"] = state_data.get("balance_inr", starting_capital)
     state_data["trade_size"] = allocated_trade_size
-    state_data["usd_inr_rate"] = usd_inr_rate
     state_data["limit_trades"] = limit_trades
     state_data["max_trades_limit"] = max_trades_limit
 
