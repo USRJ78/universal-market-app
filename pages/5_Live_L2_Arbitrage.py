@@ -151,7 +151,22 @@ if is_live_mode:
             state_data["capital"] = starting_capital_value
             state_data["balance_inr"] = starting_capital_value
         except Exception as bal_err:
-            st.sidebar.error(f"Failed to fetch balance: {bal_err}")
+            err_msg = str(bal_err)
+            if "restricted location" in err_msg or "451" in err_msg or "Eligibility" in err_msg:
+                st.sidebar.warning(
+                    "⚠️ **Binance Geoblock Detected (Streamlit Cloud):**\n\n"
+                    "Binance has blocked private API access from Streamlit's US-based hosting servers (HTTP 451).\n\n"
+                    "**To execute live trades, please run this app locally** on your machine using:\n\n"
+                    "`streamlit run streamlit_app.py`"
+                )
+                # Fallback to a mock sandbox balance so the app remains fully functional and beautiful for testing
+                starting_capital_value = float(state_data.get("capital", 100000.0))
+                if starting_capital_value == 0.0:
+                    starting_capital_value = 100000.0
+                state_data["capital"] = starting_capital_value
+                state_data["balance_inr"] = starting_capital_value
+            else:
+                st.sidebar.error(f"Failed to fetch balance: {bal_err}")
             
     starting_capital = st.sidebar.number_input(
         "Binance Live Balance (INR)",

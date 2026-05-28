@@ -491,7 +491,14 @@ class LiveL2ArbBot:
                     
                     logger.info(f"✅ Live execution completed successfully! Order IDs: {order_ids}")
                 except Exception as trade_err:
-                    logger.error(f"❌ Real trade execution failed: {trade_err}")
+                    err_msg = str(trade_err)
+                    if "restricted location" in err_msg or "451" in err_msg or "Eligibility" in err_msg:
+                        logger.error(
+                            "❌ Real trade execution failed due to Binance Geoblock! "
+                            "Streamlit Cloud's US servers are restricted by Binance. Please run this app locally to execute real trades."
+                        )
+                    else:
+                        logger.error(f"❌ Real trade execution failed: {trade_err}")
                     real_trades_success = False
             
             if real_trades_success:
@@ -588,7 +595,15 @@ def run_l2_paper_bot():
                 bot.save_state()
                 return  # Terminate daemon immediately!
         except Exception as bal_err:
-            logger.error(f"Failed to fetch live Binance balance: {bal_err}")
+            err_msg = str(bal_err)
+            if "restricted location" in err_msg or "451" in err_msg or "Eligibility" in err_msg:
+                logger.warning(
+                    "⚠️ Binance API Geoblocked on Streamlit Cloud! "
+                    "Private balance checks and order routing are unavailable due to server hosting restrictions. "
+                    "The daemon will continue in mock sandbox mode using active state values. Run locally to execute real trades."
+                )
+            else:
+                logger.error(f"Failed to fetch live Binance balance: {bal_err}")
             
     bot.save_state()
             
