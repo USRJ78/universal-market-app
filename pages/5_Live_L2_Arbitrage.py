@@ -57,11 +57,6 @@ st.markdown("""
 st.title("⚖️ CoinSwitch INR Triangular Arbitrage L2 Sandbox")
 st.markdown("Simulate high-fidelity triangular arbitrage directly against synthesized **CoinSwitch INR L2 Order Books** using actual flat CoinSwitch commission structures.")
 
-# Live Account Mode Prominent Safety Banner
-if state_data.get("execution_mode") == "live":
-    st.warning("⚠️ **WARNING: Live Account Mode Active!** The bot is authorized to execute real market spot trades on your Binance account using available USDT. Please ensure you have sufficient USDT balance and understand the risks.")
-
-
 # ---------------------------------------------------------
 # GLOBAL STATE & THREAD MANAGEMENT
 # ---------------------------------------------------------
@@ -74,6 +69,10 @@ if os.path.exists(STATE_FILE):
             state_data = json.load(f)
     except Exception:
         pass
+
+# Live Account Mode Prominent Safety Banner
+if state_data.get("execution_mode") == "live":
+    st.warning("⚠️ **WARNING: Live Account Mode Active!** The bot is authorized to execute real market spot trades on your Binance account using available USDT. Please ensure you have sufficient USDT balance and understand the risks.")
 
 # Sync JSON state status with thread enumeration
 status_str = "stopped"
