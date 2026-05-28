@@ -164,13 +164,13 @@ usd_inr_rate = st.sidebar.number_input(
 )
 
 taker_fee_rate = st.sidebar.slider(
-    "CoinSwitch Fee per Leg (%)",
-    min_value=0.01,
+    "Taker Fee per Leg (%)",
+    min_value=0.00,
     max_value=0.50,
-    value=float(state_data.get("taker_fee_pct", 0.20)),
-    step=0.01,
+    value=float(state_data.get("taker_fee_pct", 0.10)),
+    step=0.005,
     disabled=is_daemon_active,
-    help="CoinSwitch standard trading taker fee per leg (Standard: 0.20%)."
+    help="Specify the taker fee rate per leg. Standard Binance Spot is 0.10%. If you pay in BNB, set this to 0.075%. In paper trading, this models your transaction drag. In live trading, this coordinates your dashboard calculations with what Binance actually charges."
 )
 
 min_profit_trigger = st.sidebar.slider(
