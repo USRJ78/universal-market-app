@@ -574,6 +574,19 @@ def run_l2_paper_bot():
             bot.balance_inr = usdt_bal * bot.usd_inr_rate
             bot.capital = bot.balance_inr
             logger.info(f"💰 Converted Live balance: ₹{bot.balance_inr:,.2f} (${usdt_bal:.2f} USDT free)")
+            
+            # Check for sufficient capital in Live mode
+            required_usdt = bot.trade_size / bot.usd_inr_rate
+            if usdt_bal < required_usdt:
+                logger.error(
+                    f"❌ CRITICAL ERROR: Insufficient USDT balance in your Binance Spot account! "
+                    f"Available balance: ${usdt_bal:.2f} USDT. Required Trade Size: ${required_usdt:.2f} USDT. "
+                    f"Please deposit USDT to Binance or reduce your Trade Size Allocation in the sidebar."
+                )
+                bot.status = "stopped"
+                bot.archive_current_trial(stop_reason="Insufficient Spot Funds")
+                bot.save_state()
+                return  # Terminate daemon immediately!
         except Exception as bal_err:
             logger.error(f"Failed to fetch live Binance balance: {bal_err}")
             

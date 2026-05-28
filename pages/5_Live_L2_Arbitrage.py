@@ -125,7 +125,28 @@ else:
 is_live_mode = (execution_mode == "live")
 
 if is_live_mode:
-    starting_capital_value = float(state_data.get("capital", 100000.0))
+    starting_capital_value = float(state_data.get("capital", 0.0))
+    if has_credentials:
+        try:
+            import ccxt
+            config = {
+                'enableRateLimit': True,
+                'options': {'defaultType': 'spot'}
+            }
+            if api_key and "paste_your" not in api_key:
+                config['apiKey'] = api_key
+                config['secret'] = api_secret
+                
+            temp_exchange = ccxt.binance(config)
+            balances = temp_exchange.fetch_balance()
+            usdt_bal = balances.get('USDT', {}).get('free', 0.0)
+            starting_capital_value = usdt_bal * usd_inr_rate
+            # Keep cache in state
+            state_data["capital"] = starting_capital_value
+            state_data["balance_inr"] = starting_capital_value
+        except Exception as bal_err:
+            st.sidebar.error(f"Failed to fetch balance: {bal_err}")
+            
     starting_capital = st.sidebar.number_input(
         "Binance Live Balance (INR)",
         value=starting_capital_value,
@@ -226,47 +247,62 @@ with col_ctrl:
             st.rerun()
     else:
         st.markdown('<div class="status-stopped">🔴 DEACTIVATED / INACTIVE</div>', unsafe_allow_html=True)
-        if st.button("🟢 Start CoinSwitch Bot", use_container_width=True):
-            if not os.path.exists(LOG_FILE):
-                with open(LOG_FILE, "w", encoding="utf-8") as f:
-                    f.write("")
+        
+        # Check for sufficient live funds before allowing startup
+        is_funds_insufficient = False
+        if execution_mode == "live" and starting_capital_value < allocated_trade_size:
+            is_funds_insufficient = True
             
-            # Auto-archive previous run
-            if state_data.get("total_trades", 0) > 0 or state_data.get("cycles_scanned", 0) > 0:
-                from live_l2_arb_bot import LiveL2ArbBot
-                temp_bot = LiveL2ArbBot()
-                temp_bot.archive_current_trial(stop_reason="Start Reset")
-                temp_bot.reset_active_portfolio()
-                if os.path.exists(STATE_FILE):
-                    try:
-                        with open(STATE_FILE, "r", encoding="utf-8") as f:
-                            state_data = json.load(f)
-                    except Exception:
-                        pass
-                        
-            state_data["status"] = "running"
-            state_data["execution_mode"] = execution_mode
-            state_data["capital"] = starting_capital
-            state_data["balance_inr"] = starting_capital
-            state_data["total_trades"] = 0
-            state_data["total_profit_inr"] = 0.0
-            state_data["win_rate"] = 0.0
-            state_data["cycles_scanned"] = 0
-            state_data["trades"] = []
-            state_data["total_fees_paid_inr"] = 0.0
-            state_data["total_slippage_drag_inr"] = 0.0
-            state_data["limit_trades"] = limit_trades
-            state_data["max_trades_limit"] = max_trades_limit
-            
-            with open(STATE_FILE, "w", encoding="utf-8") as f:
-                json.dump(state_data, f, indent=4)
+        if is_funds_insufficient:
+            st.error(
+                f"⚠️ **Insufficient Live Funds:** Your Binance USDT balance (converted: ₹{starting_capital_value:,.2f}) "
+                f"is less than your Trade Size Allocation (₹{allocated_trade_size:,.2f}). "
+                f"Please deposit USDT to your Binance Spot account or reduce your trade size configuration in the sidebar to start trading."
+            )
+            # Render a disabled start button
+            st.button("🟢 Start CoinSwitch Bot", use_container_width=True, disabled=True, key="disabled_start")
+        else:
+            if st.button("🟢 Start CoinSwitch Bot", use_container_width=True):
+                if not os.path.exists(LOG_FILE):
+                    with open(LOG_FILE, "w", encoding="utf-8") as f:
+                        f.write("")
                 
-            # Launch L2 background thread
-            t = threading.Thread(target=run_l2_paper_bot, name="LiveL2ArbDaemon", daemon=True)
-            t.start()
-            st.toast("CoinSwitch INR arbitrage bot successfully launched!")
-            time.sleep(1.0)
-            st.rerun()
+                # Auto-archive previous run
+                if state_data.get("total_trades", 0) > 0 or state_data.get("cycles_scanned", 0) > 0:
+                    from live_l2_arb_bot import LiveL2ArbBot
+                    temp_bot = LiveL2ArbBot()
+                    temp_bot.archive_current_trial(stop_reason="Start Reset")
+                    temp_bot.reset_active_portfolio()
+                    if os.path.exists(STATE_FILE):
+                        try:
+                            with open(STATE_FILE, "r", encoding="utf-8") as f:
+                                state_data = json.load(f)
+                        except Exception:
+                            pass
+                            
+                state_data["status"] = "running"
+                state_data["execution_mode"] = execution_mode
+                state_data["capital"] = starting_capital
+                state_data["balance_inr"] = starting_capital
+                state_data["total_trades"] = 0
+                state_data["total_profit_inr"] = 0.0
+                state_data["win_rate"] = 0.0
+                state_data["cycles_scanned"] = 0
+                state_data["trades"] = []
+                state_data["total_fees_paid_inr"] = 0.0
+                state_data["total_slippage_drag_inr"] = 0.0
+                state_data["limit_trades"] = limit_trades
+                state_data["max_trades_limit"] = max_trades_limit
+                
+                with open(STATE_FILE, "w", encoding="utf-8") as f:
+                    json.dump(state_data, f, indent=4)
+                    
+                # Launch L2 background thread
+                t = threading.Thread(target=run_l2_paper_bot, name="LiveL2ArbDaemon", daemon=True)
+                t.start()
+                st.toast("CoinSwitch INR arbitrage bot successfully launched!")
+                time.sleep(1.0)
+                st.rerun()
             
         if state_data.get("total_trades", 0) > 0 or state_data.get("cycles_scanned", 0) > 0:
             st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
