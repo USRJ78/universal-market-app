@@ -57,6 +57,11 @@ st.markdown("""
 st.title("⚖️ CoinSwitch INR Triangular Arbitrage L2 Sandbox")
 st.markdown("Simulate high-fidelity triangular arbitrage directly against synthesized **CoinSwitch INR L2 Order Books** using actual flat CoinSwitch commission structures.")
 
+# Live Account Mode Prominent Safety Banner
+if state_data.get("execution_mode") == "live":
+    st.warning("⚠️ **WARNING: Live Account Mode Active!** The bot is authorized to execute real market spot trades on your Binance account using available USDT. Please ensure you have sufficient USDT balance and understand the risks.")
+
+
 # ---------------------------------------------------------
 # GLOBAL STATE & THREAD MANAGEMENT
 # ---------------------------------------------------------
@@ -83,18 +88,61 @@ if state_data.get("status") != status_str:
     except Exception:
         pass
 
+# API Credentials Detection
+api_key = st.secrets.get("BINANCE_API_KEY", "")
+if not api_key or "paste_your" in api_key:
+    api_key = st.secrets.get("binance", {}).get("api_key", "")
+    
+has_credentials = bool(api_key and "paste_your" not in api_key)
+
 # Sidebar Configurations
 st.sidebar.header("⚙️ CoinSwitch Configurations")
 
-starting_capital = st.sidebar.number_input(
-    "Starting Capital (₹)",
-    min_value=1000.0,
-    max_value=10000000.0,
-    value=state_data.get("capital", 100000.0),
-    step=1000.0,
-    disabled=is_daemon_active,
-    help="Initial mock INR capital for this trial run."
-)
+if has_credentials:
+    st.sidebar.markdown(
+        '<div style="background-color: rgba(46, 204, 113, 0.15); border: 1px solid #2ecc71; border-radius: 6px; padding: 8px 12px; text-align: center; color: #2ecc71; font-size: 12px; font-weight: bold; margin-bottom: 12px;">'
+        '🔐 BINANCE API AUTHENTICATED'
+        '</div>',
+        unsafe_allow_html=True
+    )
+    selected_mode = st.sidebar.selectbox(
+        "Trading Mode",
+        options=["Paper Trading (Simulated)", "Live Account (Real Capital)"],
+        index=0 if state_data.get("execution_mode", "paper") == "paper" else 1,
+        disabled=is_daemon_active,
+        help="Paper Trading simulates L2 order book walks. Live Account executes actual market spot trades on Binance."
+    )
+    execution_mode = "live" if "Live" in selected_mode else "paper"
+else:
+    st.sidebar.markdown(
+        '<div style="background-color: rgba(243, 156, 18, 0.15); border: 1px solid #f39c12; border-radius: 6px; padding: 8px 12px; text-align: center; color: #f39c12; font-size: 12px; font-weight: bold; margin-bottom: 12px;">'
+        '🔓 SIMULATION ONLY (No API Keys found)'
+        '</div>',
+        unsafe_allow_html=True
+    )
+    execution_mode = "paper"
+
+# Live mode fetches real balance, so starting capital is determined dynamically in live mode
+is_live_mode = (execution_mode == "live")
+
+if is_live_mode:
+    starting_capital_value = float(state_data.get("capital", 100000.0))
+    starting_capital = st.sidebar.number_input(
+        "Binance Live Balance (INR)",
+        value=starting_capital_value,
+        disabled=True,
+        help="Fetched dynamically from your Binance account balance (converted via USDT/INR rate)."
+    )
+else:
+    starting_capital = st.sidebar.number_input(
+        "Starting Capital (₹)",
+        min_value=1000.0,
+        max_value=10000000.0,
+        value=state_data.get("capital", 100000.0),
+        step=1000.0,
+        disabled=is_daemon_active,
+        help="Initial mock INR capital for this trial run."
+    )
 
 allocated_trade_size = st.sidebar.slider(
     "Trade Size per Attempt (₹)",
@@ -157,6 +205,7 @@ if limit_trades:
 
 # Save settings dynamically
 if not is_daemon_active:
+    state_data["execution_mode"] = execution_mode
     state_data["capital"] = starting_capital
     state_data["balance_inr"] = state_data.get("balance_inr", starting_capital)
     state_data["trade_size"] = allocated_trade_size
@@ -208,6 +257,7 @@ with col_ctrl:
                         pass
                         
             state_data["status"] = "running"
+            state_data["execution_mode"] = execution_mode
             state_data["capital"] = starting_capital
             state_data["balance_inr"] = starting_capital
             state_data["total_trades"] = 0

@@ -59,6 +59,20 @@ class LiveL2ArbBot:
         self.trials = []
         self.limit_trades = False
         self.max_trades_limit = 0
+        self.execution_mode = "paper" # paper or live
+        self.api_key = ""
+        self.api_secret = ""
+        
+        # Safe self-containment import to read Streamlit secrets
+        try:
+            import streamlit as st
+            self.api_key = st.secrets.get("BINANCE_API_KEY", "")
+            self.api_secret = st.secrets.get("BINANCE_API_SECRET", "")
+            if not self.api_key or "paste_your" in self.api_key:
+                self.api_key = st.secrets.get("binance", {}).get("api_key", "")
+                self.api_secret = st.secrets.get("binance", {}).get("api_secret", "")
+        except Exception:
+            pass
         
         # Load existing state if available
         self.load_state()
@@ -85,6 +99,7 @@ class LiveL2ArbBot:
                 self.trials = state.get("trials", [])
                 self.limit_trades = state.get("limit_trades", False)
                 self.max_trades_limit = state.get("max_trades_limit", 0)
+                self.execution_mode = state.get("execution_mode", "paper")
                 logger.info("CoinSwitch L2 Bot state successfully loaded from JSON.")
             except Exception as e:
                 logger.error(f"Error loading bot state: {e}")
@@ -108,6 +123,7 @@ class LiveL2ArbBot:
             "trials": self.trials,
             "limit_trades": self.limit_trades,
             "max_trades_limit": self.max_trades_limit,
+            "execution_mode": self.execution_mode,
             "last_updated": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         }
         try:
@@ -415,37 +431,103 @@ class LiveL2ArbBot:
         # 3. Check Profit Trigger (Net Return exceeds trigger threshold)
         if net_spread_pct >= self.min_profit_pct:
             logger.info(f"💥 COINSWITCH L2 TRIANGULAR ARBITRAGE TRIGGERED! Net Spread: {net_spread_pct:+.4f}%. Executing trade...")
-            self.add_trade(net_spread_pct, inr_net - self.trade_size, total_fee_inr, slippage_drag_inr)
-            logger.info(
-                f"✓ CoinSwitch cycle filled! Realized Net PnL: ₹{inr_net - self.trade_size:+.2f} | "
-                f"Taker Fees Deducted: ₹{total_fee_inr:.2f} | Slippage Cost: ₹{slippage_drag_inr:.2f}"
-            )
+            
+            real_trades_success = True
+            order_ids = []
+            
+            # Execute actual spot market trades if in live mode and exchange is authenticated!
+            if getattr(self, "execution_mode", "paper") == "live" and exchange and exchange.apiKey:
+                try:
+                    # Leg 1: Buy BTC with USDT
+                    cost_usdt = self.trade_size / self.usd_inr_rate
+                    logger.info(f"Live Spot Leg 1: Market buying BTC with ${cost_usdt:.2f} USDT...")
+                    target_btc_qty = (cost_usdt / l1_execution_price_inr) * self.usd_inr_rate
+                    order1 = exchange.create_market_buy_order("BTC/USDT", target_btc_qty)
+                    order_ids.append(order1.get("id", "L1-Real"))
+                    
+                    time.sleep(0.2)
+                    
+                    # Leg 2: Buy ETH with BTC
+                    logger.info(f"Live Spot Leg 2: Market buying ETH with walked size {eth_acquired:.6f} ETH...")
+                    order2 = exchange.create_market_buy_order("ETH/BTC", eth_acquired)
+                    order_ids.append(order2.get("id", "L2-Real"))
+                    
+                    time.sleep(0.2)
+                    
+                    # Leg 3: Sell ETH for USDT
+                    logger.info(f"Live Spot Leg 3: Market selling {eth_net:.6f} ETH for USDT...")
+                    order3 = exchange.create_market_sell_order("ETH/USDT", eth_net)
+                    order_ids.append(order3.get("id", "L3-Real"))
+                    
+                    logger.info(f"✅ Live execution completed successfully! Order IDs: {order_ids}")
+                except Exception as trade_err:
+                    logger.error(f"❌ Real trade execution failed: {trade_err}")
+                    real_trades_success = False
+            
+            if real_trades_success:
+                trade_pnl = inr_net - self.trade_size
+                self.add_trade(net_spread_pct, trade_pnl, total_fee_inr, slippage_drag_inr)
+                
+                # Append order IDs to last trade log if available
+                if order_ids and self.trades:
+                    self.trades[-1]["orders"] = order_ids
+                
+                logger.info(
+                    f"✓ CoinSwitch cycle filled! Realized Net PnL: ₹{trade_pnl:+.2f} | "
+                    f"Taker Fees Deducted: ₹{total_fee_inr:.2f} | Slippage Cost: ₹{slippage_drag_inr:.2f}"
+                )
             time.sleep(2)
 
 def run_l2_paper_bot():
     logger.info("Initializing Live CoinSwitch INR Triangular Arbitrage Daemon...")
     
+    bot = LiveL2ArbBot()
+    bot.status = "running"
+    bot.save_state()
+    
+    # Determine secure API keys
+    api_key = getattr(bot, "api_key", "")
+    api_secret = getattr(bot, "api_secret", "")
+    is_auth = False
+    
     exchange = None
     if ccxt:
         try:
-            exchange = ccxt.binance({
+            config = {
                 'enableRateLimit': True,
                 'options': {'defaultType': 'spot'}
-            })
+            }
+            if api_key and api_secret and "paste_your" not in api_key:
+                config['apiKey'] = api_key
+                config['secret'] = api_secret
+                is_auth = True
+                
+            exchange = ccxt.binance(config)
             exchange.load_markets()
-            logger.info("CCXT Spot client connected successfully.")
+            if is_auth:
+                logger.info("🔐 CCXT client authenticated with private API credentials.")
+            else:
+                logger.info("🔓 CCXT client initialized in public read-only mode.")
         except Exception as e:
             logger.warning(f"Failed to connect CCXT Spot: {e}. Bot will operate in L2 simulation fallback.")
             exchange = None
     else:
         logger.warning("CCXT missing. Bot will operate in L2 simulation fallback.")
         
-    bot = LiveL2ArbBot()
-    bot.status = "running"
-    bot.save_state()
-    
+    # Fetch live available balance if in live execution mode
+    if getattr(bot, "execution_mode", "paper") == "live" and exchange and is_auth:
+        try:
+            balances = exchange.fetch_balance()
+            usdt_bal = balances.get('USDT', {}).get('free', 0.0)
+            bot.balance_inr = usdt_bal * bot.usd_inr_rate
+            bot.capital = bot.balance_inr
+            bot.save_state()
+            logger.info(f"💰 Converted Live balance: ₹{bot.balance_inr:,.2f} (${usdt_bal:.2f} USDT free)")
+        except Exception as bal_err:
+            logger.error(f"Failed to fetch live Binance balance: {bal_err}")
+            
     logger.info(
-        f"CoinSwitch Bot RUNNING | Capital: ₹{bot.capital:,.2f} | Size: ₹{bot.trade_size:,.2f} | "
+        f"CoinSwitch Bot RUNNING | Mode: {bot.execution_mode.upper()} | Capital: ₹{bot.capital:,.2f} | Size: ₹{bot.trade_size:,.2f} | "
         f"USDT/INR: ₹{bot.usd_inr_rate:.2f} | Trigger: {bot.min_profit_pct}%"
     )
     
