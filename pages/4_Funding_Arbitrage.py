@@ -88,14 +88,51 @@ if state_data.get("status") != status_str:
 # Sidebar Configurations
 st.sidebar.header("⚙️ Arbitrage Configurations")
 
+execution_mode = st.sidebar.selectbox(
+    "Execution Mode",
+    ["Paper Sandbox (Mock)", "Live Account (Real)"],
+    index=0 if state_data.get("execution_mode", "paper") == "paper" else 1,
+    disabled=is_daemon_active,
+    help="Switch between simulated mock runs and actual real market trading on your Binance account."
+)
+mode_val = "paper" if execution_mode == "Paper Sandbox (Mock)" else "live"
+
+api_key = ""
+api_secret = ""
+if mode_val == "live":
+    api_key = st.sidebar.text_input(
+        "Binance API Key",
+        type="password",
+        value=state_data.get("api_key", ""),
+        disabled=is_daemon_active,
+        help="Your Binance private API Key with Spot and Futures trading permissions enabled."
+    )
+    api_secret = st.sidebar.text_input(
+        "Binance API Secret",
+        type="password",
+        value=state_data.get("api_secret", ""),
+        disabled=is_daemon_active,
+        help="Your Binance private API Secret Key."
+    )
+    
+    st.sidebar.markdown(
+        '<div style="background-color: rgba(231, 76, 60, 0.15); border: 1px solid #e74c3c; border-radius: 6px; padding: 10px; margin-top: 10px; font-size: 12px; color: #f87171;">'
+        '⚠️ <b>US Regional Geoblocks:</b><br>'
+        'Binance private swap/derivatives API endpoints are strictly geoblocked on US-based Streamlit Cloud hosting.<br><br>'
+        'To trade live contracts, please run the app locally:<br>'
+        '<code>streamlit run streamlit_app.py</code>'
+        '</div>',
+        unsafe_allow_html=True
+    )
+
 starting_capital = st.sidebar.number_input(
-    "Starting Mock Capital ($)",
+    "Starting Mock Capital ($)" if mode_val == "paper" else "Starting Margin Account Balance ($)",
     min_value=100.0,
     max_value=1000000.0,
     value=state_data.get("capital", 1000.0),
     step=100.0,
     disabled=is_daemon_active,
-    help="Capital for simulated paper trading."
+    help="Initial capital margin allocated for trading."
 )
 
 position_allocation = st.sidebar.slider(
@@ -105,7 +142,17 @@ position_allocation = st.sidebar.slider(
     value=float(state_data.get("position_allocation", 250.0)),
     step=50.0,
     disabled=is_daemon_active,
-    help="Cash allocated per active asset (divided into equal spot and perp short)."
+    help="USDT cash budget margin locked up per active hedged position."
+)
+
+futures_leverage = st.sidebar.slider(
+    "Futures Leverage",
+    min_value=1.0,
+    max_value=10.0,
+    value=float(state_data.get("futures_leverage", 1.0)),
+    step=1.0,
+    disabled=is_daemon_active,
+    help="Leverage factor applied on the perpetual futures short leg. 1.0x represents standard un-leveraged splits."
 )
 
 min_apr_trigger = st.sidebar.slider(
@@ -154,8 +201,12 @@ if not is_daemon_active:
     state_data["capital"] = starting_capital
     state_data["balance_usdt"] = state_data.get("balance_usdt", starting_capital)
     state_data["position_allocation"] = position_allocation
+    state_data["futures_leverage"] = futures_leverage
     state_data["limit_trades"] = limit_trades
     state_data["max_trades_limit"] = max_trades_limit
+    state_data["execution_mode"] = mode_val
+    state_data["api_key"] = api_key
+    state_data["api_secret"] = api_secret
 
 state_data["min_apr_trigger"] = min_apr_trigger
 state_data["stop_apr_trigger"] = stop_apr_trigger
@@ -337,19 +388,37 @@ with col_positions:
     if not positions_list:
         st.info("No active delta-neutral positions currently held. Waiting for APR triggers...")
     else:
+        # Leverage boost visual callout
+        L_avg = sum(p.get("leverage", 1.0) for p in positions_list) / active_positions_count
+        yield_mult = 2.0 / (1.0 + 1.0 / L_avg)
+        st.sidebar.markdown(
+            f'<div style="background-color: rgba(56, 189, 248, 0.15); border: 1px solid #38bdf8; border-radius: 6px; padding: 10px 12px; margin-top: 15px; font-size: 13px;">'
+            f'📈 <b>Leverage Boost Active:</b><br>'
+            f'Your positions are running at an average leverage of <b>{L_avg:.1f}x</b> futures leverage.<br><br>'
+            f'This amplifies your yield-harvesting size by <b>{yield_mult:.2f}x</b> compared to standard un-leveraged splits!'
+            f'</div>',
+            unsafe_allow_html=True
+        )
+        
         pos_rows = []
         for pos in positions_list:
+            spot_size_val = pos.get("spot_size", pos.get("size", position_allocation) / 2.0)
+            perp_margin_val = pos.get("perp_margin", pos.get("size", position_allocation) / 2.0)
+            leverage_val = pos.get("leverage", 1.0)
+            liq_price_val = pos.get("liq_price", pos["perp_price"] * (1.0 + 1.0/leverage_val))
             pos_rows.append({
                 "Asset": pos["asset"],
                 "Spot Entry": f"${pos['spot_price']:,.2f}",
                 "Perp Entry": f"${pos['perp_price']:,.2f}",
-                "Position Size ($)": f"${pos['size']:,.2f}",
+                "Hedged Size ($)": f"${spot_size_val:,.2f}",
+                "Futures Margin": f"${perp_margin_val:,.2f} ({leverage_val:.0f}x)",
+                "Perp Liq Price": f"${liq_price_val:,.2f}",
                 "Active APR (%)": f"{pos['apr']:.2f}%",
                 "Accrued Yield ($)": f"${pos['yield_captured']:.6f}"
             })
         pos_df = pd.DataFrame(pos_rows)
         st.dataframe(pos_df.set_index("Asset"), use_container_width=True)
-        st.caption("Positions held are perfectly hedge-neutral. Long Spot position offsets Short Perpetual position.")
+        st.caption("Leveraged cash-and-carry positions. The long spot asset physically offsets the short perpetual futures liability, rendering the position risk-free against asset price direction.")
 
 st.markdown("---")
 

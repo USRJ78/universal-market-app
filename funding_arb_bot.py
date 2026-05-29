@@ -55,6 +55,16 @@ class FundingArbBot:
         self.min_apr_trigger = min_apr_trigger # 8% APR to open
         self.stop_apr_trigger = stop_apr_trigger # 2% APR to close/unwind
         self.position_allocation = 250.0 # allocation size per active asset ($)
+        self.futures_leverage = 1.0 # default 1x futures leverage
+        
+        # Live trading credentials
+        self.execution_mode = "paper" # "paper" or "live"
+        self.api_key = ""
+        self.api_secret = ""
+        
+        # CCXT authenticating client handles
+        self.spot_exchange = None
+        self.futures_exchange = None
         
         # New trials and trade limit properties
         self.trials = []
@@ -80,10 +90,14 @@ class FundingArbBot:
                 self.min_apr_trigger = state.get("min_apr_trigger", 8.0)
                 self.stop_apr_trigger = state.get("stop_apr_trigger", 2.0)
                 self.position_allocation = state.get("position_allocation", 250.0)
+                self.futures_leverage = state.get("futures_leverage", 1.0)
                 self.total_fees_paid = state.get("total_fees_paid", 0.0)
                 self.trials = state.get("trials", [])
                 self.limit_trades = state.get("limit_trades", False)
                 self.max_trades_limit = state.get("max_trades_limit", 0)
+                self.execution_mode = state.get("execution_mode", "paper")
+                self.api_key = state.get("api_key", "")
+                self.api_secret = state.get("api_secret", "")
                 logger.info("Funding bot state successfully loaded from JSON.")
             except Exception as e:
                 logger.error(f"Error loading bot state: {e}")
@@ -101,10 +115,14 @@ class FundingArbBot:
             "min_apr_trigger": self.min_apr_trigger,
             "stop_apr_trigger": self.stop_apr_trigger,
             "position_allocation": self.position_allocation,
+            "futures_leverage": self.futures_leverage,
             "total_fees_paid": getattr(self, "total_fees_paid", 0.0),
             "trials": self.trials,
             "limit_trades": self.limit_trades,
             "max_trades_limit": self.max_trades_limit,
+            "execution_mode": self.execution_mode,
+            "api_key": self.api_key,
+            "api_secret": self.api_secret,
             "last_updated": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         }
         try:
@@ -112,6 +130,46 @@ class FundingArbBot:
                 json.dump(state, f, indent=4)
         except Exception as e:
             logger.error(f"Error saving bot state: {e}")
+
+    def init_exchanges(self):
+        if self.execution_mode == "live" and self.api_key and self.api_secret:
+            if "paste_your" in self.api_key or not self.api_key.strip():
+                logger.warning("Binance API credentials not set or contain placeholders. Falling back to simulation.")
+                self.spot_exchange = None
+                self.futures_exchange = None
+                return
+            
+            if ccxt is None:
+                logger.error("CCXT library missing. Cannot initialize live trading.")
+                return
+                
+            try:
+                # 1. Spot client
+                self.spot_exchange = ccxt.binance({
+                    'apiKey': self.api_key,
+                    'secret': self.api_secret,
+                    'enableRateLimit': True,
+                    'options': {'defaultType': 'spot'}
+                })
+                # 2. Futures swap client
+                self.futures_exchange = ccxt.binance({
+                    'apiKey': self.api_key,
+                    'secret': self.api_secret,
+                    'enableRateLimit': True,
+                    'options': {'defaultType': 'swap'}
+                })
+                
+                # Pre-load markets to ensure latency matches
+                self.spot_exchange.load_markets()
+                self.futures_exchange.load_markets()
+                logger.info("🔑 Binance LIVE SPOT and FUTURES exchange clients initialized successfully.")
+            except Exception as e:
+                logger.error(f"❌ Failed to initialize Binance Live API clients: {e}. Falling back to simulation.")
+                self.spot_exchange = None
+                self.futures_exchange = None
+        else:
+            self.spot_exchange = None
+            self.futures_exchange = None
 
     def archive_current_trial(self, stop_reason="Manual Halt"):
         if self.cycles_scanned == 0 and self.total_trades == 0:
@@ -163,72 +221,214 @@ class FundingArbBot:
         logger.info("Active paper funding portfolio successfully reset to zero/starting capital.")
 
     def open_position(self, asset, spot_price, perp_price, apr):
-        # Calculate entry transaction fee (0.075% total = 0.1% spot fee + 0.05% perp fee split on half-allocations)
-        # Spot is half of position size, Perp is half of position size
-        open_fee = self.position_allocation * 0.00075
+        # Calculate Spot & Perp size based on margin allocation and futures leverage
+        # S = M / (1.0 + 1.0/L)
+        L = getattr(self, "futures_leverage", 1.0)
+        M = self.position_allocation
+        S = M / (1.0 + 1.0 / L)
         
-        # Check if cash available (including allocation + fee)
-        if self.balance_usdt < (self.position_allocation + open_fee):
-            logger.warning(f"Insufficient cash to allocate position in {asset} + fee. Cash: ${self.balance_usdt:.2f}")
+        # Spot entry fee (0.10% taker) + Perp entry fee (0.05% taker)
+        open_fee = S * 0.0015
+        
+        # Total cash locked is position allocation margin + entry fee
+        total_cash_needed = M + open_fee
+        
+        # Check if cash available
+        if self.balance_usdt < total_cash_needed:
+            logger.warning(f"Insufficient cash to allocate position in {asset} + fee. Cash: ${self.balance_usdt:.2f}, Required: ${total_cash_needed:.2f}")
             return
             
-        self.balance_usdt -= (self.position_allocation + open_fee)
-        self.total_fees_paid = getattr(self, "total_fees_paid", 0.0) + open_fee
-        self.total_trades += 1
+        real_execution = False
+        order_ids = []
+        filled_spot_price = spot_price
+        filled_perp_price = perp_price
         
-        pos = {
-            "asset": asset,
-            "spot_price": float(spot_price),
-            "perp_price": float(perp_price),
-            "size": float(self.position_allocation),
-            "apr": float(apr),
-            "yield_captured": 0.0,
-            "opened_at": datetime.now().strftime("%H:%M:%S")
-        }
-        self.positions.append(pos)
-        
-        trade = {
-            "timestamp": datetime.now().strftime("%H:%M:%S"),
-            "asset": asset,
-            "action": "OPEN",
-            "size": float(self.position_allocation),
-            "apr": float(apr),
-            "profit": 0.0,
-            "fee": round(open_fee, 4)
-        }
-        self.trades.append(trade)
-        logger.info(f"⚡ OPENED DELTA-NEUTRAL POSITION on {asset} | Size: ${self.position_allocation:.2f} | Entry Spot: ${spot_price:,.2f} | Entry Perp: ${perp_price:,.2f} | APR: {apr:.2f}% | Fee: ${open_fee:.4f}")
-        self.log_to_excel()
+        if self.execution_mode == "live" and self.spot_exchange and self.futures_exchange:
+            spot_symbol = f"{asset}/USDT"
+            perp_symbol = f"{asset}/USDT:USDT"
+            
+            # Calculate target quantity (S / Spot Price)
+            target_qty = S / spot_price
+            
+            # Round target quantity dynamically to exchange lot size filters via CCXT amount_to_precision
+            try:
+                rounded_qty = float(self.spot_exchange.amount_to_precision(spot_symbol, target_qty))
+                logger.info(f"Target size for {asset}: ${S:.2f} -> Qty rounded to precision: {rounded_qty:.6f} {asset}")
+            except Exception as err:
+                logger.error(f"Failed to calculate lot-size precision for {asset}: {err}. Falling back to default rounding.")
+                rounded_qty = round(target_qty, 4)
+                
+            try:
+                # 1. Place Spot Market Buy (Leg 1)
+                logger.info(f"⚡ [LIVE TRADE] Executing Leg 1: Spot Market Buy {rounded_qty} {asset}...")
+                order_spot = self.spot_exchange.create_market_buy_order(spot_symbol, rounded_qty)
+                order_ids.append(order_spot.get("id", "Spot-Real"))
+                
+                # Fetch actual filled spot price if available, else fallback
+                filled_spot_price = float(order_spot.get("price", spot_price) or spot_price)
+                if filled_spot_price <= 0.0:
+                    filled_spot_price = spot_price
+                logger.info(f"✅ Spot Buy filled at ${filled_spot_price:,.2f}")
+                
+            except Exception as e1:
+                logger.error(f"❌ Live Leg 1 (Spot Buy) failed: {e1}. Aborting open position.")
+                return
+                
+            try:
+                # Configure leverage on futures symbol first
+                logger.info(f"⚡ [LIVE TRADE] Setting Perpetual Futures Leverage to {int(L)}x for {perp_symbol}...")
+                self.futures_exchange.set_leverage(int(L), perp_symbol)
+                time.sleep(0.1)
+                
+                # 2. Place Perpetual Futures Market Sell Short (Leg 2)
+                logger.info(f"⚡ [LIVE TRADE] Executing Leg 2: Futures Swap Market Sell {rounded_qty} {asset}...")
+                order_perp = self.futures_exchange.create_market_sell_order(perp_symbol, rounded_qty)
+                order_ids.append(order_perp.get("id", "Perp-Real"))
+                
+                # Fetch actual filled perp price if available, else fallback
+                filled_perp_price = float(order_perp.get("price", perp_price) or perp_price)
+                if filled_perp_price <= 0.0:
+                    filled_perp_price = perp_price
+                logger.info(f"✅ Futures Short filled at ${filled_perp_price:,.2f}")
+                real_execution = True
+                
+            except Exception as e2:
+                logger.critical(f"❌ Live Leg 2 (Futures Short) failed: {e2}. UNHEDGED POSITION DETECTED! Rolling back Spot Leg 1 instantly...")
+                # Failsafe rollback: Market sell the spot asset back instantly to return to cash
+                try:
+                    rollback_order = self.spot_exchange.create_market_sell_order(spot_symbol, rounded_qty)
+                    logger.info(f"🛡️ Rollback executed successfully! Spot sold back. Order ID: {rollback_order.get('id', 'Rollback')}")
+                except Exception as er:
+                    logger.error(f"🚨 CRITICAL WARNING: SPOT ROLLBACK FAILED! You hold {rounded_qty} unhedged spot {asset}. Close manually immediately! Error: {er}")
+                return
+        else:
+            # Paper simulation mode
+            real_execution = True
+            
+        if real_execution:
+            self.balance_usdt -= total_cash_needed
+            self.total_fees_paid = getattr(self, "total_fees_paid", 0.0) + open_fee
+            self.total_trades += 1
+            
+            # Perp liquidation price: entry_perp * (1.0 + 1.0/L)
+            liq_price = filled_perp_price * (1.0 + 1.0 / L)
+            
+            pos = {
+                "asset": asset,
+                "spot_price": float(filled_spot_price),
+                "perp_price": float(filled_perp_price),
+                "margin_allocated": float(M),
+                "spot_size": float(S),
+                "perp_size": float(S),
+                "perp_margin": float(S / L),
+                "leverage": float(L),
+                "liq_price": float(liq_price),
+                "apr": float(apr),
+                "yield_captured": 0.0,
+                "opened_at": datetime.now().strftime("%H:%M:%S")
+            }
+            if order_ids:
+                pos["orders"] = order_ids
+                
+            self.positions.append(pos)
+            
+            trade = {
+                "timestamp": datetime.now().strftime("%H:%M:%S"),
+                "asset": asset,
+                "action": "OPEN",
+                "size": float(M),
+                "apr": float(apr),
+                "profit": 0.0,
+                "fee": round(open_fee, 4)
+            }
+            if order_ids:
+                trade["orders"] = order_ids
+            self.trades.append(trade)
+            logger.info(f"⚡ OPENED DELTA-NEUTRAL POSITION on {asset} | Size: ${self.position_allocation:.2f} | Entry Spot: ${filled_spot_price:,.2f} | Entry Perp: ${filled_perp_price:,.2f} | APR: {apr:.2f}% | Fee: ${open_fee:.4f}")
+            self.log_to_excel()
 
     def close_position(self, idx, current_spot, current_perp):
         pos = self.positions.pop(idx)
         final_yield = pos["yield_captured"]
+        S = pos["spot_size"]
+        L = pos["leverage"]
+        M = pos["margin_allocated"]
+        asset = pos["asset"]
         
-        # Calculate exit commission fee
-        close_fee = pos["size"] * 0.00075
+        # Calculate exit commission fee (0.10% spot exit fee + 0.05% perp exit fee)
+        close_fee = S * 0.0015
         self.total_fees_paid = getattr(self, "total_fees_paid", 0.0) + close_fee
         
-        # Calculate Spot vs Perp entry-exit basis difference (adds/subtracts slightly to profit)
+        filled_spot_exit = current_spot
+        filled_perp_exit = current_perp
+        order_ids = []
+        
+        if self.execution_mode == "live" and self.spot_exchange and self.futures_exchange:
+            spot_symbol = f"{asset}/USDT"
+            perp_symbol = f"{asset}/USDT:USDT"
+            
+            # Calculate quantity to close
+            target_qty = S / pos["spot_price"]
+            
+            # Round target quantity dynamically to exchange lot size filters via CCXT amount_to_precision
+            try:
+                rounded_qty = float(self.spot_exchange.amount_to_precision(spot_symbol, target_qty))
+                logger.info(f"Closing size for {asset}: ${S:.2f} -> Qty rounded to precision: {rounded_qty:.6f} {asset}")
+            except Exception as err:
+                logger.error(f"Failed to calculate close lot-size precision for {asset}: {err}. Falling back to default rounding.")
+                rounded_qty = round(target_qty, 4)
+                
+            # 1. Close Spot (Market Sell)
+            try:
+                logger.info(f"🛡️ [LIVE TRADE] Executing Leg 1: Spot Market Sell {rounded_qty} {asset}...")
+                order_spot = self.spot_exchange.create_market_sell_order(spot_symbol, rounded_qty)
+                order_ids.append(order_spot.get("id", "Spot-Close-Real"))
+                
+                filled_spot_exit = float(order_spot.get("price", current_spot) or current_spot)
+                if filled_spot_exit <= 0.0:
+                    filled_spot_exit = current_spot
+                logger.info(f"✅ Spot Close filled at ${filled_spot_exit:,.2f}")
+            except Exception as e1:
+                logger.error(f"🚨 CRITICAL WARNING: Live Spot Close failed: {e1}. Please manually close Spot immediately!")
+                
+            # 2. Close Futures (Market Buy Cover short leg)
+            try:
+                logger.info(f"🛡️ [LIVE TRADE] Executing Leg 2: Futures Swap Market Buy (Cover Short) {rounded_qty} {asset}...")
+                order_perp = self.futures_exchange.create_market_buy_order(perp_symbol, rounded_qty)
+                order_ids.append(order_perp.get("id", "Perp-Close-Real"))
+                
+                filled_perp_exit = float(order_perp.get("price", current_perp) or current_perp)
+                if filled_perp_exit <= 0.0:
+                    filled_perp_exit = current_perp
+                logger.info(f"✅ Futures Close filled at ${filled_perp_exit:,.2f}")
+            except Exception as e2:
+                logger.error(f"🚨 CRITICAL WARNING: Live Perpetual Close failed: {e2}. Please manually cover perpetual short immediately!")
+        
+        # Calculate Spot vs Perp entry-exit basis difference
         entry_spread_pct = (pos["perp_price"] - pos["spot_price"]) / pos["spot_price"]
-        exit_spread_pct = (current_perp - current_spot) / current_spot
-        basis_profit = pos["size"] * (entry_spread_pct - exit_spread_pct)
+        exit_spread_pct = (filled_perp_exit - filled_spot_exit) / filled_spot_exit
+        basis_profit = S * (entry_spread_pct - exit_spread_pct)
         
         # Net Trade Profit = Accrued Yield + Basis Profit
         net_profit = final_yield + basis_profit
-        # Deduct exit fee upon liquidation
-        self.balance_usdt += pos["size"] + net_profit - close_fee
+        
+        # Cash returned is margin allocated + net profit - close fee
+        cash_returned = M + net_profit - close_fee
+        self.balance_usdt += cash_returned
         
         trade = {
             "timestamp": datetime.now().strftime("%H:%M:%S"),
-            "asset": pos["asset"],
+            "asset": asset,
             "action": "CLOSE",
-            "size": pos["size"],
+            "size": M,
             "apr": pos["apr"],
             "profit": round(net_profit, 4),
             "fee": round(close_fee, 4)
         }
+        if order_ids:
+            trade["orders"] = order_ids
         self.trades.append(trade)
-        logger.info(f"🛡️ CLOSED DELTA-NEUTRAL POSITION on {pos['asset']} | Realized Yield: ${final_yield:+.4f} | Basis Profit: ${basis_profit:+.4f} | Net Trade Profit: ${net_profit:+.4f} | Fee Paid: ${close_fee:.4f}")
+        logger.info(f"🛡️ CLOSED DELTA-NEUTRAL POSITION on {asset} | Realized Yield: ${final_yield:+.4f} | Basis Profit: ${basis_profit:+.4f} | Net Trade Profit: ${net_profit:+.4f} | Fee Paid: ${close_fee:.4f}")
         self.log_to_excel()
 
     def log_to_excel(self):
@@ -359,13 +559,27 @@ class FundingArbBot:
             logger.error(f"Error fetching live pricing/funding rate tickers: {e}")
             return
 
+        # Sync real balances in live mode on every cycle
+        if self.execution_mode == "live" and self.spot_exchange and self.futures_exchange:
+            try:
+                spot_bal = self.spot_exchange.fetch_balance()
+                futures_bal = self.futures_exchange.fetch_balance()
+                
+                spot_usdt = spot_bal.get('USDT', {}).get('free', 0.0)
+                futures_usdt = futures_bal.get('USDT', {}).get('free', 0.0)
+                
+                self.balance_usdt = spot_usdt + futures_usdt
+                logger.info(f"💰 Real USDT Balances Synced: Spot ${spot_usdt:.2f} | Futures Perp ${futures_usdt:.2f} | Total Available: ${self.balance_usdt:.2f}")
+            except Exception as e:
+                logger.warning(f"⚠️ Failed to sync live wallet balances: {e}. Utilizing local simulated cached balance.")
+
         # 2. Accrue Yield for active positions pro-rata
         # The loop runs every 2.0 seconds
         loop_interval = 2.0
         seconds_in_year = 365 * 24 * 3600
         for pos in self.positions:
-            # Yield = size * (apr / 100) * (loop_interval / seconds_in_year)
-            accrued = pos["size"] * (pos["apr"] / 100.0) * (loop_interval / seconds_in_year)
+            # Yield = spot_size * (apr / 100) * (loop_interval / seconds_in_year)
+            accrued = pos["spot_size"] * (pos["apr"] / 100.0) * (loop_interval / seconds_in_year)
             pos["yield_captured"] += accrued
             self.total_yield += accrued
             # We don't credit cash balance until position unwinds (unrealized until exit)
@@ -423,6 +637,9 @@ def run_funding_bot():
         
     bot = FundingArbBot()
     bot.status = "running"
+    
+    # Initialize Binance Live exchanges if credentials loaded in Live Mode
+    bot.init_exchanges()
     bot.save_state()
     
     logger.info(f"Funding Bot RUNNING | Start Capital: ${bot.capital:,.2f} | Entry APR trigger: {bot.min_apr_trigger}% | Exit APR trigger: {bot.stop_apr_trigger}%")
