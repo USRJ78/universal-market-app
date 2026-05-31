@@ -96,10 +96,22 @@ if key_val and secret_val:
                 'enableRateLimit': True
             })
             exchange.load_markets()
+            # Force key validation using a lightweight private call
+            exchange.fetch_balance()
             is_authenticated = True
-        except Exception as e:
-            st.sidebar.error(f"Connection failed: {e}")
+        except ccxt.AuthenticationError:
+            st.sidebar.error("❌ Invalid Delta API Key/Secret. Running in Sandbox Mode.")
             exchange = None
+            is_authenticated = False
+        except Exception as e:
+            # Fallback check if CCXT throws a generic error containing invalid key string
+            err_str = str(e).lower()
+            if "invalid_api_key" in err_str or "apikey" in err_str or "unauthorized" in err_str or "auth" in err_str:
+                st.sidebar.error("❌ Invalid Delta API Key/Secret. Running in Sandbox Mode.")
+            else:
+                st.sidebar.error(f"Connection failed: {e}")
+            exchange = None
+            is_authenticated = False
             
 if is_authenticated:
     st.sidebar.markdown('<div class="status-auth">🟢 LIVE ACCOUNT ACTIVE</div>', unsafe_allow_html=True)
