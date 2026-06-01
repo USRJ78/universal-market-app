@@ -89,27 +89,46 @@ exchange = None
 
 if key_val and secret_val:
     if ccxt:
-        try:
-            exchange = ccxt.delta({
-                'apiKey': key_val,
-                'secret': secret_val,
-                'enableRateLimit': True
-            })
-            exchange.load_markets()
-            # Force key validation using a lightweight private call
-            exchange.fetch_balance()
+        try_endpoints = [
+            {"name": "Global", "url": "https://api.delta.exchange"},
+            {"name": "India", "url": "https://api.india.delta.exchange"}
+        ]
+        
+        last_error = ""
+        resolved_exchange = None
+        
+        for ep in try_endpoints:
+            try:
+                test_ex = ccxt.delta({
+                    'apiKey': key_val,
+                    'secret': secret_val,
+                    'enableRateLimit': True
+                })
+                test_ex.urls['api'] = {
+                    'public': ep["url"],
+                    'private': ep["url"]
+                }
+                test_ex.load_markets()
+                test_ex.fetch_balance()
+                resolved_exchange = test_ex
+                break
+            except Exception as e:
+                last_error = str(e)
+                
+        if resolved_exchange:
+            exchange = resolved_exchange
             is_authenticated = True
-        except ccxt.AuthenticationError:
-            st.sidebar.error("❌ Invalid Delta API Key/Secret. Running in Sandbox Mode.")
-            exchange = None
-            is_authenticated = False
-        except Exception as e:
-            # Fallback check if CCXT throws a generic error containing invalid key string
-            err_str = str(e).lower()
-            if "invalid_api_key" in err_str or "apikey" in err_str or "unauthorized" in err_str or "auth" in err_str:
-                st.sidebar.error("❌ Invalid Delta API Key/Secret. Running in Sandbox Mode.")
+        else:
+            err_str = last_error.lower()
+            if "ip_not_whitelisted" in err_str:
+                import re
+                ip_match = re.search(r'"client_ip"\s*:\s*"([^"]+)"', last_error)
+                client_ip = ip_match.group(1) if ip_match else "your current IP"
+                st.sidebar.error(f"❌ **IP Not Whitelisted!**\nPlease add your IP `{client_ip}` to your Delta API key's whitelist in the exchange API management dashboard.")
+            elif "invalid_api_key" in err_str or "apikey" in err_str or "unauthorized" in err_str or "auth" in err_str:
+                st.sidebar.error("❌ **Invalid Delta API Key/Secret.** Running in Sandbox Mode.")
             else:
-                st.sidebar.error(f"Connection failed: {e}")
+                st.sidebar.error(f"Connection failed: {last_error}")
             exchange = None
             is_authenticated = False
             
@@ -119,16 +138,24 @@ else:
     st.sidebar.markdown('<div class="status-sandbox">💜 DETECTING SANDBOX MODE</div>', unsafe_allow_html=True)
     st.sidebar.info("Dashboard is displaying a high-fidelity real-time sandbox portfolio. Configure your credentials in secrets.toml or in the sidebar to trade live.")
 
-# Initialize public scanners safely
+# Initialize public scanners safely (adaptive to India or Global availability)
 public_exchange = None
 if ccxt:
-    try:
-        public_exchange = ccxt.delta({
-            'enableRateLimit': True
-        })
-        public_exchange.load_markets()
-    except Exception:
-        public_exchange = None
+    try_urls = ["https://api.delta.exchange", "https://api.india.delta.exchange"]
+    for url in try_urls:
+        try:
+            pub_ex = ccxt.delta({
+                'enableRateLimit': True
+            })
+            pub_ex.urls['api'] = {
+                'public': url,
+                'private': url
+            }
+            pub_ex.load_markets()
+            public_exchange = pub_ex
+            break
+        except Exception:
+            pass
 
 # ---------------------------------------------------------
 # LIVE PRICING FETCH (GENUINE DELTA DATA)
