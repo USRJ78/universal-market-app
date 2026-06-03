@@ -16,6 +16,13 @@ class StrategyHelper:
         else:
             self.workspace_dir = workspace_dir
         self.strategies = {
+            "Crypto UTBot Strategy": {
+                "file": "crypto_utbot_equity.csv",
+                "trades_file": "crypto_utbot_trades.csv",
+                "type": "csv_custom",
+                "initial_capital": 100000.0,
+                "desc": "Executes volatility-adjusted trend-following (UTBot Alerts) across a basket of major cryptocurrencies (BTC, ETH, SOL) with ATR 10 and Multiplier 1.0."
+            },
             "Discount Stock Strategy v2 (DSS2)": {
                 "file": "DSS2BEST.xlsx",
                 "sheet": "Sheet1",
@@ -103,12 +110,26 @@ class StrategyHelper:
         if not cfg:
             return pd.DataFrame()
             
-        fpath = self.get_file_path(cfg["file"])
+        if cfg["type"] == "csv_custom":
+            fpath = self.get_file_path(cfg["trades_file"])
+        else:
+            fpath = self.get_file_path(cfg["file"])
+            
         if not os.path.exists(fpath):
             return pd.DataFrame()
             
         try:
-            if cfg["type"] == "trade_log":
+            if cfg["type"] == "csv_custom":
+                df = pd.read_csv(fpath)
+                df["Exit Date"] = pd.to_datetime(df["Exit Date"])
+                df["Entry Date"] = pd.to_datetime(df["Entry Date"])
+                df["Profit"] = pd.to_numeric(df["Profit"]).fillna(0.0)
+                df["Return %"] = pd.to_numeric(df["Return %"]).fillna(0.0)
+                df["Stock"] = df["Stock"] if "Stock" in df.columns else "Generic Asset"
+                df["Exit Reason"] = df["Exit Reason"] if "Exit Reason" in df.columns else "Normal Exit"
+                self.cached_trades[name] = df
+                return df
+            elif cfg["type"] == "trade_log":
                 wb = openpyxl.load_workbook(fpath, read_only=True, data_only=True)
                 sheet_name = cfg["sheet"]
                 if sheet_name not in wb.sheetnames:
@@ -250,7 +271,14 @@ class StrategyHelper:
             return pd.DataFrame()
             
         try:
-            if cfg["type"] == "trade_log":
+            if cfg["type"] == "csv_custom":
+                df = pd.read_csv(fpath)
+                df["Date"] = pd.to_datetime(df["Exit Date"]).dt.normalize()
+                df["Equity"] = pd.to_numeric(df["Portfolio Equity"]).fillna(cfg["initial_capital"])
+                res = df[["Date", "Equity"]].copy()
+                self.cached_curves[name] = res
+                return res
+            elif cfg["type"] == "trade_log":
                 trades = self.load_strategy_trades(name)
                 if trades.empty:
                     return pd.DataFrame()

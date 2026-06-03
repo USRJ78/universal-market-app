@@ -250,7 +250,7 @@ with tabs[1]:
     selected_strats = st.multiselect(
         "Select strategies to include in portfolio:",
         options=available_strategies,
-        default=["Discount Stock Strategy v2 (DSS2)", "Chess Trading Strategy", "Vector HFT"]
+        default=["Discount Stock Strategy v2 (DSS2)", "Chess Trading Strategy", "Crypto UTBot Strategy"]
     )
     
     if not selected_strats:
