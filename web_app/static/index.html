@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visual Options Laboratory V2</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="glass-container">
+        <header>
+            <h1>Visual Options Laboratory V2</h1>
+            <p>Drag and Drop Sandbox + Historical Simulation Engine</p>
+        </header>
+        
+        <main>
+            <!-- Left Sidebar: Palette & Config -->
+            <section class="sidebar">
+                <h2>Component Palette</h2>
+                <p class="hint">Drag blocks into the active zone</p>
+                <div class="palette">
+                    <div class="drag-item" draggable="true" data-type="call" data-action="buy">Long Call (100%)</div>
+                    <div class="drag-item" draggable="true" data-type="call" data-action="sell">Short Call (100%)</div>
+                    <div class="drag-item" draggable="true" data-type="put" data-action="buy">Long Put (100%)</div>
+                    <div class="drag-item" draggable="true" data-type="put" data-action="sell">Short Put (100%)</div>
+                    <div class="drag-item future-block" draggable="true" data-type="future" data-action="buy">Long Future</div>
+                </div>
+                
+                <h2 style="margin-top: 2rem;">Simulation Config</h2>
+                <div class="config-panel">
+                    <label>Asset Class</label>
+                    <select id="assetSelect">
+                        <option value="BTC-USD">Bitcoin (BTC-USD)</option>
+                        <option value="^NSEI">NIFTY 50 (^NSEI)</option>
+                        <option value="SPY">S&P 500 (SPY)</option>
+                    </select>
+                    
+                    <label>Start Date</label>
+                    <input type="date" id="startDate" value="2018-01-01">
+                    
+                    <label>End Date</label>
+                    <input type="date" id="endDate" value="2023-01-01">
+                    
+                    <button id="simulateBtn" class="btn-simulate">🚀 Run Historical Backtest</button>
+                </div>
+            </section>
+            
+            <!-- Middle: Active Zone & Theoretical Chart -->
+            <section class="middle-panel">
+                <h2>Active Geometry (Drop Zone)</h2>
+                <div class="drop-zone" id="dropZone">
+                    <p class="drop-hint">Drop Options/Futures Here</p>
+                    <ul id="legList"></ul>
+                </div>
+                
+                <h2 style="margin-top: 1rem;">Theoretical Expiry Profile</h2>
+                <div class="chart-wrapper">
+                    <canvas id="payoffChart"></canvas>
+                </div>
+            </section>
+            
+            <!-- Right: Real Historical Equity Curve -->
+            <section class="right-panel">
+                <h2>Real Historical Equity Curve</h2>
+                <div class="chart-wrapper">
+                    <canvas id="equityChart"></canvas>
+                </div>
+                
+                <div id="simulationResults" class="hidden">
+                    <div class="metric">
+                        <span class="label">Total Return</span>
+                        <span class="value" id="resReturn">0%</span>
+                    </div>
+                    <div class="metric">
+                        <span class="label">Max Drawdown</span>
+                        <span class="value" id="resDrawdown">0%</span>
+                    </div>
+                    <div class="metric">
+                        <span class="label">Sharpe Ratio</span>
+                        <span class="value" id="resSharpe">0.0</span>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+    
+    <!-- Modal for tweaking dragged item -->
+    <div id="tweakModal" class="modal hidden">
+        <div class="modal-content">
+            <h3>Configure Leg</h3>
+            <label>Strike %</label>
+            <input type="number" id="modalStrike" value="100">
+            <label>Qty</label>
+            <input type="number" id="modalQty" value="1.0" step="0.1">
+            <label>DTE</label>
+            <input type="number" id="modalDte" value="90">
+            <button id="modalSave" class="btn-primary">Add to Geometry</button>
+        </div>
+    </div>
+    
+    <script src="app.js"></script>
+</body>
+</html>

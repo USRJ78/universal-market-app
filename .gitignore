@@ -1,0 +1,18 @@
+# Streamlit secrets (NEVER commit these!)
+.streamlit/secrets.toml
+.streamlit/
+
+# Local cache & states
+*state.json
+*.log
+*.xlsx
+__pycache__/
+*.pkl
+*.ipynb_checkpoints/
+
+# OS and IDE specific
+.idea/
+.vscode/
+Thumbs.db
+desktop.ini
+~$*.xlsx

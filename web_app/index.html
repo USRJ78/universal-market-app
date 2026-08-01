@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>SwarmAlpha V6.0 — Quantitative Signal & Option Payoff Engine</title>
+  
+  <!-- Native iOS App Meta Tags -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="SwarmAlpha">
+  <link rel="apple-touch-icon" href="https://img.icons8.com/emoji/192/000000/dragon-emoji.png">
+  <link rel="manifest" href="manifest.json">
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- App Container -->
+  <div class="app-container">
+    
+    <!-- Top Navigation Bar -->
+    <header class="navbar">
+      <div class="brand">
+        <div class="logo-icon">🐉</div>
+        <div class="brand-text">
+          <h1>SWARM ALPHA <span class="badge-v6">V6.0</span></h1>
+          <p>Ouroboros Quantum Convexity & Option Geometry Engine</p>
+        </div>
+      </div>
+      <div class="nav-metrics">
+        <div class="stat-pill">
+          <span class="lbl">10Y CAGR</span>
+          <span class="val cyan">+103.55%</span>
+        </div>
+        <div class="stat-pill">
+          <span class="lbl">Profit Factor</span>
+          <span class="val green">22.72</span>
+        </div>
+        <div class="stat-pill">
+          <span class="lbl">Max Drawdown</span>
+          <span class="val gold">-2.97%</span>
+        </div>
+        <div class="status-badge live">
+          <span class="pulse-dot"></span>
+          DAEMON ACTIVE
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Grid Content -->
+    <main class="dashboard-grid">
+
+      <!-- Column 1: Live Conviction Radar -->
+      <section class="card conviction-radar">
+        <div class="card-header">
+          <h2>⚡ Live Swarm Conviction Radar</h2>
+          <span class="update-lbl">Scanned 10s ago</span>
+        </div>
+        <div class="radar-list" id="radarList">
+          <!-- Populated by JS -->
+        </div>
+      </section>
+
+      <!-- Column 2: Interactive 1x2 Option Payoff Visualizer -->
+      <section class="card payoff-simulator">
+        <div class="card-header">
+          <h2>🎯 Zero-Debit 1x2 Ratio Call Spread Simulator</h2>
+          <span class="tag-badge">Non-Linear Convexity</span>
+        </div>
+        <div class="sim-controls">
+          <div class="ctrl-group">
+            <label>Underlying Price (S): $<span id="lblSpot">65,000</span></label>
+            <input type="range" id="sliderSpot" min="50000" max="85000" step="500" value="65000">
+          </div>
+          <div class="ctrl-group">
+            <label>1x Buy ATM Strike (K1): $<span id="lblK1">65,000</span></label>
+            <input type="range" id="sliderK1" min="50000" max="80000" step="500" value="65000">
+          </div>
+          <div class="ctrl-group">
+            <label>2x Sell OTM Strike (K2): $<span id="lblK2">68,000</span></label>
+            <input type="range" id="sliderK2" min="55000" max="85000" step="500" value="68000">
+          </div>
+        </div>
+
+        <div class="canvas-container">
+          <canvas id="payoffCanvas" width="600" height="280"></canvas>
+        </div>
+
+        <div class="payoff-metrics">
+          <div class="m-box">
+            <span class="m-title">Net Upfront Debit</span>
+            <span class="m-val green" id="valDebit">$0.00 (Zero Debit)</span>
+          </div>
+          <div class="m-box">
+            <span class="m-title">Max Non-Linear Payoff</span>
+            <span class="m-val cyan" id="valMaxPayoff">+$3,000 (+145%)</span>
+          </div>
+          <div class="m-box">
+            <span class="m-title">Breakeven Upper Boundary</span>
+            <span class="m-val gold" id="valUpperBE">$71,000</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Full Width: Verified 10-Year Track Record -->
+      <section class="card track-record">
+        <div class="card-header">
+          <h2>📈 Verified 10-Year Out-of-Sample Track Record (2016 – 2026)</h2>
+          <div class="tab-buttons">
+            <button class="tab-btn active" onclick="switchTab('chartTab')">Equity Curve</button>
+            <button class="tab-btn" onclick="switchTab('logTab')">Executed Trades Log</button>
+          </div>
+        </div>
+
+        <div class="tab-content" id="chartTab">
+          <div class="track-chart-box">
+            <img src="../analysis/ouroboros_v6_chart.png" alt="10-Year Master Equity Curve" class="equity-img" id="equityChartImg">
+          </div>
+        </div>
+
+        <div class="tab-content hidden" id="logTab">
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Asset</th>
+                  <th>Execution Type</th>
+                  <th>Entry Price</th>
+                  <th>Exit Price</th>
+                  <th>PnL (%)</th>
+                  <th>PnL ($)</th>
+                </tr>
+              </thead>
+              <tbody id="tradeLogTable">
+                <!-- Populated by JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <p>SWARM ALPHA QUANTITATIVE ENGINE V6.0 — ANTIGRAVITY AI BRAIN CORE SYSTEM</p>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
