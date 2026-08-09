@@ -1,0 +1,35 @@
+{
+    "is_running": true,
+    "force_execute": true,
+    "auto_unwind": true,
+    "min_profit_pct": 0.01,
+    "trade_size_usd": 180.0,
+    "leverage": 20,
+    "accumulated_profit_usd": 0.0,
+    "active_position": {
+        "loop": "B",
+        "underlying": "BTC",
+        "expiry": "2026-06-26",
+        "strike": 69000.0,
+        "qty": 10,
+        "timestamp": "2026-06-03 18:30:00",
+        "legs": {
+            "perp": {
+                "symbol": "BTC/USD:USD",
+                "entry_price": 67078.2
+            },
+            "call": {
+                "symbol": "BTC/USD:USD-260626-69000-C",
+                "entry_price": 2085.0
+            },
+            "put": {
+                "symbol": "BTC/USD:USD-260626-69000-P",
+                "entry_price": 3965.0
+            }
+        }
+    },
+    "trades": [],
+    "last_update": "2026-06-20T11:15:42.050652",
+    "pid": 3272,
+    "starting": false
+}

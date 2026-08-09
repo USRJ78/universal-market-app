@@ -1,0 +1,76 @@
+{
+    "is_running": true,
+    "starting": true,
+    "force_execute": false,
+    "min_profit_pct": 1.0,
+    "trade_size_usd": 100.0,
+    "leverage": 20,
+    "accumulated_profit_usd": -0.4812599999999939,
+    "trades": [
+        {
+            "timestamp_entry": "2026-06-09 11:12:44",
+            "timestamp_exit": "2026-06-09 12:54:37",
+            "direction": "SELL",
+            "qty": 1.0,
+            "entry_perp": 63365.5,
+            "exit_perp": 63274.5,
+            "entry_spot": 63397.97,
+            "exit_spot": 63303.05,
+            "fees_usd": 0.19009650000000003,
+            "net_profit_usd": -0.1940164999999983,
+            "is_sandbox": false
+        },
+        {
+            "timestamp_entry": "2026-06-09 12:54:54",
+            "timestamp_exit": "2026-06-09 20:27:06",
+            "direction": "BUY",
+            "qty": 1.0,
+            "entry_perp": 63265.5,
+            "exit_perp": 61335.5,
+            "entry_spot": 63300.0,
+            "exit_spot": 61348.0,
+            "fees_usd": 0.1897965,
+            "net_profit_usd": -0.1677965,
+            "is_sandbox": false
+        },
+        {
+            "timestamp_entry": "2026-06-09 20:48:56",
+            "timestamp_exit": "2026-06-09 22:10:19",
+            "direction": "BUY",
+            "qty": 1.0,
+            "entry_perp": 61549.0,
+            "exit_perp": 60779.0,
+            "entry_spot": 61626.73,
+            "exit_spot": 60791.53,
+            "fees_usd": 0.184647,
+            "net_profit_usd": -0.11944699999999564,
+            "is_sandbox": false
+        }
+    ],
+    "active_position": {
+        "symbol": "BTC/USD:USD",
+        "direction": "BUY",
+        "qty": 1.0,
+        "fill_price": 60842.0,
+        "spot_price": 60876.2,
+        "is_sandbox": false,
+        "timestamp": "2026-06-09 22:10:51",
+        "next_funding_timestamp": 1781049600.0,
+        "next_funding_time_utc": "2026-06-10 00:00:00 UTC",
+        "next_funding_time_ist": "2026-06-10 05:30:00 IST"
+    },
+    "last_update": "2026-06-10T02:35:03.451853",
+    "pid": null,
+    "indicators": {
+        "spot_ask": 62056.0,
+        "spot_bid": 62055.99,
+        "perp_ask": 62018.0,
+        "perp_bid": 62017.5,
+        "basis_spread_pct": -0.06204073739847879,
+        "funding_rate_apr": 10.950000000000001,
+        "volatility_annual": 0.4261291096234513,
+        "fen": "rnbq1rk1/Npp2ppp/8/3p4/8/8/PPPP1PPP/RNBQ1RK1 w KQkq - 0 1",
+        "score": 4.19,
+        "bestmove": "bestmove a7c8 ponder f8e8"
+    }
+}

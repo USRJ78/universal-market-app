@@ -1,0 +1,11 @@
+[package]
+name = "rust_1000pct_engine"
+version = "0.1.0"
+edition = "2021"
+authors = ["Uday Singh Rathore <udaysinghrathore09@gmail.com>", "goforaditya"]
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+reqwest = { version = "0.11", features = ["json", "blocking"] }
+chrono = "0.4"

@@ -1,0 +1,914 @@
+{
+    "is_running": false,
+    "starting": false,
+    "pid": null,
+    "num_bots": 10000,
+    "anomalies": [
+        {
+            "timestamp": "2026-06-03 17:57:48",
+            "bug_id": "Bug #949381",
+            "asset": "BTC-USD",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:57:49",
+            "bug_id": "Bug #828177",
+            "asset": "BTC-USD",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:57:49",
+            "bug_id": "Bug #161987",
+            "asset": "BTC-USD",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:57:50",
+            "bug_id": "Bug #617724",
+            "asset": "BTC-USD",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:57:50",
+            "bug_id": "Bug #847792",
+            "asset": "BTC-USD",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:57:51",
+            "bug_id": "Bug #960920",
+            "asset": "BTC-USD",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:57:51",
+            "bug_id": "Bug #945237",
+            "asset": "BTC-USD",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:57:52",
+            "bug_id": "Bug #367013",
+            "asset": "BTC-USD",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:57:53",
+            "bug_id": "Bug #395257",
+            "asset": "BTC-USD",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:57:53",
+            "bug_id": "Bug #466710",
+            "asset": "BTC-USD",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:57:54",
+            "bug_id": "Bug #605612",
+            "asset": "BTC-USD",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:57:54",
+            "bug_id": "Bug #728270",
+            "asset": "BTC-USD",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:57:55",
+            "bug_id": "Bug #458786",
+            "asset": "BTC-USD",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:57:56",
+            "bug_id": "Bug #733524",
+            "asset": "BTC-USD",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:57:56",
+            "bug_id": "Bug #907795",
+            "asset": "BTC-USD",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:57:57",
+            "bug_id": "Bug #265182",
+            "asset": "BTC-USD",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:57:57",
+            "bug_id": "Bug #366582",
+            "asset": "BTC-USD",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:57:58",
+            "bug_id": "Bug #127019",
+            "asset": "BTC-USD",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:57:59",
+            "bug_id": "Bug #324995",
+            "asset": "BTC-USD",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:57:59",
+            "bug_id": "Bug #909948",
+            "asset": "ETH-USD",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:58:00",
+            "bug_id": "Bug #237245",
+            "asset": "ETH-USD",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:58:00",
+            "bug_id": "Bug #898896",
+            "asset": "ETH-USD",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:58:01",
+            "bug_id": "Bug #268021",
+            "asset": "ETH-USD",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:58:01",
+            "bug_id": "Bug #667330",
+            "asset": "ETH-USD",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:58:02",
+            "bug_id": "Bug #929147",
+            "asset": "ETH-USD",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:58:03",
+            "bug_id": "Bug #754183",
+            "asset": "ETH-USD",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:58:03",
+            "bug_id": "Bug #905770",
+            "asset": "ETH-USD",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:58:04",
+            "bug_id": "Bug #470961",
+            "asset": "ETH-USD",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:58:04",
+            "bug_id": "Bug #125743",
+            "asset": "ETH-USD",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:58:05",
+            "bug_id": "Bug #813209",
+            "asset": "ETH-USD",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:58:06",
+            "bug_id": "Bug #572748",
+            "asset": "ETH-USD",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:58:07",
+            "bug_id": "Bug #439179",
+            "asset": "ETH-USD",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:58:08",
+            "bug_id": "Bug #778521",
+            "asset": "ETH-USD",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:58:10",
+            "bug_id": "Bug #670926",
+            "asset": "ETH-USD",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:58:10",
+            "bug_id": "Bug #682943",
+            "asset": "ETH-USD",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:58:11",
+            "bug_id": "Bug #850605",
+            "asset": "ETH-USD",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:58:11",
+            "bug_id": "Bug #650669",
+            "asset": "ETH-USD",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:58:12",
+            "bug_id": "Bug #191814",
+            "asset": "ETH-USD",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:58:23",
+            "bug_id": "Bug #725265",
+            "asset": "DOGE-USD",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:58:24",
+            "bug_id": "Bug #466036",
+            "asset": "DOGE-USD",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:58:25",
+            "bug_id": "Bug #130784",
+            "asset": "DOGE-USD",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:58:25",
+            "bug_id": "Bug #221006",
+            "asset": "DOGE-USD",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:58:26",
+            "bug_id": "Bug #839112",
+            "asset": "DOGE-USD",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:58:27",
+            "bug_id": "Bug #780618",
+            "asset": "DOGE-USD",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:58:27",
+            "bug_id": "Bug #151738",
+            "asset": "DOGE-USD",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:58:28",
+            "bug_id": "Bug #873651",
+            "asset": "DOGE-USD",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:58:29",
+            "bug_id": "Bug #844053",
+            "asset": "DOGE-USD",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:58:30",
+            "bug_id": "Bug #792446",
+            "asset": "DOGE-USD",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:58:30",
+            "bug_id": "Bug #887920",
+            "asset": "DOGE-USD",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:58:31",
+            "bug_id": "Bug #142862",
+            "asset": "DOGE-USD",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:58:32",
+            "bug_id": "Bug #562387",
+            "asset": "DOGE-USD",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:58:33",
+            "bug_id": "Bug #491623",
+            "asset": "DOGE-USD",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:58:34",
+            "bug_id": "Bug #812635",
+            "asset": "DOGE-USD",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:58:35",
+            "bug_id": "Bug #812038",
+            "asset": "DOGE-USD",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:58:36",
+            "bug_id": "Bug #382400",
+            "asset": "DOGE-USD",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:58:36",
+            "bug_id": "Bug #639949",
+            "asset": "DOGE-USD",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:58:37",
+            "bug_id": "Bug #228739",
+            "asset": "DOGE-USD",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:58:38",
+            "bug_id": "Bug #902449",
+            "asset": "AAPL",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:58:38",
+            "bug_id": "Bug #382298",
+            "asset": "AAPL",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:58:39",
+            "bug_id": "Bug #439460",
+            "asset": "AAPL",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:58:40",
+            "bug_id": "Bug #789947",
+            "asset": "AAPL",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:58:41",
+            "bug_id": "Bug #382017",
+            "asset": "AAPL",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:58:41",
+            "bug_id": "Bug #771050",
+            "asset": "AAPL",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:58:42",
+            "bug_id": "Bug #249289",
+            "asset": "AAPL",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:58:42",
+            "bug_id": "Bug #192894",
+            "asset": "AAPL",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:58:43",
+            "bug_id": "Bug #732182",
+            "asset": "AAPL",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:58:44",
+            "bug_id": "Bug #836071",
+            "asset": "AAPL",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:58:45",
+            "bug_id": "Bug #636180",
+            "asset": "AAPL",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:58:45",
+            "bug_id": "Bug #235141",
+            "asset": "AAPL",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:58:46",
+            "bug_id": "Bug #734849",
+            "asset": "AAPL",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:58:46",
+            "bug_id": "Bug #217892",
+            "asset": "AAPL",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:58:47",
+            "bug_id": "Bug #318558",
+            "asset": "AAPL",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:58:47",
+            "bug_id": "Bug #585706",
+            "asset": "AAPL",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:58:48",
+            "bug_id": "Bug #244246",
+            "asset": "AAPL",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:58:49",
+            "bug_id": "Bug #576107",
+            "asset": "AAPL",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:58:49",
+            "bug_id": "Bug #336292",
+            "asset": "AAPL",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:58:51",
+            "bug_id": "Bug #351468",
+            "asset": "MSFT",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:58:52",
+            "bug_id": "Bug #620453",
+            "asset": "MSFT",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:58:54",
+            "bug_id": "Bug #452531",
+            "asset": "MSFT",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:58:55",
+            "bug_id": "Bug #838939",
+            "asset": "MSFT",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:58:56",
+            "bug_id": "Bug #784399",
+            "asset": "MSFT",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:58:56",
+            "bug_id": "Bug #658363",
+            "asset": "MSFT",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:58:57",
+            "bug_id": "Bug #203206",
+            "asset": "MSFT",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:58:58",
+            "bug_id": "Bug #375192",
+            "asset": "MSFT",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:58:58",
+            "bug_id": "Bug #263804",
+            "asset": "MSFT",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:58:59",
+            "bug_id": "Bug #806826",
+            "asset": "MSFT",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:59:00",
+            "bug_id": "Bug #455589",
+            "asset": "MSFT",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:59:00",
+            "bug_id": "Bug #542387",
+            "asset": "MSFT",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:59:01",
+            "bug_id": "Bug #220570",
+            "asset": "MSFT",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:59:02",
+            "bug_id": "Bug #453474",
+            "asset": "MSFT",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:59:03",
+            "bug_id": "Bug #306636",
+            "asset": "MSFT",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:59:03",
+            "bug_id": "Bug #278698",
+            "asset": "MSFT",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:59:04",
+            "bug_id": "Bug #243567",
+            "asset": "MSFT",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:59:05",
+            "bug_id": "Bug #824666",
+            "asset": "MSFT",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:59:06",
+            "bug_id": "Bug #913544",
+            "asset": "MSFT",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:59:23",
+            "bug_id": "Bug #315302",
+            "asset": "NVDA",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:59:24",
+            "bug_id": "Bug #165649",
+            "asset": "NVDA",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:59:25",
+            "bug_id": "Bug #674508",
+            "asset": "NVDA",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:59:26",
+            "bug_id": "Bug #640198",
+            "asset": "NVDA",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        },
+        {
+            "timestamp": "2026-06-03 17:59:27",
+            "bug_id": "Bug #276757",
+            "asset": "NVDA",
+            "pattern": "RSI-13 Oversold Level (15.6)",
+            "direction": "BUY",
+            "strength": 14.376,
+            "price": 66938.6406
+        }
+    ],
+    "stats": {
+        "total_scans": 1,
+        "anomalies_detected": 2221,
+        "active_bugs": 10000
+    },
+    "last_update": "2026-06-03T18:01:10.633168"
+}

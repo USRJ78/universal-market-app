@@ -1,0 +1,2 @@
+class BinanceBroker:
+    pass

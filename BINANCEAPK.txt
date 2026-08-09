@@ -1,0 +1,7 @@
+sk = tGffKynOB2dbZnFxN60U3vrdgrycxPlPQePjty8vD42ls7Ae0gdIJgpkm7qnLItp
+ak = nH4mvR1jCXXbGV3FXjuN4SuKZuljXdosffxQ0N3Zhi3w0IymonlI6GfYcYlgQN9Y
+
+
+delta = "WMKFETOALADN2PGD"
+api = "lfg5GiCElub3icoh87LHAeYpD2Q1sS"
+secret = "uqyAjJ594nsZo1nCJ7Wjh2iG2weXUSX1gXTuW8ajs0mzwQT3QqfGmRoysOmz"

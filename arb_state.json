@@ -1,0 +1,16 @@
+{
+    "cash": 10000,
+    "trade_count": 0,
+    "equity": [
+        "2026-05-26 00:47:50",
+        10000
+    ],
+    "timestamp": "2026-05-26T00:47:50.331275",
+    "status": "stopped",
+    "capital": 1000.0,
+    "balance_usdt": 1000.0,
+    "trade_size": 100.0,
+    "limit_trades": false,
+    "max_trades_limit": 0,
+    "min_profit_pct": 0.05
+}

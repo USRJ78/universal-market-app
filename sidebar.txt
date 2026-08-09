@@ -1,0 +1,6 @@
+st.sidebar.markdown("---")
+st.sidebar.markdown("**Legal & Policies**")
+st.sidebar.markdown("- [Privacy Policy](https://drive.google.com/file/d/1JLl2BzpkHDpz6-cfMR6b-wiXpcN6dKet/view?usp=sharing)")
+st.sidebar.markdown("- [Terms of Service](https://drive.google.com/file/d/1VABpc6ZANgS1L3DEiSlLuPX7oqS8mh44/view?usp=sharing)")
+st.sidebar.markdown("- [Refund & Cancellation Policy](https://drive.google.com/file/d/1i0g2g9YdNASv1UyweBiiNEtXyxM_7H3A/view?usp=sharing)")
+st.sidebar.markdown("**Contact:** udaysinghrathore09@gmail.com")  # ← change to your real email

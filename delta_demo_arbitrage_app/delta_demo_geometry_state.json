@@ -1,0 +1,40 @@
+{
+    "is_running": true,
+    "starting": false,
+    "pid": 10716,
+    "trade_size_usd": 100.0,
+    "target_profit_usd": 5.0,
+    "accumulated_profit_usd": 5.700000000000003,
+    "trades": [
+        {
+            "timestamp": "2026-07-04 00:13:46",
+            "geometry": "Deep_ITM_Strangle",
+            "net_pnl": 5.700000000000003,
+            "call_exit": 6315.0,
+            "put_exit": 8725.0
+        }
+    ],
+    "active_position": {
+        "geometry": "Deep_ITM_Strangle",
+        "expiry": "2026-07-31T12:00:00.000Z",
+        "entry_time": "2026-07-15 19:10:48",
+        "total_cost": 99.92,
+        "contract_size": 0.001,
+        "call": {
+            "symbol": "BTC/USD:USD-260731-65000-C",
+            "qty": 21,
+            "entry_price": 2360.0,
+            "strike": 65000.0
+        },
+        "put": {
+            "symbol": "BTC/USD:USD-260731-78000-P",
+            "qty": 4,
+            "entry_price": 12590.0,
+            "strike": 78000.0
+        },
+        "current_call_price": 2430.0,
+        "current_put_price": 11630.0,
+        "unrealized_pnl": -2.3699999999999903
+    },
+    "last_update": "2026-07-21T14:07:27.427698"
+}

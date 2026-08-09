@@ -8,3 +8,5 @@ seaborn
 requests
 openpyxl
 ccxt
+scikit-learn
+networkx

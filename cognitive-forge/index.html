@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Cognitive Forge</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <div class="brand">
+                <h1>THE FORGE</h1>
+                <div class="brand-subtitle">COGNITIVE ENGINE v1.0</div>
+            </div>
+            
+            <ul class="nav-links">
+                <li class="active" data-target="dashboard">
+                    <span class="icon">📊</span>
+                    <span>Dashboard</span>
+                </li>
+                <li data-target="isolation">
+                    <span class="icon">🔒</span>
+                    <span>Isolation Chamber</span>
+                </li>
+                <li data-target="nback">
+                    <span class="icon">🧠</span>
+                    <span>N-Back Engine</span>
+                </li>
+                <li data-target="models">
+                    <span class="icon">📐</span>
+                    <span>Mental Models</span>
+                </li>
+            </ul>
+
+            <div class="user-stats-sidebar">
+                <div class="stat-row">
+                    <span>Focus Score:</span>
+                    <span id="nav-focus-score" class="highlight-text">0</span>
+                </div>
+                <div class="stat-row">
+                    <span>N-Level:</span>
+                    <span id="nav-n-level" class="highlight-text">1</span>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="content-area">
+            
+            <!-- VIEW: DASHBOARD -->
+            <section id="view-dashboard" class="view active-view glass-panel">
+                <header class="view-header">
+                    <h2>SYSTEM OVERVIEW</h2>
+                    <p>Track your cognitive optimization.</p>
+                </header>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3>Deep Work Sessions</h3>
+                        <div class="stat-value" id="dash-sessions">0</div>
+                        <div class="stat-label">Successful completions</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Failures (Breaches)</h3>
+                        <div class="stat-value error-text" id="dash-failures">0</div>
+                        <div class="stat-label">Distractions logged</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>N-Back Accuracy</h3>
+                        <div class="stat-value" id="dash-accuracy">0%</div>
+                        <div class="stat-label">Current N-Level: <span id="dash-current-n">1</span></div>
+                    </div>
+                </div>
+
+                <div class="action-card mt-20">
+                    <h3>Ready to Train?</h3>
+                    <p>Select a module from the left to begin your cognitive upload.</p>
+                </div>
+            </section>
+
+            <!-- VIEW: ISOLATION CHAMBER -->
+            <section id="view-isolation" class="view glass-panel">
+                <header class="view-header">
+                    <h2>ISOLATION CHAMBER</h2>
+                    <p>Enter deep focus. If you switch tabs, you fail.</p>
+                </header>
+                
+                <div class="timer-container">
+                    <div class="timer-display" id="timer-text">25:00</div>
+                    <div class="timer-controls">
+                        <button id="btn-timer-start" class="btn primary-btn">INITIATE DEEP WORK</button>
+                        <button id="btn-timer-stop" class="btn danger-btn hidden">ABORT (LOG FAILURE)</button>
+                    </div>
+                    <div class="timer-status mt-20" id="timer-status-msg">System Idle.</div>
+                </div>
+            </section>
+
+            <!-- VIEW: N-BACK ENGINE -->
+            <section id="view-nback" class="view glass-panel">
+                <header class="view-header">
+                    <h2>N-BACK ENGINE</h2>
+                    <p>Expand your working memory. Match the position from <span class="highlight-text" id="nback-current-n">1</span> step(s) ago.</p>
+                </header>
+                
+                <div class="nback-container">
+                    <div class="nback-grid" id="nback-grid">
+                        <div class="grid-cell" data-idx="0"></div>
+                        <div class="grid-cell" data-idx="1"></div>
+                        <div class="grid-cell" data-idx="2"></div>
+                        <div class="grid-cell" data-idx="3"></div>
+                        <div class="grid-cell" data-idx="4"></div>
+                        <div class="grid-cell" data-idx="5"></div>
+                        <div class="grid-cell" data-idx="6"></div>
+                        <div class="grid-cell" data-idx="7"></div>
+                        <div class="grid-cell" data-idx="8"></div>
+                    </div>
+                    
+                    <div class="nback-controls">
+                        <button id="btn-nback-start" class="btn primary-btn">START TRIAL</button>
+                        <button id="btn-nback-match" class="btn action-btn" disabled>MATCH POSITION</button>
+                    </div>
+                    
+                    <div class="nback-stats mt-20">
+                        Trials: <span id="nback-trials">0/20</span> | 
+                        Score: <span id="nback-score">0</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- VIEW: MENTAL MODELS -->
+            <section id="view-models" class="view glass-panel">
+                <header class="view-header">
+                    <h2>MENTAL MODEL DRILLS</h2>
+                    <p>Upgrade your reasoning algorithms.</p>
+                </header>
+                
+                <div class="model-drill-container">
+                    <div class="scenario-card">
+                        <h3>Scenario:</h3>
+                        <p id="model-scenario">Loading scenario...</p>
+                    </div>
+                    
+                    <div class="options-grid" id="model-options">
+                        <!-- Options generated via JS -->
+                    </div>
+
+                    <div class="feedback-msg mt-20" id="model-feedback"></div>
+                    <button id="btn-model-next" class="btn secondary-btn mt-20 hidden">NEXT DRILL</button>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

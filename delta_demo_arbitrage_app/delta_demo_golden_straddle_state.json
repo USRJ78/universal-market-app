@@ -1,0 +1,46 @@
+{
+    "is_running": true,
+    "starting": false,
+    "pid": 26984,
+    "target_profit_usd": 3.0,
+    "accumulated_profit_usd": 0.0,
+    "trades": [],
+    "active_position": {
+        "geometry": "Golden_Straddle_Fib_Hedge",
+        "entry_time": "2026-07-03 10:04:55",
+        "net_premium_cost": 2.3549999999999995,
+        "contract_size": 0.001,
+        "expiry_long": "2026-07-17T12:00:00.000Z",
+        "expiry_short": "2026-07-31T12:00:00.000Z",
+        "call_long": {
+            "symbol": "BTC/USD:USD-260717-61500-C",
+            "qty": 2,
+            "entry_price": 1850.0,
+            "strike": 61500.0,
+            "current_price": 3465.0
+        },
+        "put_long": {
+            "symbol": "BTC/USD:USD-260717-61500-P",
+            "qty": 2,
+            "entry_price": 1860.0,
+            "strike": 61500.0,
+            "current_price": 60.0
+        },
+        "call_short": {
+            "symbol": "BTC/USD:USD-260731-71000-C",
+            "qty": 1,
+            "entry_price": 290.0,
+            "strike": 71000.0,
+            "current_price": 355.0
+        },
+        "put_short": {
+            "symbol": "BTC/USD:USD-260731-65000-P",
+            "qty": 1,
+            "entry_price": 4775.0,
+            "strike": 65000.0,
+            "current_price": 2080.0
+        },
+        "unrealized_pnl": 2.2600000000000007
+    },
+    "last_update": "2026-07-15T12:25:21.556249"
+}

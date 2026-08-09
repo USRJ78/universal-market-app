@@ -1,0 +1,16 @@
+{
+    "symbol": "SOL/USD:USD",
+    "capital": 100000.0,
+    "leverage": 5,
+    "spot_held": 83333.33333333334,
+    "perp_short": 83333.33333333334,
+    "accumulated_yield": 0.0,
+    "balance_history": [
+        {
+            "time": "11:49:34",
+            "yield": 0.0,
+            "balance": 100000.0
+        }
+    ],
+    "start_time": 1780294774.7160532
+}

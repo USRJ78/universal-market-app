@@ -1,0 +1,91 @@
+{
+    "is_running": false,
+    "force_execute": false,
+    "min_profit_pct": 0.01,
+    "trade_size_usd": 100.0,
+    "leverage": 25,
+    "accumulated_profit_usd": -1.0285321554788542,
+    "trades": [
+        {
+            "timestamp": "2026-06-03 17:28:36",
+            "direction": "SPOT_BTC_TO_PERP_ETH",
+            "trade_size_usd": 160.0,
+            "gross_return_pct": 0.010951114199997392,
+            "net_return_pct": -0.2890488858000026,
+            "profit_usd": -0.46247821728000416,
+            "success": true,
+            "legs": [
+                {
+                    "symbol": "BTC/USDT",
+                    "side": "buy",
+                    "amount": 0.0024,
+                    "price": 67068.01,
+                    "status": "closed"
+                },
+                {
+                    "symbol": "BTC/USD:USD",
+                    "side": "sell",
+                    "amount": 2.0,
+                    "price": 67040.0,
+                    "status": "closed"
+                },
+                {
+                    "symbol": "ETH/USD:USD",
+                    "side": "buy",
+                    "amount": 8.0,
+                    "price": 1877.75,
+                    "status": "closed"
+                },
+                {
+                    "symbol": "ETH/USDT",
+                    "side": "sell",
+                    "amount": 0.085,
+                    "price": 1878.24,
+                    "status": "closed"
+                }
+            ]
+        },
+        {
+            "timestamp": "2026-06-03 17:42:38",
+            "direction": "SPOT_BTC_TO_PERP_ETH",
+            "trade_size_usd": 190.0,
+            "gross_return_pct": 0.0020768746321842,
+            "net_return_pct": -0.2979231253678158,
+            "profit_usd": -0.5660539381988501,
+            "success": true,
+            "legs": [
+                {
+                    "symbol": "BTC/USDT",
+                    "side": "buy",
+                    "amount": 0.0028,
+                    "price": 66992.46,
+                    "status": "closed"
+                },
+                {
+                    "symbol": "BTC/USD:USD",
+                    "side": "sell",
+                    "amount": 2.0,
+                    "price": 66964.4,
+                    "status": "closed"
+                },
+                {
+                    "symbol": "ETH/USD:USD",
+                    "side": "buy",
+                    "amount": 10.0,
+                    "price": 1874.9,
+                    "status": "closed"
+                },
+                {
+                    "symbol": "ETH/USDT",
+                    "side": "sell",
+                    "amount": 0.101,
+                    "price": 1875.57,
+                    "status": "closed"
+                }
+            ]
+        }
+    ],
+    "last_update": "2026-06-09T21:01:24.348875",
+    "pid": null,
+    "starting": false
+}

@@ -1,0 +1,28 @@
+Privacy Policy for Stockathon App
+
+Last updated: February 03, 2026
+
+Stockathon ("we", "us", or "our") operates the web application accessible at https://stockathon.streamlit.app/ (the "App").
+
+1. Information We Collect
+- Email address (only for premium feature access)
+- No payment card details (handled securely by Razorpay)
+- Usage data (e.g., selected stocks) for app functionality
+- Public market data via yfinance (no personal financial info stored)
+
+2. How We Use Information
+- To provide AI predictions and premium features
+- To improve the App
+- We do not sell or share personal data with third parties except Razorpay for payments and required legal compliance.
+
+3. Data Security
+- We use secure practices; however, no system is 100% secure.
+
+4. Your Rights
+- Request deletion of your email/premium status by contacting us.
+- We comply with Indian data protection laws.
+
+5. Changes to Policy
+- We may update this policy; check back periodically.
+
+Contact: [udaysinghrathore09@gmail.com]
