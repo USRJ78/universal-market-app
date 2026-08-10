@@ -1,11 +1,27 @@
 [package]
-name = "rust_swarm_engine"
-version = "0.1.0"
+name = "antigravity_rust_engine"
+version = "2.0.0"
 edition = "2021"
 authors = ["Uday Singh Rathore <udaysinghrathore09@gmail.com>"]
+description = "Antigravity AI Brain — Full Production Rust Trading Engine for Delta Exchange"
+
+[[bin]]
+name = "antigravity"
+path = "src/main.rs"
 
 [dependencies]
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-reqwest = { version = "0.11", features = ["json", "blocking"] }
-chrono = "0.4"
+serde       = { version = "1.0", features = ["derive"] }
+serde_json  = "1.0"
+reqwest     = { version = "0.11", features = ["json", "blocking"] }
+chrono      = "0.4"
+hmac        = "0.12"
+sha2        = "0.10"
+hex         = "0.4"
+statrs      = "0.16"
+
+[profile.release]
+opt-level   = 3
+lto         = true
+codegen-units = 1
+panic       = "abort"
+strip       = true
