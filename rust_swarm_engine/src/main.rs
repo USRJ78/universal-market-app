@@ -24,7 +24,6 @@
 
 use chrono::{Local, Utc};
 use hmac::{Hmac, Mac};
-use reqwest::blocking::Client;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use sha2::Sha256;
@@ -118,42 +117,39 @@ fn sign(secret: &str, msg: &str) -> String {
     hex::encode(mac.finalize().into_bytes())
 }
 
-fn delta_get(client: &Client, path: &str) -> Value {
+fn delta_get(path: &str) -> Value {
     let ts  = timestamp().to_string();
     let msg = format!("GET{}{}", ts, path);
     let sig = sign(API_SECRET, &msg);
     let url = format!("{}{}", BASE_URL, path);
-    match client
-        .get(&url)
-        .header("api-key",   API_KEY)
-        .header("timestamp", &ts)
-        .header("signature", &sig)
-        .header("Content-Type", "application/json")
+    match ureq::get(&url)
+        .set("api-key", API_KEY)
+        .set("timestamp", &ts)
+        .set("signature", &sig)
+        .set("Content-Type", "application/json")
         .timeout(Duration::from_secs(8))
-        .send()
+        .call()
     {
-        Ok(r)  => r.json::<Value>().unwrap_or(json!({})),
+        Ok(r)  => r.into_json::<Value>().unwrap_or(json!({})),
         Err(e) => { log_warn(&format!("GET {} failed: {}", path, e)); json!({}) }
     }
 }
 
-fn delta_post(client: &Client, path: &str, body: &Value) -> Value {
-    let ts      = timestamp().to_string();
+fn delta_post(path: &str, body: &Value) -> Value {
+    let ts       = timestamp().to_string();
     let body_str = body.to_string();
-    let msg     = format!("POST{}{}{}", ts, path, body_str);
-    let sig     = sign(API_SECRET, &msg);
-    let url     = format!("{}{}", BASE_URL, path);
-    match client
-        .post(&url)
-        .header("api-key",       API_KEY)
-        .header("timestamp",     &ts)
-        .header("signature",     &sig)
-        .header("Content-Type",  "application/json")
+    let msg      = format!("POST{}{}{}", ts, path, body_str);
+    let sig      = sign(API_SECRET, &msg);
+    let url      = format!("{}{}", BASE_URL, path);
+    match ureq::post(&url)
+        .set("api-key",      API_KEY)
+        .set("timestamp",    &ts)
+        .set("signature",    &sig)
+        .set("Content-Type", "application/json")
         .timeout(Duration::from_secs(8))
-        .body(body_str)
-        .send()
+        .send_string(&body_str)
     {
-        Ok(r)  => r.json::<Value>().unwrap_or(json!({})),
+        Ok(r)  => r.into_json::<Value>().unwrap_or(json!({})),
         Err(e) => { log_warn(&format!("POST {} failed: {}", path, e)); json!({}) }
     }
 }
@@ -168,8 +164,8 @@ fn log_win(msg: &str)   { println!("[{}] ✅ {}", ts(), msg); }
 fn log_warn(msg: &str)  { println!("[{}] ⚠️  {}", ts(), msg); }
 
 // ─── MARKET DATA ─────────────────────────────────────────────────────────────
-fn fetch_btc_price(client: &Client) -> f64 {
-    let data = delta_get(client, "/v2/tickers/BTCUSD");
+fn fetch_btc_price() -> f64 {
+    let data = delta_get("/v2/tickers/BTCUSD");
     if let Some(r) = data.get("result") {
         for field in &["close", "mark_price"] {
             if let Some(v) = r.get(field).and_then(|v| v.as_str()) {
@@ -182,8 +178,8 @@ fn fetch_btc_price(client: &Client) -> f64 {
     65000.0 // fallback
 }
 
-fn fetch_balance(client: &Client) -> f64 {
-    let data = delta_get(client, "/v2/wallet/balances");
+fn fetch_balance() -> f64 {
+    let data = delta_get("/v2/wallet/balances");
     // Try net_equity first (includes unrealised PnL)
     if let Some(meta) = data.get("meta") {
         if let Some(ne) = meta.get("net_equity").and_then(|v| v.as_str()) {
@@ -413,14 +409,14 @@ fn kelly_contracts(conviction: f64, balance: f64, aggression: f64) -> u64 {
 }
 
 // ─── ORDER EXECUTION ─────────────────────────────────────────────────────────
-fn place_order(client: &Client, side: &str, size: u64, reason: &str) -> bool {
+fn place_order(side: &str, size: u64, reason: &str) -> bool {
     let body = json!({
         "product_id": BTC_PERP_ID,
         "size":       size,
         "side":       side,
         "order_type": "market_order"
     });
-    let resp = delta_post(client, "/v2/orders", &body);
+    let resp = delta_post("/v2/orders", &body);
     if resp.get("success").and_then(|v| v.as_bool()).unwrap_or(false) {
         let oid = resp.get("result")
             .and_then(|r| r.get("id"))
@@ -435,8 +431,8 @@ fn place_order(client: &Client, side: &str, size: u64, reason: &str) -> bool {
     }
 }
 
-fn close_all_positions(client: &Client) {
-    let data = delta_get(client, "/v2/positions/margined");
+fn close_all_positions() {
+    let data = delta_get("/v2/positions/margined");
     if let Some(arr) = data.get("result").and_then(|v| v.as_array()) {
         for pos in arr {
             let size = pos.get("size").and_then(|v| v.as_f64()).unwrap_or(0.0);
@@ -450,7 +446,7 @@ fn close_all_positions(client: &Client) {
                 "order_type":  "market_order",
                 "reduce_only": true
             });
-            let resp = delta_post(client, "/v2/orders", &body);
+            let resp = delta_post("/v2/orders", &body);
             log_trade(&format!("CLOSE {} {:.0} contracts | success:{}", side, size.abs(),
                 resp.get("success").and_then(|v| v.as_bool()).unwrap_or(false)));
         }
@@ -473,17 +469,16 @@ fn progress_bar(balance: f64) -> String {
 
 // ─── MAIN LOOP ────────────────────────────────────────────────────────────────
 fn main() {
-    let client       = Client::builder().timeout(Duration::from_secs(10)).build().unwrap();
     let session_start = Instant::now();
     let total_secs   = 15 * 3600_u64; // 15-hour challenge
 
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-    println!("  🦀 ANTIGRAVITY AI BRAIN — FULL PRODUCTION RUST ENGINE V2.0");
+    println!("  🦀 ANTIGRAVITY AI BRAIN — LIGHTWEIGHT RUST ENGINE V2.0");
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     println!("  Target   : ${:.2} (from ${:.2}, need +{:.1}%)", TARGET, STARTING_BAL, (TARGET/STARTING_BAL-1.0)*100.0);
     println!("  Hard Stop: ${:.2}", HARD_STOP);
     println!("  Scan     : Every {}s", SCAN_SECS);
-    println!("  Engine   : Rust {} | Zero GC | LLVM Optimised", env!("CARGO_PKG_VERSION"));
+    println!("  Engine   : Rust {} | Zero GC | Fast Build (ureq)", env!("CARGO_PKG_VERSION"));
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
     let mut scan        = 0u64;
@@ -501,13 +496,13 @@ fn main() {
 
         if remaining == 0 {
             println!("\n[{}] ⏰ DEADLINE REACHED — closing all positions!", ts());
-            close_all_positions(&client);
+            close_all_positions();
             break;
         }
 
         // ── Fetch balance & price ────────────────────────────────────────────
-        let balance   = fetch_balance(&client);
-        let btc_price = fetch_btc_price(&client);
+        let balance   = fetch_balance();
+        let btc_price = fetch_btc_price();
         let gain      = balance - STARTING_BAL;
         let gain_pct  = (balance / STARTING_BAL - 1.0) * 100.0;
 
@@ -522,14 +517,14 @@ fn main() {
         // ── Hard stop ───────────────────────────────────────────────────────
         if balance <= HARD_STOP {
             println!("[{}] 🚨 HARD STOP! ${:.2} ≤ ${:.2} — halting!", ts(), balance, HARD_STOP);
-            close_all_positions(&client);
+            close_all_positions();
             break;
         }
 
         // ── Target hit ──────────────────────────────────────────────────────
         if balance >= TARGET {
             println!("[{}] 🏆 TARGET $200 REACHED! Balance = ${:.2}!", ts(), balance);
-            close_all_positions(&client);
+            close_all_positions();
             println!("[{}] ✅ MISSION COMPLETE! Locked in at ${:.2}!", ts(), balance);
             break;
         }
@@ -545,7 +540,7 @@ fn main() {
             continue;
         } else if hold_scans >= HOLD_MAX {
             println!("  🔄 HOLD period over — closing to reassess...");
-            close_all_positions(&client);
+            close_all_positions();
             hold_scans = 0;
             thread::sleep(Duration::from_secs(3));
             continue;
@@ -565,7 +560,7 @@ fn main() {
                 println!("  ✅ SIGNAL: {} | Conv:{:.0}% | Strategy:{} | Size:{}x",
                          sig.side.to_uppercase(), sig.conviction * 100.0,
                          sig.strategy, desperation_boost);
-                let ok = place_order(&client, &sig.side, desperation_boost, &sig.reason);
+                let ok = place_order(&sig.side, desperation_boost, &sig.reason);
                 if ok {
                     trades     += 1;
                     hold_scans  = 1;
@@ -585,7 +580,7 @@ fn main() {
     }
 
     // ── Final Report ─────────────────────────────────────────────────────────
-    let final_bal = fetch_balance(&client);
+    let final_bal = fetch_balance();
     println!("\n{}", "━".repeat(67));
     println!("  🏁 RUST ENGINE FINAL REPORT");
     println!("{}", "━".repeat(67));
