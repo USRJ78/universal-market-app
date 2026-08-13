@@ -22,12 +22,11 @@
 //  ✅ 30-second scan cycle
 // =============================================================================
 
-use chrono::{Local, Utc};
+use chrono::{Local, Utc, Timelike};
 use hmac::{Hmac, Mac};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use sha2::Sha256;
-use std::collections::VecDeque;
 use std::thread;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
