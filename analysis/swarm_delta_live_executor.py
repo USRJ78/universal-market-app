@@ -201,49 +201,55 @@ def agent_delta_overseer(a, b, g):
     return conviction
 
 # ─────────────────────────────────────────────
-# PLACE TRUE 1x2 CALL SPREAD ORDERS
+# PLACE TRUE 1x2 CALL SPREAD ORDERS (REAL OPTIONS)
 # ─────────────────────────────────────────────
-def place_spread(k1_option, k2_option):
+def place_spread(k1_option, k2_option, balance=140.0):
     """
-    Execute true 1x2 Ratio Call Spread:
-    LEG 1: BUY  1x ATM Call (K1)
-    LEG 2: SELL 2x OTM Call (K2)
+    Execute true 1x2 Ratio Call Spread on REAL OPTIONS CONTRACTS:
+    LEG 1: BUY  N x ATM Call (K1)
+    LEG 2: SELL 2N x OTM Call (K2)
     """
     k1_id  = k1_option.get("id")
     k2_id  = k2_option.get("id")
     k1_sym = k1_option.get("symbol")
     k2_sym = k2_option.get("symbol")
 
-    log(f"\n  🎯 EXECUTING 1x2 RATIO CALL SPREAD:")
-    log(f"     LEG 1: BUY  1x {k1_sym} (ID: {k1_id})")
-    log(f"     LEG 2: SELL 2x {k2_sym} (ID: {k2_id})")
+    # Scale spreads to use 95% of free available margin
+    num_spreads = max(1, int((balance * 0.95) / 15.0))
+    leg1_size   = num_spreads
+    leg2_size   = num_spreads * 2
 
-    # LEG 1: BUY 1x ATM Call
+    log(f"\n  🎯 EXECUTING TRUE 1x2 RATIO CALL SPREAD ON DELTA OPTIONS CHAIN:")
+    log(f"     Allocating 95% Margin (${balance*0.95:.2f}) -> {num_spreads} Spreads")
+    log(f"     LEG 1: BUY  {leg1_size}x {k1_sym} (ID: {k1_id})")
+    log(f"     LEG 2: SELL {leg2_size}x {k2_sym} (ID: {k2_id})")
+
+    # LEG 1: BUY N x ATM Call
     leg1 = delta_post("/v2/orders", {
         "product_id": k1_id,
-        "size":       1,
+        "size":       leg1_size,
         "side":       "buy",
         "order_type": "market_order"
     })
     if leg1.get("success"):
         oid1 = leg1.get("result", {}).get("id", "N/A")
-        log(f"  ✅ LEG 1 FILLED | BUY 1x {k1_sym} | Order ID: {oid1}")
+        log(f"  ✅ LEG 1 FILLED | BUY {leg1_size}x {k1_sym} | Order ID: {oid1}")
     else:
         log(f"  ❌ LEG 1 FAILED: {leg1}")
         return False
 
     time.sleep(1)
 
-    # LEG 2: SELL 2x OTM Call
+    # LEG 2: SELL 2N x OTM Call
     leg2 = delta_post("/v2/orders", {
         "product_id": k2_id,
-        "size":       2,
+        "size":       leg2_size,
         "side":       "sell",
         "order_type": "market_order"
     })
     if leg2.get("success"):
         oid2 = leg2.get("result", {}).get("id", "N/A")
-        log(f"  ✅ LEG 2 FILLED | SELL 2x {k2_sym} | Order ID: {oid2}")
+        log(f"  ✅ LEG 2 FILLED | SELL {leg2_size}x {k2_sym} | Order ID: {oid2}")
         return True
     else:
         log(f"  ❌ LEG 2 FAILED: {leg2}")
