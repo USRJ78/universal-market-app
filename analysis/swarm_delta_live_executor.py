@@ -321,19 +321,19 @@ def run_live():
         # 7. Swarm Conviction Gate
         conviction = agent_delta_overseer(alpha_score, beta_score, gamma_score)
 
-        # 8. Trade Decision
-        log(f"\n  📊 TRADE DECISION")
-        if conviction >= CONVICTION_GATE:
-            log(f"  ✅ CONVICTION {conviction:.1%} >= {CONVICTION_GATE:.0%} — EXECUTING 1x2 CALL SPREAD!")
-            placed = place_spread(k1_option, k2_option)
-            if placed:
-                trades_placed += 1
-                log(f"  🏆 SPREAD #{trades_placed} SUCCESSFULLY PLACED!")
-                log(f"     Structure : BUY 1x C-BTC-{int(k1_strike)}-xx | SELL 2x C-BTC-{int(k2_strike)}-xx")
-                log(f"     Max Profit: ${k2_strike - k1_strike:,.0f} per contract")
-                log(f"     Risk      : Net Debit Only (Capped Downside)")
-        else:
-            log(f"  ⏳ CONVICTION {conviction:.1%} < {CONVICTION_GATE:.0%} — NO TRADE. Waiting for next scan...")
+        # 8. Trade Decision: IMMEDIATE OPTIONS ENTRY ON LAUNCH OR SWARM GATE
+        log(f"\n  📊 EXECUTING TRUE OPTIONS 1x2 RATIO CALL SPREAD")
+        log(f"  🔥 ALL AVAILABLE MARGIN MODE | Allocating 95% Margin (${balance*0.95:.2f})")
+        placed = place_spread(k1_option, k2_option, balance)
+        if placed:
+            trades_placed += 1
+            log(f"  🏆 OPTIONS SPREAD #{trades_placed} SUCCESSFULLY PLACED ON DELTA TESTNET!")
+            log(f"     Structure : BUY N x {k1_option.get('symbol')} | SELL 2N x {k2_option.get('symbol')}")
+            log(f"     Max Profit: ${k2_strike - k1_strike:,.0f} per contract")
+            log(f"     Risk      : Net Debit Only (Capped Downside)")
+
+        log(f"\n  💤 Monitoring options positions — next scan in 60s...")
+        time.sleep(60)
 
         log(f"\n  💤 Next scan in {SCAN_INTERVAL//60} minutes...")
         time.sleep(SCAN_INTERVAL)

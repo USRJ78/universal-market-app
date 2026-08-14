@@ -487,6 +487,15 @@ def api_execute(strategy_id):
                 stdout=log_handle,
                 stderr=log_handle
             )
+        elif strategy_id == "swarm_call_spread":
+            # Launch dedicated REAL OPTIONS 1x2 Ratio Call Spread executor
+            options_script = os.path.join(ANALYSIS_DIR, "swarm_delta_live_executor.py")
+            proc = subprocess.Popen(
+                [VENV_PYTHON, "-u", options_script],
+                cwd=ANALYSIS_DIR,
+                stdout=log_handle,
+                stderr=log_handle
+            )
         else:
             proc = subprocess.Popen(
                 [VENV_PYTHON, "-u", RUNNER_SCRIPT, "--strategy", strategy_id, "--margin_pct", "0.95"],
