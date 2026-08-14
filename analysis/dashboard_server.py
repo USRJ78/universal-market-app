@@ -464,6 +464,13 @@ def api_execute(strategy_id):
     if not strat:
         return jsonify({"success": False, "error": f"Strategy '{strategy_id}' not found"})
 
+    # Halt any background services to prevent daemon conflicts (e.g. rust_engine or adaptive_hunter closing positions)
+    for svc in ["rust_engine", "adaptive_hunter", "swarm_bot_engine"]:
+        try:
+            subprocess.run(["sudo", "systemctl", "stop", svc], timeout=3, capture_output=True)
+        except Exception:
+            pass
+
     if strategy_id in active_processes:
         proc = active_processes[strategy_id]
         if proc.poll() is None:
@@ -482,7 +489,7 @@ def api_execute(strategy_id):
             )
         else:
             proc = subprocess.Popen(
-                [VENV_PYTHON, "-u", RUNNER_SCRIPT, "--strategy", strategy_id],
+                [VENV_PYTHON, "-u", RUNNER_SCRIPT, "--strategy", strategy_id, "--margin_pct", "0.95"],
                 cwd=ANALYSIS_DIR,
                 stdout=log_handle,
                 stderr=log_handle
@@ -491,7 +498,7 @@ def api_execute(strategy_id):
         active_processes[strategy_id] = proc
         return jsonify({
             "success": True,
-            "message": f"🚀 Launched '{strat['name']}' Live on Delta Testnet!",
+            "message": f"🚀 Launched '{strat['name']}' Independently on 95% Max Margin!",
             "pid": proc.pid
         })
     except Exception as e:
