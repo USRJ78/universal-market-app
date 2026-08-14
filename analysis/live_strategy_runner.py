@@ -267,12 +267,14 @@ def run():
 
         # 4. Execute Trade if Conviction Gate Passed
         if conv >= 0.70:
-            size = max(1, int(balance * 0.20 / 15))  # Risk-controlled size
-            log(f"  ✅ CONVICTION {conv:.1%} >= 70% — PLACING LIVE ORDER ON DELTA TESTNET!")
+            # ALL AVAILABLE MARGIN MODE: Use 95% of wallet balance
+            size = max(1, int((balance * 0.95) / 15.0))
+            log(f"  🔥 ALL AVAILABLE MARGIN MODE | Allocating 95% Margin (${balance*0.95:.2f}) -> {size} contracts", "RISK")
+            log(f"  ✅ CONVICTION {conv:.1%} >= 70% — PLACING LIVE ORDER ON DELTA TESTNET!", "TRADE")
             placed = place_order(side, size, reason)
             if placed:
                 trades += 1
-                log(f"  📈 Total Live Trades Executed: {trades}")
+                log(f"  📈 Total Live Trades Executed: {trades}", "TRADE")
         else:
             log(f"  ⏳ Conviction {conv:.1%} < 70% — No trade. Monitoring next scan...")
 
