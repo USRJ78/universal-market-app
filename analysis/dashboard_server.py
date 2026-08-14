@@ -1,15 +1,15 @@
 """
 ==============================================================================
-  ANTIGRAVITY AI BRAIN — PRODUCTION WEB DASHBOARD V3.0
+  ANTIGRAVITY AI BRAIN — PRODUCTION WEB DASHBOARD V3.1 (Delta Testnet Live)
 ==============================================================================
   Full Production Web Application for Laptop & Mobile Browser (Oracle Cloud)
   Features:
   - REAL Live Delta Exchange Testnet Account Audit (Net Equity, Wallet Bal, Available, Margin)
   - ALL 19 Iconic Antigravity Strategies (OMNI Engine, CHIMERA V6, Rust HF Swarm, etc.)
-  - Real-Time Execution Manager (Start / Stop any strategy with live process tracking)
-  - Live Process Health Check & Log Streaming into Dashboard Feed
+  - Real-Time Execution Manager via live_strategy_runner.py (Start / Stop with live process tracking)
+  - Live Process Health Check & Dedicated Per-Strategy Log Feed [/api/log/<strategy_id>]
   - One-Click Manual BTC Perpetual Order Placement & Position Management
-  - Interactive BTC/USD Price Chart (48-Hour Canvas)
+  - Interactive BTC/USD Price Chart
   - Full Mobile Responsive Drawer Navigation
 ==============================================================================
 """
@@ -29,6 +29,7 @@ DELTA_BASE_URL   = "https://cdn-ind.testnet.deltaex.org"
 ANALYSIS_DIR     = os.path.dirname(os.path.abspath(__file__))
 BASE_DIR         = os.path.dirname(ANALYSIS_DIR)
 RUST_DIR         = os.path.join(BASE_DIR, "rust_swarm_engine")
+RUNNER_SCRIPT    = os.path.join(ANALYSIS_DIR, "live_strategy_runner.py")
 
 # Use absolute python path for venv execution on Oracle VM
 VENV_PYTHON      = sys.executable
@@ -37,7 +38,6 @@ app = Flask(__name__)
 
 # Global registry of active strategy subprocesses: { strategy_id: subprocess.Popen }
 active_processes = {}
-process_logs     = {}
 
 # ─── ALL 19 ANTIGRAVITY AI BRAIN STRATEGIES ─────────────────
 STRATEGIES = [
@@ -303,7 +303,7 @@ def delta_get(path):
                      "signature": sig, "Content-Type": "application/json"},
             timeout=8)
         return r.json() if r.content else {}
-    except Exception as e:
+    except Exception:
         return {}
 
 def delta_post(path, payload):
@@ -316,7 +316,7 @@ def delta_post(path, payload):
                      "signature": sig, "Content-Type": "application/json"},
             timeout=8)
         return r.json() if r.content else {}
-    except Exception as e:
+    except Exception:
         return {}
 
 def get_wallet_audit():
@@ -357,10 +357,10 @@ def get_positions():
             size = float(p.get("size", 0))
             if abs(size) > 0:
                 positions.append({
-                    "symbol":     p.get("product", {}).get("symbol", "BTC-PERP"),
-                    "size":       size,
-                    "entry":      float(p.get("entry_price", 0)),
-                    "side":       "LONG" if size > 0 else "SHORT",
+                    "symbol":       p.get("product", {}).get("symbol", "BTC-PERP"),
+                    "size":         size,
+                    "entry":        float(p.get("entry_price", 0)),
+                    "side":         "LONG" if size > 0 else "SHORT",
                     "realized_pnl": float(p.get("realized_pnl", 0))
                 })
     except Exception:
@@ -377,18 +377,14 @@ def get_btc_price():
         pass
     return 65000.0
 
-def get_recent_logs(n=35):
-    """Scan and merge recent log files across the environment"""
+def get_recent_logs(n=40):
+    """Scan and return recent live log lines from strategy executions"""
     logs = []
-    log_files = [
-        "adaptive_200_hunt.log", "swarm_call_spread_live.log",
-        "target_200_hunt.log", "swarm_delta_live.log",
-        "rust_engine.log", "ai_brain.log"
-    ]
-    
-    # Also check per-strategy logs
+    log_files = []
     for s in STRATEGIES:
         log_files.append(f"{s['id']}.log")
+
+    log_files.extend(["adaptive_200_hunt.log", "swarm_call_spread_live.log", "rust_engine.log", "ai_brain.log"])
 
     for fname in log_files:
         for d in [ANALYSIS_DIR, RUST_DIR, BASE_DIR]:
@@ -397,18 +393,16 @@ def get_recent_logs(n=35):
                 try:
                     with open(fpath, "r", encoding="utf-8", errors="ignore") as f:
                         lines = f.readlines()
-                    for line in lines[-15:]:
+                    for line in lines[-20:]:
                         line = line.strip()
                         if line:
                             logs.append({"source": fname.replace(".log",""), "msg": line})
                 except Exception:
                     pass
-    
-    # Sort and return unique recent log lines
-    logs = logs[-n:]
-    return logs
 
-# ─── PROCESS MANAGEMENT API ─────────────────────────────────
+    # Sort log entries by time or return latest
+    return logs[-n:]
+
 def update_running_processes():
     """Clean up dead processes and return list of active strategy IDs"""
     running_ids = []
@@ -425,9 +419,9 @@ def api_status():
     wallet    = get_wallet_audit()
     positions = get_positions()
     btc       = get_btc_price()
-    logs      = get_recent_logs(30)
+    logs      = get_recent_logs(40)
     running   = update_running_processes()
-    
+
     starting  = 138.57
     target    = 200.00
     current   = wallet["net_equity"]
@@ -461,6 +455,20 @@ def api_strategies():
         result.append(s_copy)
     return jsonify(result)
 
+@app.route("/api/log/<strategy_id>")
+def api_strategy_log(strategy_id):
+    """Return specific real-time log lines for a particular strategy"""
+    log_file_path = os.path.join(ANALYSIS_DIR, f"{strategy_id}.log")
+    if not os.path.exists(log_file_path):
+        return jsonify({"success": False, "logs": [f"[{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S IST')}] [{strategy_id.upper()}] Initializing live logger..."]})
+
+    try:
+        with open(log_file_path, "r", encoding="utf-8", errors="ignore") as f:
+            lines = [line.strip() for line in f.readlines() if line.strip()]
+        return jsonify({"success": True, "logs": lines[-30:]})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e), "logs": []})
+
 @app.route("/api/execute/<strategy_id>", methods=["POST"])
 def api_execute(strategy_id):
     strat = next((s for s in STRATEGIES if s["id"] == strategy_id), None)
@@ -473,26 +481,22 @@ def api_execute(strategy_id):
         if proc.poll() is None:
             return jsonify({"success": False, "error": f"'{strat['name']}' is ALREADY running (PID {proc.pid})"})
 
-    script_path = strat["script"]
-    if not os.path.exists(script_path):
-        return jsonify({"success": False, "error": f"Script not found at: {script_path}"})
-
     try:
         log_file_path = os.path.join(ANALYSIS_DIR, f"{strategy_id}.log")
         log_handle    = open(log_file_path, "a", encoding="utf-8")
 
         if strat["is_binary"]:
-            # Run compiled binary directly (Rust engine)
+            # Run compiled native binary directly (Rust engine)
             proc = subprocess.Popen(
-                [script_path],
+                [strat["script"]],
                 cwd=RUST_DIR,
                 stdout=log_handle,
                 stderr=log_handle
             )
         else:
-            # Run Python script using virtualenv python
+            # Run live runner script connected directly to Delta Exchange Testnet
             proc = subprocess.Popen(
-                [VENV_PYTHON, "-u", script_path],
+                [VENV_PYTHON, "-u", RUNNER_SCRIPT, "--strategy", strategy_id],
                 cwd=ANALYSIS_DIR,
                 stdout=log_handle,
                 stderr=log_handle
@@ -501,7 +505,7 @@ def api_execute(strategy_id):
         active_processes[strategy_id] = proc
         return jsonify({
             "success": True,
-            "message": f"🚀 Successfully Launched '{strat['name']}'!",
+            "message": f"🚀 Successfully Launched '{strat['name']}' Live on Delta Testnet!",
             "pid": proc.pid
         })
     except Exception as e:
@@ -538,7 +542,7 @@ def api_place_order():
     data = request.json or {}
     side = data.get("side", "buy").lower()
     size = int(data.get("size", 1))
-    
+
     payload = {
         "product_id": 84,
         "size":       size,
@@ -740,7 +744,7 @@ DASHBOARD_HTML = r"""<!DOCTYPE html>
   /* LOG FEED */
   .log-feed {
     background: rgba(0,0,0,0.4); border: 1px solid var(--border);
-    border-radius: 14px; padding: 16px; height: 360px; overflow-y: auto;
+    border-radius: 14px; padding: 16px; height: 380px; overflow-y: auto;
     font-family: 'JetBrains Mono', monospace; font-size: 11px; line-height: 1.8;
   }
   .log-line { color:#94a3b8; word-break:break-all; }
@@ -896,7 +900,7 @@ DASHBOARD_HTML = r"""<!DOCTYPE html>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
         <div>
           <div style="font-size:16px;font-weight:700;">Antigravity AI Brain — 19 Iconic Quantitative Engines</div>
-          <div style="font-size:12px;color:var(--muted);margin-top:2px;">Launch or stop any strategy directly on Oracle Cloud VM</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px;">Launch or stop any strategy live on Delta Exchange Testnet (140.245.195.162)</div>
         </div>
         <button class="btn btn-red" onclick="stopAllStrategies()">🛑 Stop All</button>
       </div>
@@ -937,8 +941,14 @@ DASHBOARD_HTML = r"""<!DOCTYPE html>
     <div class="page" id="page-logs">
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-          <div class="card-label" style="margin:0;">📡 Live AI Brain Log Feed</div>
-          <button class="btn" onclick="fetchStatus()">🔄 Refresh</button>
+          <div class="card-label" style="margin:0;" id="log-title">📡 Live AI Brain Log Feed</div>
+          <div style="display:flex;gap:10px;">
+            <select class="form-select" id="log-selector" onchange="fetchSpecificLog()" style="padding:6px 10px;font-size:12px;">
+              <option value="all">All Combined Logs</option>
+              <!-- Dynamically populated options -->
+            </select>
+            <button class="btn" onclick="fetchStatus()">🔄 Refresh</button>
+          </div>
         </div>
         <div class="log-feed" id="log-feed">Connecting to live log feed...</div>
       </div>
@@ -966,6 +976,7 @@ function showPage(id, navEl) {
   closeSidebar();
 
   if (id === 'strategies') renderStrategies();
+  if (id === 'logs') fetchSpecificLog();
 }
 
 function openSidebar()  { document.getElementById('sidebar').classList.add('open'); document.getElementById('overlay').classList.add('open'); }
@@ -980,6 +991,7 @@ function toast(msg, type='info') {
 }
 
 let runningStrategies = [];
+let availableStrategies = [];
 
 async function fetchStatus() {
   try {
@@ -1029,16 +1041,9 @@ async function fetchStatus() {
     if (document.getElementById('t-positions'))
       document.getElementById('t-positions').innerHTML = posHtml;
 
-    // Render Logs
-    if (data.logs.length > 0) {
-      document.getElementById('log-feed').innerHTML = data.logs.slice().reverse().map(l => {
-        let cls = 'log-line';
-        if (l.msg.includes('ORDER') && l.msg.includes('BUY'))  cls += ' log-buy';
-        if (l.msg.includes('ORDER') && l.msg.includes('SELL')) cls += ' log-sell';
-        if (l.msg.includes('TARGET') || l.msg.includes('✅')) cls += ' log-win';
-        if (l.msg.includes('Agent') || l.msg.includes('Swarm')) cls += ' log-agent';
-        return `<div class="${cls}">[${l.source}] ${l.msg}</div>`;
-      }).join('');
+    // If 'all' selected in log selector, render combined logs
+    if (document.getElementById('log-selector').value === 'all') {
+      renderLogLines(data.logs);
     }
 
   } catch(e) {
@@ -1046,10 +1051,51 @@ async function fetchStatus() {
   }
 }
 
+function renderLogLines(lines) {
+  if (!lines || lines.length === 0) {
+    document.getElementById('log-feed').innerHTML = '<div style="color:var(--muted);">No logs recorded yet. Launch an engine to start streaming live logs!</div>';
+    return;
+  }
+  document.getElementById('log-feed').innerHTML = lines.slice().reverse().map(l => {
+    const msg = typeof l === 'object' ? `[${l.source}] ${l.msg}` : l;
+    let cls = 'log-line';
+    if (msg.includes('ORDER') && msg.includes('BUY'))  cls += ' log-buy';
+    if (msg.includes('ORDER') && msg.includes('SELL')) cls += ' log-sell';
+    if (msg.includes('TARGET') || msg.includes('✅')) cls += ' log-win';
+    if (msg.includes('Agent') || msg.includes('Swarm') || msg.includes('IST')) cls += ' log-agent';
+    return `<div class="${cls}">${msg}</div>`;
+  }).join('');
+}
+
+async function fetchSpecificLog() {
+  const selected = document.getElementById('log-selector').value;
+  if (selected === 'all') {
+    fetchStatus();
+    return;
+  }
+  try {
+    const res  = await fetch('/api/log/' + selected);
+    const data = await res.json();
+    if (data.logs) {
+      renderLogLines(data.logs);
+    }
+  } catch(e) {
+    console.error('Specific log fetch error:', e);
+  }
+}
+
 async function renderStrategies() {
   try {
     const res  = await fetch('/api/strategies');
     const list = await res.json();
+    availableStrategies = list;
+
+    // Populate log selector dropdown
+    const selector = document.getElementById('log-selector');
+    const currentVal = selector.value;
+    selector.innerHTML = '<option value="all">All Combined Logs</option>' +
+      list.map(s => `<option value="${s.id}">${s.icon} ${s.name}</option>`).join('');
+    selector.value = currentVal || 'all';
 
     const grid = document.getElementById('strat-grid');
     grid.innerHTML = list.map(s => {
@@ -1090,14 +1136,16 @@ async function renderStrategies() {
 }
 
 async function executeStrategy(id) {
-  toast('🚀 Launching strategy on Oracle Cloud...', 'info');
+  toast('🚀 Launching strategy live on Delta Exchange Testnet...', 'info');
   try {
     const res = await fetch('/api/execute/' + id, { method:'POST' }).then(r => r.json());
     if (res.success) {
       toast(res.message, 'success');
+      document.getElementById('log-selector').value = id;
       await fetchStatus();
       await renderStrategies();
       showPage('logs');
+      fetchSpecificLog();
     } else {
       toast('❌ ' + res.error, 'error');
     }
@@ -1132,7 +1180,7 @@ async function placeManualOrder() {
   const side = document.getElementById('t-side').value;
   const size = parseInt(document.getElementById('t-size').value);
   
-  toast(`Executing ${side.toUpperCase()} ${size}x order...`, 'info');
+  toast(`Executing ${side.toUpperCase()} ${size}x order on Delta Testnet...`, 'info');
   try {
     const res = await fetch('/api/place_order', {
       method:'POST',
@@ -1163,7 +1211,8 @@ function updateClock() {
 }
 
 fetchStatus();
-setInterval(fetchStatus, 8000);
+renderStrategies();
+setInterval(fetchStatus, 5000);
 setInterval(updateClock, 1000);
 updateClock();
 </script>
@@ -1172,7 +1221,7 @@ updateClock();
 
 if __name__ == "__main__":
     print("=" * 70)
-    print("  ⚡ ANTIGRAVITY AI BRAIN — PRODUCTION WEB DASHBOARD V3.0")
+    print("  ⚡ ANTIGRAVITY AI BRAIN — PRODUCTION WEB DASHBOARD V3.1")
     print("=" * 70)
     print(f"  Public URL : http://140.245.195.162:8080")
     print(f"  Local URL  : http://localhost:8080")
