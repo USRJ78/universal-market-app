@@ -34,8 +34,20 @@ app = Flask(__name__)
 # Global registry of active strategy subprocesses: { strategy_id: subprocess.Popen }
 active_processes = {}
 
-# ─── ALL 19 ANTIGRAVITY AI BRAIN STRATEGIES ─────────────────
 STRATEGIES = [
+    {
+        "id": "rsi_swarm_bot",
+        "name": "RSI Momentum Swarm Engine V1.0",
+        "icon": "📊",
+        "category": "RSI Swarm",
+        "cagr": "+13.0% CAGR",
+        "win": "35.7%",
+        "mdd": "-3.45%",
+        "script": os.path.join(ANALYSIS_DIR, "rsi_swarm_bot_engine.py"),
+        "is_binary": False,
+        "color": "#ec4899",
+        "desc": "Multi-timeframe RSI(14) momentum filter (48<=RSI<=68) + Swarm Conviction & Zero Debit 1x2 Call Spreads."
+    },
     {
         "id": "autonomous_ai_swarm_brain",
         "name": "Autonomous AI RL Swarm Brain V4.0",
