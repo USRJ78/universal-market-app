@@ -394,6 +394,48 @@ def update_running_processes():
     return running_ids
 
 # ─── FLASK ENDPOINTS ────────────────────────────────────────
+BASELINE_FILE = os.path.join(ANALYSIS_DIR, "baseline_config.json")
+
+def load_baseline(current_net_equity):
+    if os.path.exists(BASELINE_FILE):
+        try:
+            with open(BASELINE_FILE, "r") as f:
+                data = json.load(f)
+                b = float(data.get("baseline_balance", current_net_equity))
+                t = float(data.get("target_balance", b * 1.5))
+                return b, t
+        except Exception:
+            pass
+    # If first time or uninitialized, save current net equity as baseline
+    save_baseline(current_net_equity, current_net_equity * 1.5)
+    return current_net_equity, current_net_equity * 1.5
+
+def save_baseline(baseline, target):
+    try:
+        with open(BASELINE_FILE, "w") as f:
+            json.dump({
+                "baseline_balance": round(baseline, 2),
+                "target_balance": round(target, 2),
+                "updated_at": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S IST")
+            }, f, indent=2)
+    except Exception:
+        pass
+
+@app.route("/api/reset_baseline", methods=["POST"])
+def api_reset_baseline():
+    data = request.json or {}
+    wallet = get_wallet_audit()
+    current = wallet["net_equity"]
+    new_baseline = float(data.get("baseline", current))
+    new_target   = float(data.get("target", new_baseline * 1.5))
+    save_baseline(new_baseline, new_target)
+    return jsonify({
+        "success": True,
+        "message": f"✅ Baseline Reset to ${new_baseline:.2f}! PnL is now accurately calculated from this baseline.",
+        "baseline": new_baseline,
+        "target": new_target
+    })
+
 @app.route("/api/status")
 def api_status():
     wallet    = get_wallet_audit()
@@ -401,17 +443,22 @@ def api_status():
     btc       = get_btc_price()
     running   = update_running_processes()
 
-    starting  = 138.57
-    target    = 200.00
     current   = wallet["net_equity"]
+    
+    # Auto-align baseline if wallet reloaded (e.g. balance jumped up significantly with no open positions)
+    starting, target = load_baseline(current)
+    if current > starting + 50.0 and len(positions) == 0:
+        starting = current
+        target   = current * 1.5
+        save_baseline(starting, target)
+
     gain      = current - starting
     gain_pct  = (gain / starting) * 100.0 if starting > 0 else 0.0
-    progress  = min(100.0, max(0.0, (current - starting) / (target - starting) * 100.0))
+    progress  = min(100.0, max(0.0, (current - starting) / max(1.0, target - starting) * 100.0))
 
     # Fast master log tailing
     master_lines = fast_tail_file(MASTER_LOG, max_lines=35)
     if not master_lines:
-        # Fallback to rust_swarm_engine or swarm_call_spread
         master_lines = fast_tail_file(os.path.join(ANALYSIS_DIR, "swarm_call_spread.log"), max_lines=35)
 
     return jsonify({
@@ -423,6 +470,8 @@ def api_status():
         "positions":      positions,
         "logs":           master_lines,
         "running":        running,
+        "starting":       round(starting, 2),
+        "target":         round(target, 2),
         "gain":           round(gain, 2),
         "gain_pct":       round(gain_pct, 2),
         "progress":       round(progress, 1),
@@ -859,14 +908,17 @@ DASHBOARD_HTML = r"""<!DOCTYPE html>
           <div class="card-sub">Total Account Value</div>
         </div>
         <div class="card">
-          <div class="card-label">📈 Cumulative PnL</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <div class="card-label" style="margin:0;">📈 Cumulative PnL</div>
+            <button class="btn" style="padding:2px 8px;font-size:10px;border-radius:6px;" onclick="resetBaseline()" title="Reset Baseline to Current Wallet Balance">🔄 Reset Baseline</button>
+          </div>
           <div class="card-value" id="d-pnl">$---</div>
-          <div class="card-sub">vs $138.57 baseline</div>
+          <div class="card-sub" id="d-sub-baseline">vs $--- baseline</div>
         </div>
         <div class="card">
-          <div class="card-label">🎯 $200 Progress</div>
+          <div class="card-label">🎯 Target Progress</div>
           <div class="card-value y" id="d-progress">0%</div>
-          <div class="card-sub">$138.57 → $200.00</div>
+          <div class="card-sub" id="d-target-sub">Baseline → Target</div>
         </div>
         <div class="card">
           <div class="card-label">🤖 Active Engines</div>
@@ -883,9 +935,9 @@ DASHBOARD_HTML = r"""<!DOCTYPE html>
         </div>
         <div class="progress-track"><div class="progress-fill" id="d-bar" style="width:0%;"></div></div>
         <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);">
-          <span>$138.57 Baseline</span>
+          <span id="d-base-label">$--- Baseline</span>
           <span id="d-current">$--- Current</span>
-          <span>$200.00 Target</span>
+          <span id="d-target-label">$--- Target</span>
         </div>
       </div>
 
@@ -1012,6 +1064,15 @@ async function fetchStatus() {
     const pnlEl = document.getElementById('d-pnl');
     pnlEl.textContent = (data.gain >= 0 ? '+' : '') + `$${data.gain.toFixed(2)} (${data.gain_pct > 0 ? '+' : ''}${data.gain_pct.toFixed(2)}%)`;
     pnlEl.className = 'card-value ' + (data.gain >= 0 ? 'g' : 'r');
+
+    if (document.getElementById('d-sub-baseline'))
+      document.getElementById('d-sub-baseline').textContent = `vs $${data.starting.toFixed(2)} baseline`;
+    if (document.getElementById('d-target-sub'))
+      document.getElementById('d-target-sub').textContent = `$${data.starting.toFixed(2)} → $${data.target.toFixed(2)}`;
+    if (document.getElementById('d-base-label'))
+      document.getElementById('d-base-label').textContent = `$${data.starting.toFixed(2)} Baseline`;
+    if (document.getElementById('d-target-label'))
+      document.getElementById('d-target-label').textContent = `$${data.target.toFixed(2)} Target`;
 
     document.getElementById('d-progress').textContent = `${data.progress.toFixed(1)}%`;
     document.getElementById('d-running').textContent  = data.running.length;
@@ -1207,6 +1268,18 @@ async function closeAllPositions() {
   const res = await fetch('/api/close_all', { method:'POST' }).then(r => r.json());
   toast(res.closed > 0 ? `🔒 Closed ${res.closed} open position(s)!` : '💤 No open positions to close.', 'success');
   await fetchStatus();
+}
+
+async function resetBaseline() {
+  try {
+    const res = await fetch('/api/reset_baseline', { method:'POST' }).then(r => r.json());
+    if (res.success) {
+      toast(res.message, 'success');
+      await fetchStatus();
+    }
+  } catch(e) {
+    toast('❌ Error resetting baseline: ' + e.message, 'error');
+  }
 }
 
 function updateClock() {
