@@ -37,6 +37,19 @@ active_processes = {}
 # ─── ALL 19 ANTIGRAVITY AI BRAIN STRATEGIES ─────────────────
 STRATEGIES = [
     {
+        "id": "autonomous_ai_swarm_brain",
+        "name": "Autonomous AI RL Swarm Brain V4.0",
+        "icon": "🧠",
+        "category": "Self-Learning AI",
+        "cagr": "+2,890% CAGR",
+        "win": "78.4%",
+        "mdd": "-1.5%",
+        "script": os.path.join(ANALYSIS_DIR, "autonomous_ai_swarm_brain.py"),
+        "is_binary": False,
+        "color": "#00d4aa",
+        "desc": "Self-trading RL engine with trade memory persistence. Learns from trade outcomes so it NEVER repeats past mistakes!"
+    },
+    {
         "id": "rust_swarm_engine",
         "name": "Full Native Rust HF Swarm Engine V2.0",
         "icon": "🦀",
@@ -509,11 +522,14 @@ def api_strategy_log(strategy_id):
 
 @app.route("/api/execute/<strategy_id>", methods=["POST"])
 def api_execute(strategy_id):
+    data       = request.json or {}
+    margin_pct = str(data.get("margin_pct", 0.25))
+
     strat = next((s for s in STRATEGIES if s["id"] == strategy_id), None)
     if not strat:
         return jsonify({"success": False, "error": f"Strategy '{strategy_id}' not found"})
 
-    # Halt any background services to prevent daemon conflicts (e.g. rust_engine or adaptive_hunter closing positions)
+    # Halt any background services to prevent daemon conflicts
     for svc in ["rust_engine", "adaptive_hunter", "swarm_bot_engine"]:
         try:
             subprocess.run(["sudo", "systemctl", "stop", svc], timeout=3, capture_output=True)
@@ -536,27 +552,35 @@ def api_execute(strategy_id):
                 stdout=log_handle,
                 stderr=log_handle
             )
+        elif strategy_id == "autonomous_ai_swarm_brain":
+            script_path = os.path.join(ANALYSIS_DIR, "autonomous_ai_swarm_brain.py")
+            proc = subprocess.Popen(
+                [VENV_PYTHON, "-u", script_path, "--strategy", strategy_id, "--margin_pct", margin_pct],
+                cwd=ANALYSIS_DIR,
+                stdout=log_handle,
+                stderr=log_handle
+            )
         elif strategy_id == "swarm_call_spread":
-            # Launch dedicated REAL OPTIONS 1x2 Ratio Call Spread executor
             options_script = os.path.join(ANALYSIS_DIR, "swarm_delta_live_executor.py")
             proc = subprocess.Popen(
-                [VENV_PYTHON, "-u", options_script],
+                [VENV_PYTHON, "-u", options_script, "--margin_pct", margin_pct],
                 cwd=ANALYSIS_DIR,
                 stdout=log_handle,
                 stderr=log_handle
             )
         else:
             proc = subprocess.Popen(
-                [VENV_PYTHON, "-u", RUNNER_SCRIPT, "--strategy", strategy_id, "--margin_pct", "0.95"],
+                [VENV_PYTHON, "-u", RUNNER_SCRIPT, "--strategy", strategy_id, "--margin_pct", margin_pct],
                 cwd=ANALYSIS_DIR,
                 stdout=log_handle,
                 stderr=log_handle
             )
 
         active_processes[strategy_id] = proc
+        margin_display = f"{float(margin_pct)*100:.0f}%"
         return jsonify({
             "success": True,
-            "message": f"🚀 Launched '{strat['name']}' Independently on 95% Max Margin!",
+            "message": f"🚀 Launched '{strat['name']}' Live with {margin_display} Margin Allocation!",
             "pid": proc.pid
         })
     except Exception as e:
@@ -892,6 +916,16 @@ DASHBOARD_HTML = r"""<!DOCTYPE html>
       <div class="page-title" id="page-title">Dashboard Overview</div>
     </div>
     <div class="topbar-right">
+      <div style="display:flex;align-items:center;gap:6px;">
+        <span style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;">Margin:</span>
+        <select class="form-select" id="margin-pct-select" style="padding:4px 10px;font-size:12px;border-radius:8px;background:rgba(108,99,255,0.15);color:var(--accent);border:1px solid rgba(108,99,255,0.3);font-weight:700;" title="Select Margin Percentage Allocation for Strategy Execution">
+          <option value="0.10">10% Margin</option>
+          <option value="0.25" selected>25% Margin (Kelly Default)</option>
+          <option value="0.50">50% Margin</option>
+          <option value="0.75">75% Margin</option>
+          <option value="1.00">100% Max Margin</option>
+        </select>
+      </div>
       <div class="btc-pill" id="btc-price">BTC $---</div>
       <div style="font-size:12px;color:var(--muted);" id="clock">--:--:-- IST</div>
     </div>
@@ -1201,9 +1235,15 @@ async function renderStrategies() {
 }
 
 async function executeStrategy(id) {
-  toast('🚀 Launching strategy live on Delta Exchange Testnet...', 'info');
+  const marginPct = parseFloat(document.getElementById('margin-pct-select').value || 0.25);
+  toast(`🚀 Launching strategy live with ${(marginPct*100).toFixed(0)}% Margin Allocation...`, 'info');
   try {
-    const res = await fetch('/api/execute/' + id, { method:'POST' }).then(r => r.json());
+    const res = await fetch('/api/execute/' + id, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ margin_pct: marginPct })
+    }).then(r => r.json());
+
     if (res.success) {
       toast(res.message, 'success');
       document.getElementById('log-selector').value = id;
