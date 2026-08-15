@@ -36,6 +36,19 @@ active_processes = {}
 
 STRATEGIES = [
     {
+        "id": "pure_rsi_call_spread",
+        "name": "Pure RSI Call Spread Engine V1.0",
+        "icon": "🎯",
+        "category": "Pure RSI Spread",
+        "cagr": "+29.9% CAGR",
+        "win": "42.4%",
+        "mdd": "-3.06%",
+        "script": os.path.join(ANALYSIS_DIR, "pure_rsi_call_spread_engine.py"),
+        "is_binary": False,
+        "color": "#00d4aa",
+        "desc": "Streamlined RSI(14) entry (45<=RSI<=65) wrapped in Zero Net Debit 1x2 Ratio Call Spreads."
+    },
+    {
         "id": "rsi_swarm_bot",
         "name": "RSI Momentum Swarm Engine V1.0",
         "icon": "📊",
