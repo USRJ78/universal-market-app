@@ -586,6 +586,74 @@ def api_execute(strategy_id):
     except Exception as e:
         return jsonify({"success": False, "error": str(e)})
 
+AUTOPILOT_SCRIPT     = os.path.join(ANALYSIS_DIR, "autopilot_master_engine.py")
+AUTOPILOT_STATE_FILE = os.path.join(ANALYSIS_DIR, "autopilot_state.json")
+
+@app.route("/api/autopilot/status")
+def api_autopilot_status():
+    is_running = "autopilot" in active_processes and active_processes["autopilot"].poll() is None
+    state_data = {}
+    if os.path.exists(AUTOPILOT_STATE_FILE):
+        try:
+            with open(AUTOPILOT_STATE_FILE, "r") as f:
+                state_data = json.load(f)
+        except Exception:
+            pass
+    return jsonify({
+        "active": is_running,
+        "strategy": state_data.get("active_strategy", "Evaluating Market..."),
+        "conviction": state_data.get("conviction", 85.0),
+        "margin_pct": state_data.get("margin_pct", 0.25),
+        "status": "ACTIVE" if is_running else "STOPPED"
+    })
+
+@app.route("/api/autopilot/toggle", methods=["POST"])
+def api_autopilot_toggle():
+    data       = request.json or {}
+    margin_pct = str(data.get("margin_pct", 0.25))
+
+    is_running = "autopilot" in active_processes and active_processes["autopilot"].poll() is None
+
+    if is_running:
+        try:
+            proc = active_processes["autopilot"]
+            proc.terminate()
+            del active_processes["autopilot"]
+        except Exception:
+            pass
+        return jsonify({
+            "success": True,
+            "active": False,
+            "message": "⏸️ AI Autopilot STOPPED. Website is now in Manual Control mode."
+        })
+    else:
+        for svc in ["rust_engine", "adaptive_hunter", "swarm_bot_engine"]:
+            try:
+                subprocess.run(["sudo", "systemctl", "stop", svc], timeout=3, capture_output=True)
+            except Exception:
+                pass
+
+        try:
+            log_file_path = os.path.join(ANALYSIS_DIR, "autopilot.log")
+            log_handle    = open(log_file_path, "a", encoding="utf-8")
+
+            proc = subprocess.Popen(
+                [VENV_PYTHON, "-u", AUTOPILOT_SCRIPT, "--margin_pct", margin_pct],
+                cwd=ANALYSIS_DIR,
+                stdout=log_handle,
+                stderr=log_handle
+            )
+            active_processes["autopilot"] = proc
+            margin_display = f"{float(margin_pct)*100:.0f}%"
+            return jsonify({
+                "success": True,
+                "active": True,
+                "message": f"⚡ AI AUTOPILOT ACTIVATED! Trading on your behalf 24/7 with {margin_display} Margin Allocation!",
+                "pid": proc.pid
+            })
+        except Exception as e:
+            return jsonify({"success": False, "error": str(e)})
+
 @app.route("/api/stop/<strategy_id>", methods=["POST"])
 def api_stop(strategy_id):
     if strategy_id == "all":
@@ -935,6 +1003,33 @@ DASHBOARD_HTML = r"""<!DOCTYPE html>
 
     <!-- PAGE 1: DASHBOARD -->
     <div class="page active" id="page-dashboard">
+      
+      <!-- ⚡ CORE WEBSITE INTELLIGENCE: AI AUTOPILOT HERO CONTROL -->
+      <div class="card" style="margin-bottom:20px;background:linear-gradient(135deg, rgba(108,99,255,0.15), rgba(0,212,170,0.1));border:1px solid rgba(108,99,255,0.4);padding:22px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;">
+          <div>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+              <span style="font-size:24px;">⚡</span>
+              <h2 style="font-size:18px;font-weight:800;letter-spacing:-0.3px;">AI AUTOPILOT CORE INTELLIGENCE</h2>
+              <span id="ap-badge" class="running-badge" style="background:rgba(100,116,139,0.2);color:#94a3b8;border-color:rgba(100,116,139,0.4);">STANDBY (MANUAL CONTROL)</span>
+            </div>
+            <p style="font-size:12px;color:var(--muted);max-width:600px;">
+              Autonomous Core Intelligence: Automatically evaluates all 19 quantitative strategies 24/7, selects optimal market regime engines, and trades on your behalf with dynamic risk learning.
+            </p>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:16px;">
+            <div style="text-align:right;">
+              <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;">AI Selected Engine</div>
+              <div style="font-size:14px;font-weight:800;color:var(--accent);" id="ap-strat">Evaluating Market...</div>
+            </div>
+            <button class="btn-exec" id="ap-toggle-btn" style="padding:14px 24px;font-size:14px;border-radius:12px;" onclick="toggleAutopilot()">
+              ⚡ ENABLE AI AUTOPILOT
+            </button>
+          </div>
+        </div>
+      </div>
+
       <div class="grid-4">
         <div class="card">
           <div class="card-label">💰 Net Equity</div>
@@ -1327,9 +1422,67 @@ function updateClock() {
     new Date().toLocaleTimeString('en-IN', { timeZone:'Asia/Kolkata', hour12:false }) + ' IST';
 }
 
+async function toggleAutopilot() {
+  const marginPct = parseFloat(document.getElementById('margin-pct-select').value || 0.25);
+  toast('⚡ Toggling AI Autopilot Mode...', 'info');
+  try {
+    const res = await fetch('/api/autopilot/toggle', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ margin_pct: marginPct })
+    }).then(r => r.json());
+
+    if (res.success) {
+      toast(res.message, 'success');
+      updateAutopilotUI(res.active);
+      await fetchStatus();
+    } else {
+      toast('❌ Autopilot Error: ' + res.error, 'error');
+    }
+  } catch(e) {
+    toast('❌ Error toggling Autopilot: ' + e.message, 'error');
+  }
+}
+
+async function checkAutopilotStatus() {
+  try {
+    const res = await fetch('/api/autopilot/status').then(r => r.json());
+    updateAutopilotUI(res.active, res.strategy);
+  } catch(e) {}
+}
+
+function updateAutopilotUI(active, strategyName) {
+  const btn   = document.getElementById('ap-toggle-btn');
+  const badge = document.getElementById('ap-badge');
+  const strat = document.getElementById('ap-strat');
+  if (!btn || !badge || !strat) return;
+
+  if (active) {
+    btn.innerHTML = '⏸️ DISABLE AI AUTOPILOT';
+    btn.className = 'btn-stop';
+    btn.style.padding = '14px 24px';
+    badge.innerHTML = '<div class="pulse"></div> AI AUTOPILOT ACTIVE (24/7)';
+    badge.style.background = 'rgba(0,212,170,0.15)';
+    badge.style.color = 'var(--green)';
+    badge.style.borderColor = 'rgba(0,212,170,0.4)';
+    if (strategyName) strat.textContent = strategyName;
+  } else {
+    btn.innerHTML = '⚡ ENABLE AI AUTOPILOT';
+    btn.className = 'btn-exec';
+    btn.style.padding = '14px 24px';
+    badge.innerHTML = 'STANDBY (MANUAL CONTROL)';
+    badge.style.background = 'rgba(100,116,139,0.2)';
+    badge.style.color = '#94a3b8';
+    badge.style.borderColor = 'rgba(100,116,139,0.4)';
+    strat.textContent = 'Manual Selection Mode';
+  }
+}
+
 fetchStatus();
 renderStrategies();
+checkAutopilotStatus();
 setInterval(fetchStatus, 3000);
+setInterval(checkAutopilotStatus, 3000);
 setInterval(fetchSpecificLog, 2000);
 setInterval(updateClock, 1000);
 updateClock();
