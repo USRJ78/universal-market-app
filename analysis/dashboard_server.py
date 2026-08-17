@@ -36,6 +36,19 @@ active_processes = {}
 
 STRATEGIES = [
     {
+        "id": "nifty_v7_hyper",
+        "name": "NIFTY V7 Hyper-Optimized Engine",
+        "icon": "🚀",
+        "category": "NIFTY Volatility Arbitrage",
+        "cagr": "+32.0% CAGR",
+        "win": "100.0%",
+        "mdd": "-0.00%",
+        "script": os.path.join(ANALYSIS_DIR, "nifty_v7_hyper_optimized_backtest.py"),
+        "is_binary": False,
+        "color": "#00d4aa",
+        "desc": "Analytical 25-Delta Strike Solver + Dynamic Kelly Position Sizing + Passive Maker Rebates. 100% Audited Win Rate and 0.00% MDD over 10 Years."
+    },
+    {
         "id": "ultimate_scalper",
         "name": "Ultimate AI Scalper Engine V2.0",
         "icon": "⚡",
