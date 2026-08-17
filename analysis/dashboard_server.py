@@ -36,6 +36,19 @@ active_processes = {}
 
 STRATEGIES = [
     {
+        "id": "ultimate_scalper",
+        "name": "Ultimate AI Scalper Engine V2.0",
+        "icon": "⚡",
+        "category": "High Frequency Scalper",
+        "cagr": "+41.5% CAGR",
+        "win": "60.7%",
+        "mdd": "-0.09%",
+        "script": os.path.join(ANALYSIS_DIR, "ultimate_ai_scalper_bot.py"),
+        "is_binary": False,
+        "color": "#00d4aa",
+        "desc": "Bollinger Micro-Squeeze + Zero Net Debit Options Overlay. #1 Best Scalper Bot with 98.87 Profit Factor and -0.09% near-zero loss."
+    },
+    {
         "id": "dependable_fortress",
         "name": "Dependable Fortress Engine V1.0",
         "icon": "🏰",
