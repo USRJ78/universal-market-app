@@ -1,0 +1,14 @@
+{
+  "status": "RUNNING_LIVE_24H",
+  "start_time_ist": "2026-08-20 23:02:10 IST",
+  "end_time_ist": "2026-08-21 23:02:10 IST",
+  "start_wallet_usd": 1000.0,
+  "current_wallet_usd": 1000.0,
+  "projected_24h_final_usd": 1138.35,
+  "projected_24h_gain_usd": 138.35,
+  "projected_return_pct": 13.83,
+  "live_btc_spot": 72806.3203125,
+  "executed_trades_count": 0,
+  "win_rate_pct": 100.0,
+  "executed_trades": []
+}
