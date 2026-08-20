@@ -1120,6 +1120,34 @@ DASHBOARD_HTML = r"""<!DOCTYPE html>
         </div>
       </div>
 
+      <!-- 🎯 MANUAL BASELINE & TARGET CONTROL PANEL -->
+      <div class="card" style="margin-bottom:20px;background:rgba(108,99,255,0.06);border:1px solid rgba(108,99,255,0.3);">
+        <div style="font-size:14px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px;">
+          <span>🎯</span> MANUAL TARGET & BASELINE SETTING PANEL
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:14px;align-items:end;">
+          <div class="form-group">
+            <div class="form-label" style="color:var(--yellow);">Baseline Capital ($)</div>
+            <input class="form-input" type="number" id="manual-base-val" placeholder="e.g. 1000" style="font-family:'JetBrains Mono';font-weight:700;color:var(--yellow);">
+          </div>
+          <div class="form-group">
+            <div class="form-label" style="color:var(--green);">Target Capital ($)</div>
+            <input class="form-input" type="number" id="manual-target-val" placeholder="e.g. 2000" style="font-family:'JetBrains Mono';font-weight:700;color:var(--green);">
+          </div>
+          <div class="form-group">
+            <div class="form-label" style="color:var(--accent);">Baseline Strike K1 ($)</div>
+            <input class="form-input" type="number" id="manual-k1-val" placeholder="e.g. 65000" style="font-family:'JetBrains Mono';font-weight:700;color:var(--accent);">
+          </div>
+          <div class="form-group">
+            <div class="form-label" style="color:var(--green);">Target Strike K2 ($)</div>
+            <input class="form-input" type="number" id="manual-k2-val" placeholder="e.g. 68000" style="font-family:'JetBrains Mono';font-weight:700;color:var(--green);">
+          </div>
+          <button class="btn btn-green" style="height:42px;font-weight:700;" onclick="saveManualTargetBaseline()">
+            🎯 SAVE TARGET & BASELINE
+          </button>
+        </div>
+      </div>
+
       <!-- PROGRESS TRACKER -->
       <div class="card" style="margin-bottom:20px;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
@@ -1539,6 +1567,40 @@ function updateAutopilotUI(active, strategyName) {
     badge.style.color = '#94a3b8';
     badge.style.borderColor = 'rgba(100,116,139,0.4)';
     strat.textContent = 'Manual Selection Mode';
+  }
+}
+
+async function saveManualTargetBaseline() {
+  const baseVal   = document.getElementById('manual-base-val').value;
+  const targetVal = document.getElementById('manual-target-val').value;
+  const k1Val     = document.getElementById('manual-k1-val').value;
+  const k2Val     = document.getElementById('manual-k2-val').value;
+
+  if (!baseVal && !targetVal && !k1Val && !k2Val) {
+    toast('⚠️ Please enter at least one Baseline or Target value', 'error');
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/reset_baseline', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        baseline: baseVal ? parseFloat(baseVal) : undefined,
+        target: targetVal ? parseFloat(targetVal) : undefined,
+        k1_strike: k1Val ? parseFloat(k1Val) : undefined,
+        k2_strike: k2Val ? parseFloat(k2Val) : undefined
+      })
+    }).then(r => r.json());
+
+    if (res.success) {
+      toast(res.message, 'success');
+      await fetchStatus();
+    } else {
+      toast('❌ Error saving baseline & target', 'error');
+    }
+  } catch(e) {
+    toast('❌ Connection Error: ' + e.message, 'error');
   }
 }
 
