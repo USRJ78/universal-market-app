@@ -43,28 +43,68 @@ function initRadarList() {
 // 2. Interactive Canvas Payoff Simulator for 1x2 Ratio Call Spread
 function initPayoffSimulator() {
   const spotSlider = document.getElementById("sliderSpot");
-  const k1Slider = document.getElementById("sliderK1");
-  const k2Slider = document.getElementById("sliderK2");
+  const k1Slider   = document.getElementById("sliderK1");
+  const k2Slider   = document.getElementById("sliderK2");
+
+  const numSpot    = document.getElementById("numSpot");
+  const numK1      = document.getElementById("numK1");
+  const numK2      = document.getElementById("numK2");
 
   if (!spotSlider || !k1Slider || !k2Slider) return;
 
-  const update = () => {
+  const updateFromSliders = () => {
     const spot = parseFloat(spotSlider.value);
-    const k1 = parseFloat(k1Slider.value);
-    const k2 = parseFloat(k2Slider.value);
+    const k1   = parseFloat(k1Slider.value);
+    const k2   = parseFloat(k2Slider.value);
 
-    document.getElementById("lblSpot").innerText = spot.toLocaleString();
-    document.getElementById("lblK1").innerText = k1.toLocaleString();
-    document.getElementById("lblK2").innerText = k2.toLocaleString();
+    if (numSpot) numSpot.value = spot;
+    if (numK1)   numK1.value   = k1;
+    if (numK2)   numK2.value   = k2;
 
     drawPayoffCurve(spot, k1, k2);
   };
 
-  spotSlider.addEventListener("input", update);
-  k1Slider.addEventListener("input", update);
-  k2Slider.addEventListener("input", update);
+  const updateFromInputs = () => {
+    const spot = parseFloat(numSpot.value) || 65000;
+    const k1   = parseFloat(numK1.value)   || 65000;
+    const k2   = parseFloat(numK2.value)   || 68000;
 
-  update();
+    spotSlider.value = spot;
+    k1Slider.value   = k1;
+    k2Slider.value   = k2;
+
+    drawPayoffCurve(spot, k1, k2);
+  };
+
+  spotSlider.addEventListener("input", updateFromSliders);
+  k1Slider.addEventListener("input", updateFromSliders);
+  k2Slider.addEventListener("input", updateFromSliders);
+
+  if (numSpot) numSpot.addEventListener("input", updateFromInputs);
+  if (numK1)   numK1.addEventListener("input", updateFromInputs);
+  if (numK2)   numK2.addEventListener("input", updateFromInputs);
+
+  updateFromSliders();
+}
+
+function setPreset(asset, spot, k1, k2) {
+  const spotSlider = document.getElementById("sliderSpot");
+  const k1Slider   = document.getElementById("sliderK1");
+  const k2Slider   = document.getElementById("sliderK2");
+
+  const numSpot    = document.getElementById("numSpot");
+  const numK1      = document.getElementById("numK1");
+  const numK2      = document.getElementById("numK2");
+
+  if (spotSlider) spotSlider.value = spot;
+  if (k1Slider)   k1Slider.value   = k1;
+  if (k2Slider)   k2Slider.value   = k2;
+
+  if (numSpot) numSpot.value = spot;
+  if (numK1)   numK1.value   = k1;
+  if (numK2)   numK2.value   = k2;
+
+  drawPayoffCurve(spot, k1, k2);
 }
 
 function drawPayoffCurve(spot, k1, k2) {

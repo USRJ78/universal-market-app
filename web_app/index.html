@@ -70,18 +70,34 @@
           <h2>🎯 Zero-Debit 1x2 Ratio Call Spread Simulator</h2>
           <span class="tag-badge">Non-Linear Convexity</span>
         </div>
+        <div class="preset-buttons-bar">
+          <span class="preset-lbl">⚡ Quick Presets:</span>
+          <button class="btn-preset" onclick="setPreset('BTC', 65000, 65000, 68000)">BTC ($65k ➔ $68k)</button>
+          <button class="btn-preset" onclick="setPreset('NIFTY', 24500, 24500, 25400)">NIFTY (24.5k ➔ 25.4k)</button>
+          <button class="btn-preset" onclick="setPreset('BANKNIFTY', 50000, 50000, 52200)">BNF (50k ➔ 52.2k)</button>
+        </div>
+
         <div class="sim-controls">
           <div class="ctrl-group">
-            <label>Underlying Price (S): $<span id="lblSpot">65,000</span></label>
-            <input type="range" id="sliderSpot" min="50000" max="85000" step="500" value="65000">
+            <div class="input-header">
+              <label>Underlying Price (S):</label>
+              <input type="number" id="numSpot" class="manual-input" value="65000" step="100">
+            </div>
+            <input type="range" id="sliderSpot" min="10000" max="120000" step="100" value="65000">
           </div>
           <div class="ctrl-group">
-            <label>1x Buy ATM Strike (K1): $<span id="lblK1">65,000</span></label>
-            <input type="range" id="sliderK1" min="50000" max="80000" step="500" value="65000">
+            <div class="input-header">
+              <label>1x Baseline Strike (K1):</label>
+              <input type="number" id="numK1" class="manual-input baseline-input" value="65000" step="100">
+            </div>
+            <input type="range" id="sliderK1" min="10000" max="120000" step="100" value="65000">
           </div>
           <div class="ctrl-group">
-            <label>2x Sell OTM Strike (K2): $<span id="lblK2">68,000</span></label>
-            <input type="range" id="sliderK2" min="55000" max="85000" step="500" value="68000">
+            <div class="input-header">
+              <label>2x Target Strike (K2):</label>
+              <input type="number" id="numK2" class="manual-input target-input" value="68000" step="100">
+            </div>
+            <input type="range" id="sliderK2" min="10000" max="120000" step="100" value="68000">
           </div>
         </div>
 
