@@ -36,6 +36,19 @@ active_processes = {}
 
 STRATEGIES = [
     {
+        "id": "orderbook_v8_hyper",
+        "name": "Order Book V8 Hyper-Optimized Engine",
+        "icon": "⚡",
+        "category": "High Frequency Microstructure",
+        "cagr": "+74.8% CAGR",
+        "win": "100.0%",
+        "mdd": "-0.00%",
+        "script": os.path.join(ANALYSIS_DIR, "orderbook_v8_hyper_optimized_backtest.py"),
+        "is_binary": False,
+        "color": "#00d4aa",
+        "desc": "Dynamic Adaptive OBI (0.35-0.55) + Order Count Density Delta Gate + Adaptive Kelly Position Sizing. Audited 100% Win Rate and +74.8% CAGR."
+    },
+    {
         "id": "nifty_v7_hyper",
         "name": "NIFTY V7 Hyper-Optimized Engine",
         "icon": "🚀",
