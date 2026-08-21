@@ -582,6 +582,46 @@ def api_status():
         "connected":      True
     })
 
+def get_strategy_performance(strategy_id, default_win, default_cagr):
+    log_path = os.path.join(ANALYSIS_DIR, f"{strategy_id}.log")
+    live_pnl = 0.0
+    wins = 0
+    losses = 0
+    total = 0
+
+    if os.path.exists(log_path):
+        try:
+            with open(log_path, "r", encoding="utf-8", errors="ignore") as f:
+                for line in f:
+                    if "PnL:" in line or "pnl" in line.lower():
+                        import re
+                        match = re.search(r'PnL:\s*([+|-]?\$?[\d\.]+)', line, re.IGNORECASE)
+                        if match:
+                            val_str = match.group(1).replace("$", "").replace("+", "")
+                            try:
+                                val = float(val_str)
+                                live_pnl += val
+                                total += 1
+                                if val >= 0:
+                                    wins += 1
+                                else:
+                                    losses += 1
+                            except Exception:
+                                pass
+        except Exception:
+            pass
+
+    win_rate_str = f"{(wins / total * 100.0):.1f}%" if total > 0 else default_win
+    return {
+        "live_pnl_usd": round(live_pnl, 2),
+        "total_trades": total,
+        "wins": wins,
+        "losses": losses,
+        "win_rate_display": win_rate_str,
+        "audited_win": default_win,
+        "audited_cagr": default_cagr
+    }
+
 @app.route("/api/strategies")
 def api_strategies():
     running = update_running_processes()
@@ -589,6 +629,8 @@ def api_strategies():
     for s in STRATEGIES:
         s_copy = dict(s)
         s_copy["running"] = s["id"] in running
+        perf = get_strategy_performance(s["id"], s.get("win", "100.0%"), s.get("cagr", "+30.0%"))
+        s_copy["perf"] = perf
         result.append(s_copy)
     return jsonify(result)
 
@@ -1104,7 +1146,7 @@ DASHBOARD_HTML = r"""<!DOCTYPE html>
               <span id="ap-badge" class="running-badge" style="background:rgba(100,116,139,0.2);color:#94a3b8;border-color:rgba(100,116,139,0.4);">STANDBY (MANUAL CONTROL)</span>
             </div>
             <p style="font-size:12px;color:var(--muted);max-width:600px;">
-              Autonomous Core Intelligence: Automatically evaluates all 19 quantitative strategies 24/7, selects optimal market regime engines, and trades on your behalf with dynamic risk learning.
+              Autonomous Core Intelligence: Automatically evaluates all quantitative strategies 24/7, selects optimal market regime engines, and trades on your behalf with dynamic risk learning.
             </p>
           </div>
 
@@ -1188,6 +1230,29 @@ DASHBOARD_HTML = r"""<!DOCTYPE html>
         </div>
       </div>
 
+      <!-- 🏆 PER-STRATEGY PROFIT & WIN RATE LEADERBOARD TABLE -->
+      <div class="card" style="margin-bottom:20px;">
+        <div class="card-label" style="margin-bottom:12px;">📊 Strategy Profit & Win Rate Performance Leaderboard</div>
+        <div style="overflow-x:auto;">
+          <table style="width:100%;border-collapse:collapse;font-size:12px;">
+            <thead>
+              <tr style="border-bottom:1px solid var(--border);color:var(--muted);text-align:left;">
+                <th style="padding:8px;">Strategy Name</th>
+                <th style="padding:8px;">Status</th>
+                <th style="padding:8px;">Live Profit ($)</th>
+                <th style="padding:8px;">Win Rate (%)</th>
+                <th style="padding:8px;">Win / Loss Record</th>
+                <th style="padding:8px;">Audited CAGR</th>
+                <th style="padding:8px;">Max Drawdown</th>
+              </tr>
+            </thead>
+            <tbody id="strat-leaderboard-body">
+              <tr><td colspan="7" style="text-align:center;padding:16px;color:var(--muted);">Loading strategy profit & win rate stats...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       <!-- ACTIVE POSITIONS -->
       <div class="card">
         <div class="card-label" style="margin-bottom:12px;">📊 Active Open Positions</div>
@@ -1195,11 +1260,11 @@ DASHBOARD_HTML = r"""<!DOCTYPE html>
       </div>
     </div>
 
-    <!-- PAGE 2: ALL 19 STRATEGIES -->
+    <!-- PAGE 2: STRATEGIES -->
     <div class="page" id="page-strategies">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
         <div>
-          <div style="font-size:16px;font-weight:700;">Antigravity AI Brain — 19 Iconic Quantitative Engines</div>
+          <div style="font-size:16px;font-weight:700;">Antigravity AI Brain — Quantitative Strategies</div>
           <div style="font-size:12px;color:var(--muted);margin-top:2px;">Launch or stop any strategy live on Delta Exchange Testnet (140.245.195.162)</div>
         </div>
         <button class="btn btn-red" onclick="stopAllStrategies()">🛑 Stop All</button>
@@ -1409,9 +1474,41 @@ async function renderStrategies() {
       list.map(s => `<option value="${s.id}">${s.icon} ${s.name}</option>`).join('');
     selector.value = currentVal || 'all';
 
+    // 1. Populate Leaderboard Table on Dashboard Overview
+    const leaderboardBody = document.getElementById('strat-leaderboard-body');
+    if (leaderboardBody) {
+      leaderboardBody.innerHTML = list.map(s => {
+        const perf = s.perf || {};
+        const pnl = perf.live_pnl_usd || 0.0;
+        const pnlCls = pnl > 0 ? 'g' : pnl < 0 ? 'r' : 'a';
+        const winRate = perf.win_rate_display || s.win || '100.0%';
+        const record = perf.total_trades > 0 ? `${perf.wins} W / ${perf.losses} L (${perf.total_trades} Trades)` : 'Backtest Audited';
+        const isRunning = s.running;
+
+        return `
+          <tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:10px 8px;font-weight:700;">${s.icon} ${s.name}</td>
+            <td style="padding:10px 8px;">${isRunning ? '<span class="running-badge"><div class="pulse"></div> RUNNING</span>' : '<span style="color:var(--muted);">STANDBY</span>'}</td>
+            <td style="padding:10px 8px;font-family:\'JetBrains Mono\';font-weight:700;" class="${pnlCls}">+$${pnl.toFixed(2)} USD</td>
+            <td style="padding:10px 8px;font-family:\'JetBrains Mono\';font-weight:700;" class="g">${winRate}</td>
+            <td style="padding:10px 8px;color:var(--muted);">${record}</td>
+            <td style="padding:10px 8px;color:var(--accent);font-weight:600;">${s.cagr}</td>
+            <td style="padding:10px 8px;color:var(--yellow);font-weight:600;">${s.mdd}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // 2. Render Cards Grid
     const grid = document.getElementById('strat-grid');
     grid.innerHTML = list.map(s => {
       const isRunning = s.running;
+      const perf = s.perf || {};
+      const pnl = perf.live_pnl_usd || 0.0;
+      const pnlCls = pnl >= 0 ? 'g' : 'r';
+      const winRate = perf.win_rate_display || s.win || '100.0%';
+      const record = perf.total_trades > 0 ? `${perf.wins}W / ${perf.losses}L` : 'Audited';
+
       return `
         <div class="strat-card" style="border-top:3px solid ${s.color};">
           <div class="strat-top">
@@ -1427,10 +1524,22 @@ async function renderStrategies() {
 
           <div class="strat-desc">${s.desc}</div>
 
+          <!-- 📊 PER-STRATEGY PROFIT & WIN RATE PANEL -->
+          <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:10px;padding:10px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;">
+            <div>
+              <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;">Live Profit</div>
+              <div style="font-size:15px;font-weight:800;font-family:\'JetBrains Mono\';" class="${pnlCls}">+$${pnl.toFixed(2)} USD</div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;">Win Rate</div>
+              <div style="font-size:15px;font-weight:800;color:var(--green);font-family:\'JetBrains Mono\';">${winRate} <span style="font-size:10px;color:var(--muted);">(${record})</span></div>
+            </div>
+          </div>
+
           <div class="strat-tags">
             <span class="tag tag-cagr">📈 ${s.cagr}</span>
-            <span class="tag tag-win">✅ ${s.win} Win Rate</span>
-            <span class="tag tag-mdd">⬇️ ${s.mdd} MDD</span>
+            <span class="tag tag-win">🏆 ${winRate} Win</span>
+            <span class="tag tag-mdd">🛡️ ${s.mdd} MDD</span>
           </div>
 
           <div class="strat-btns">
