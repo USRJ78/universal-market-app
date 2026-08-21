@@ -1098,7 +1098,7 @@ DASHBOARD_HTML = r"""<!DOCTYPE html>
   <div class="sidebar-nav">
     <div class="nav-cat">Main Dashboard</div>
     <div class="nav-item active" onclick="showPage('dashboard', this)"><span>📊</span> Dashboard Overview</div>
-    <div class="nav-item" onclick="showPage('strategies', this)"><span>🤖</span> All 19 Strategies</div>
+    <div class="nav-item" onclick="showPage('strategies', this)"><span>🤖</span> Strategies</div>
     <div class="nav-item" onclick="showPage('trade', this)"><span>⚡</span> Manual Order Panel</div>
     <div class="nav-item" onclick="showPage('logs', this)"><span>📡</span> Live Log Feed</div>
 
@@ -1335,7 +1335,7 @@ function showPage(id, navEl) {
   
   const titles = {
     dashboard: 'Dashboard Overview',
-    strategies: 'All 19 Quantitative Engines',
+    strategies: 'Strategies',
     trade: 'Manual Order Panel',
     logs: 'Live AI Brain Log Feed'
   };
