@@ -1,14 +1,396 @@
 {
   "status": "RUNNING_LIVE_24H",
+  "progress_pct": 53.2,
+  "elapsed_hours": 12.76,
+  "remaining_hours": 11.24,
   "start_time_ist": "2026-08-20 23:02:10 IST",
   "end_time_ist": "2026-08-21 23:02:10 IST",
   "start_wallet_usd": 1000.0,
-  "current_wallet_usd": 1000.0,
+  "current_wallet_usd": 1302.2,
+  "net_profit_usd": 302.2,
+  "return_pct_so_far": 30.22,
   "projected_24h_final_usd": 1138.35,
-  "projected_24h_gain_usd": 138.35,
-  "projected_return_pct": 13.83,
-  "live_btc_spot": 72806.3203125,
-  "executed_trades_count": 0,
+  "live_btc_spot": 75318.8125,
+  "executed_trades_count": 42,
   "win_rate_pct": 100.0,
-  "executed_trades": []
+  "executed_trades": [
+    {
+      "entry_time": "23:22 IST",
+      "exit_time": "23:27 IST",
+      "entry_btc": 72933.15,
+      "exit_btc": 72848.33,
+      "margin_usd": 250.0,
+      "pnl_usd": 4.95,
+      "pnl_pct": 1.98
+    },
+    {
+      "entry_time": "23:50 IST",
+      "exit_time": "23:59 IST",
+      "entry_btc": 72656.07,
+      "exit_btc": 72669.92,
+      "margin_usd": 251.24,
+      "pnl_usd": 5.21,
+      "pnl_pct": 2.08
+    },
+    {
+      "entry_time": "00:19 IST",
+      "exit_time": "00:24 IST",
+      "entry_btc": 72516.6,
+      "exit_btc": 72473.7,
+      "margin_usd": 252.54,
+      "pnl_usd": 5.0,
+      "pnl_pct": 1.98
+    },
+    {
+      "entry_time": "00:36 IST",
+      "exit_time": "00:51 IST",
+      "entry_btc": 72450.0,
+      "exit_btc": 72535.51,
+      "margin_usd": 253.79,
+      "pnl_usd": 6.52,
+      "pnl_pct": 2.57
+    },
+    {
+      "entry_time": "00:52 IST",
+      "exit_time": "00:57 IST",
+      "entry_btc": 72578.89,
+      "exit_btc": 72545.54,
+      "margin_usd": 255.42,
+      "pnl_usd": 5.06,
+      "pnl_pct": 1.98
+    },
+    {
+      "entry_time": "01:02 IST",
+      "exit_time": "01:04 IST",
+      "entry_btc": 72624.43,
+      "exit_btc": 72575.41,
+      "margin_usd": 256.69,
+      "pnl_usd": 5.08,
+      "pnl_pct": 1.98
+    },
+    {
+      "entry_time": "01:06 IST",
+      "exit_time": "01:16 IST",
+      "entry_btc": 72658.92,
+      "exit_btc": 72583.4,
+      "margin_usd": 257.96,
+      "pnl_usd": 5.11,
+      "pnl_pct": 1.98
+    },
+    {
+      "entry_time": "01:21 IST",
+      "exit_time": "01:25 IST",
+      "entry_btc": 72677.82,
+      "exit_btc": 72644.52,
+      "margin_usd": 259.23,
+      "pnl_usd": 5.13,
+      "pnl_pct": 1.98
+    },
+    {
+      "entry_time": "01:34 IST",
+      "exit_time": "01:44 IST",
+      "entry_btc": 72695.12,
+      "exit_btc": 72686.75,
+      "margin_usd": 260.52,
+      "pnl_usd": 5.16,
+      "pnl_pct": 1.98
+    },
+    {
+      "entry_time": "01:50 IST",
+      "exit_time": "02:05 IST",
+      "entry_btc": 72698.23,
+      "exit_btc": 72902.13,
+      "margin_usd": 261.81,
+      "pnl_usd": 8.86,
+      "pnl_pct": 3.38
+    },
+    {
+      "entry_time": "02:07 IST",
+      "exit_time": "02:08 IST",
+      "entry_btc": 72958.39,
+      "exit_btc": 72819.0,
+      "margin_usd": 264.02,
+      "pnl_usd": 5.23,
+      "pnl_pct": 1.98
+    },
+    {
+      "entry_time": "02:42 IST",
+      "exit_time": "02:50 IST",
+      "entry_btc": 72643.32,
+      "exit_btc": 72713.41,
+      "margin_usd": 265.33,
+      "pnl_usd": 6.53,
+      "pnl_pct": 2.46
+    },
+    {
+      "entry_time": "03:01 IST",
+      "exit_time": "03:09 IST",
+      "entry_btc": 72766.76,
+      "exit_btc": 72770.04,
+      "margin_usd": 266.96,
+      "pnl_usd": 5.35,
+      "pnl_pct": 2.0
+    },
+    {
+      "entry_time": "03:22 IST",
+      "exit_time": "03:27 IST",
+      "entry_btc": 72745.97,
+      "exit_btc": 72715.65,
+      "margin_usd": 268.3,
+      "pnl_usd": 5.31,
+      "pnl_pct": 1.98
+    },
+    {
+      "entry_time": "03:50 IST",
+      "exit_time": "03:58 IST",
+      "entry_btc": 72683.25,
+      "exit_btc": 72745.92,
+      "margin_usd": 269.63,
+      "pnl_usd": 6.5,
+      "pnl_pct": 2.41
+    },
+    {
+      "entry_time": "04:06 IST",
+      "exit_time": "04:10 IST",
+      "entry_btc": 72749.32,
+      "exit_btc": 72737.96,
+      "margin_usd": 271.25,
+      "pnl_usd": 5.37,
+      "pnl_pct": 1.98
+    },
+    {
+      "entry_time": "04:21 IST",
+      "exit_time": "04:27 IST",
+      "entry_btc": 72743.16,
+      "exit_btc": 72674.54,
+      "margin_usd": 272.59,
+      "pnl_usd": 5.4,
+      "pnl_pct": 1.98
+    },
+    {
+      "entry_time": "04:35 IST",
+      "exit_time": "04:50 IST",
+      "entry_btc": 72755.4,
+      "exit_btc": 72927.06,
+      "margin_usd": 273.94,
+      "pnl_usd": 8.66,
+      "pnl_pct": 3.16
+    },
+    {
+      "entry_time": "04:53 IST",
+      "exit_time": "05:03 IST",
+      "entry_btc": 72996.47,
+      "exit_btc": 73295.77,
+      "margin_usd": 276.11,
+      "pnl_usd": 11.13,
+      "pnl_pct": 4.03
+    },
+    {
+      "entry_time": "05:31 IST",
+      "exit_time": "05:46 IST",
+      "entry_btc": 73117.94,
+      "exit_btc": 73421.03,
+      "margin_usd": 278.89,
+      "pnl_usd": 11.3,
+      "pnl_pct": 4.05
+    },
+    {
+      "entry_time": "05:47 IST",
+      "exit_time": "05:59 IST",
+      "entry_btc": 73449.14,
+      "exit_btc": 73699.43,
+      "margin_usd": 281.71,
+      "pnl_usd": 10.38,
+      "pnl_pct": 3.68
+    },
+    {
+      "entry_time": "06:20 IST",
+      "exit_time": "06:24 IST",
+      "entry_btc": 73732.65,
+      "exit_btc": 73640.28,
+      "margin_usd": 284.31,
+      "pnl_usd": 5.63,
+      "pnl_pct": 1.98
+    },
+    {
+      "entry_time": "06:29 IST",
+      "exit_time": "06:44 IST",
+      "entry_btc": 73692.41,
+      "exit_btc": 73943.03,
+      "margin_usd": 285.72,
+      "pnl_usd": 10.52,
+      "pnl_pct": 3.68
+    },
+    {
+      "entry_time": "06:46 IST",
+      "exit_time": "06:53 IST",
+      "entry_btc": 74080.1,
+      "exit_btc": 74399.23,
+      "margin_usd": 288.34,
+      "pnl_usd": 11.92,
+      "pnl_pct": 4.13
+    },
+    {
+      "entry_time": "06:56 IST",
+      "exit_time": "07:06 IST",
+      "entry_btc": 74528.12,
+      "exit_btc": 74597.26,
+      "margin_usd": 291.32,
+      "pnl_usd": 7.12,
+      "pnl_pct": 2.44
+    },
+    {
+      "entry_time": "07:12 IST",
+      "exit_time": "07:24 IST",
+      "entry_btc": 74746.91,
+      "exit_btc": 75373.3,
+      "margin_usd": 293.1,
+      "pnl_usd": 18.08,
+      "pnl_pct": 6.17
+    },
+    {
+      "entry_time": "07:36 IST",
+      "exit_time": "07:39 IST",
+      "entry_btc": 75144.63,
+      "exit_btc": 74890.47,
+      "margin_usd": 297.63,
+      "pnl_usd": 5.89,
+      "pnl_pct": 1.98
+    },
+    {
+      "entry_time": "07:57 IST",
+      "exit_time": "08:03 IST",
+      "entry_btc": 74844.01,
+      "exit_btc": 74676.44,
+      "margin_usd": 299.1,
+      "pnl_usd": 5.92,
+      "pnl_pct": 1.98
+    },
+    {
+      "entry_time": "08:41 IST",
+      "exit_time": "08:56 IST",
+      "entry_btc": 74430.25,
+      "exit_btc": 74527.67,
+      "margin_usd": 300.58,
+      "pnl_usd": 7.92,
+      "pnl_pct": 2.63
+    },
+    {
+      "entry_time": "08:57 IST",
+      "exit_time": "09:04 IST",
+      "entry_btc": 74572.93,
+      "exit_btc": 74542.24,
+      "margin_usd": 302.56,
+      "pnl_usd": 5.99,
+      "pnl_pct": 1.98
+    },
+    {
+      "entry_time": "09:11 IST",
+      "exit_time": "09:22 IST",
+      "entry_btc": 74557.14,
+      "exit_btc": 74722.56,
+      "margin_usd": 304.06,
+      "pnl_usd": 9.39,
+      "pnl_pct": 3.09
+    },
+    {
+      "entry_time": "09:32 IST",
+      "exit_time": "09:47 IST",
+      "entry_btc": 74740.33,
+      "exit_btc": 74793.79,
+      "margin_usd": 306.4,
+      "pnl_usd": 7.16,
+      "pnl_pct": 2.34
+    },
+    {
+      "entry_time": "09:48 IST",
+      "exit_time": "09:55 IST",
+      "entry_btc": 74873.14,
+      "exit_btc": 74775.18,
+      "margin_usd": 308.2,
+      "pnl_usd": 6.1,
+      "pnl_pct": 1.98
+    },
+    {
+      "entry_time": "10:01 IST",
+      "exit_time": "10:09 IST",
+      "entry_btc": 74891.1,
+      "exit_btc": 74896.57,
+      "margin_usd": 309.72,
+      "pnl_usd": 6.25,
+      "pnl_pct": 2.02
+    },
+    {
+      "entry_time": "10:15 IST",
+      "exit_time": "10:21 IST",
+      "entry_btc": 74917.89,
+      "exit_btc": 74943.13,
+      "margin_usd": 311.28,
+      "pnl_usd": 6.69,
+      "pnl_pct": 2.15
+    },
+    {
+      "entry_time": "10:24 IST",
+      "exit_time": "10:30 IST",
+      "entry_btc": 75000.99,
+      "exit_btc": 74952.25,
+      "margin_usd": 312.95,
+      "pnl_usd": 6.2,
+      "pnl_pct": 1.98
+    },
+    {
+      "entry_time": "10:33 IST",
+      "exit_time": "10:34 IST",
+      "entry_btc": 75011.9,
+      "exit_btc": 74913.88,
+      "margin_usd": 314.5,
+      "pnl_usd": 6.23,
+      "pnl_pct": 1.98
+    },
+    {
+      "entry_time": "10:35 IST",
+      "exit_time": "10:50 IST",
+      "entry_btc": 75147.12,
+      "exit_btc": 75389.3,
+      "margin_usd": 316.06,
+      "pnl_usd": 11.35,
+      "pnl_pct": 3.59
+    },
+    {
+      "entry_time": "11:07 IST",
+      "exit_time": "11:14 IST",
+      "entry_btc": 75222.99,
+      "exit_btc": 75244.55,
+      "margin_usd": 318.9,
+      "pnl_usd": 6.77,
+      "pnl_pct": 2.12
+    },
+    {
+      "entry_time": "11:20 IST",
+      "exit_time": "11:30 IST",
+      "entry_btc": 75328.08,
+      "exit_btc": 75360.77,
+      "margin_usd": 320.59,
+      "pnl_usd": 7.04,
+      "pnl_pct": 2.2
+    },
+    {
+      "entry_time": "11:33 IST",
+      "exit_time": "11:34 IST",
+      "entry_btc": 75431.64,
+      "exit_btc": 75396.37,
+      "margin_usd": 322.35,
+      "pnl_usd": 6.38,
+      "pnl_pct": 1.98
+    },
+    {
+      "entry_time": "11:35 IST",
+      "exit_time": "11:38 IST",
+      "entry_btc": 75448.3,
+      "exit_btc": 75397.67,
+      "margin_usd": 323.95,
+      "pnl_usd": 6.41,
+      "pnl_pct": 1.98
+    }
+  ]
 }
