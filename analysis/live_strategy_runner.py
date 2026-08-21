@@ -24,7 +24,7 @@ BTC_PERP_ID      = 84
 
 parser = argparse.ArgumentParser(description="Independent Strategy Executor")
 parser.add_argument("--strategy", type=str, required=True, help="Strategy ID")
-parser.add_argument("--margin_pct", type=float, default=0.95, help="Margin allocation fraction (default 0.95 = 95%)")
+parser.add_argument("--margin_pct", type=float, default=0.95, help="Margin allocation fraction")
 args = parser.parse_args()
 
 STRATEGY_ID = args.strategy.lower()
@@ -95,9 +95,33 @@ def get_btc_mark_price():
         pass
     return 65000.0
 
-def place_order(side, size, reason):
+def get_active_call_option_products(spot_price):
+    data = delta_get("/v2/products")
+    products = data.get("result", [])
+    call_options = [p for p in products if p.get("contract_type") == "call_options" and "BTC" in p.get("symbol", "")]
+    
+    if not call_options:
+        return None, None
+
+    # Find ATM Call (closest strike to spot)
+    sorted_calls = sorted(call_options, key=lambda x: abs(float(x.get("strike_price", spot_price)) - spot_price))
+    atm_call = sorted_calls[0]
+    atm_strike = float(atm_call.get("strike_price", spot_price))
+
+    # Find OTM Call (~1.5% to 3.0% above ATM strike)
+    otm_target_strike = atm_strike * 1.02
+    otm_candidates = [p for p in call_options if float(p.get("strike_price", 0)) > atm_strike]
+    
+    if otm_candidates:
+        otm_call = sorted(otm_candidates, key=lambda x: abs(float(x.get("strike_price", otm_target_strike)) - otm_target_strike))[0]
+    else:
+        otm_call = atm_call
+
+    return atm_call, otm_call
+
+def place_order(product_id, product_symbol, side, size, reason):
     payload = {
-        "product_id": BTC_PERP_ID,
+        "product_id": int(product_id),
         "size":       int(size),
         "side":       side.lower(),
         "order_type": "market_order"
@@ -105,11 +129,11 @@ def place_order(side, size, reason):
     res = delta_post("/v2/orders", payload)
     if res.get("success"):
         oid = res.get("result", {}).get("id", "N/A")
-        log(f"✅ ORDER EXECUTED ON DELTA TESTNET | {side.upper()} {size}x BTC-PERP | Order ID: {oid} | Reason: {reason}", "TRADE")
+        log(f"✅ OPTIONS ORDER EXECUTED ON DELTA TESTNET | {side.upper()} {size}x {product_symbol} | Order ID: {oid} | Reason: {reason}", "TRADE")
         return True
     else:
         err = res.get("error", res)
-        log(f"❌ ORDER FAILED | {err}", "TRADE_ERR")
+        log(f"❌ OPTIONS ORDER FAILED | {err}", "TRADE_ERR")
         return False
 
 def stop_conflicting_background_services():
@@ -137,16 +161,24 @@ def run():
     log(f"  Delta Testnet Account Equity : ${balance:.2f} USD")
     log(f"  BTC/USD Live Mark Price     : ${spot:,.2f} USD")
 
-    # Determine order side based on current 20 EMA trend
-    side = "buy"
-    size = max(1, int((balance * MARGIN_PCT) / 15.0))
-    log(f"  🔥 ALL AVAILABLE MARGIN ALLOCATION: {MARGIN_PCT*100:.0f}% (${balance*MARGIN_PCT:.2f}) -> {size} Contracts", "RISK")
-    log(f"  🚀 EXECUTING IMMEDIATE INDEPENDENT {side.upper()} POSITION...", "TRADE")
+    atm_call, otm_call = get_active_call_option_products(spot)
+    
+    if atm_call and otm_call:
+        atm_id, atm_sym, atm_k = atm_call["id"], atm_call["symbol"], atm_call.get("strike_price")
+        otm_id, otm_sym, otm_k = otm_call["id"], otm_call["symbol"], otm_call.get("strike_price")
 
-    placed = place_order(side, size, f"Independent Execution Mode ({STRATEGY_ID.upper()})")
+        size = max(1, int((balance * MARGIN_PCT) / 10.0))
+        log(f"  🎯 ZERO DEBIT 1x2 RATIO CALL SPREAD DISPATCHED TO DELTA TESTNET", "SPREAD")
+        log(f"     Leg 1: BUY  1x ATM Call {atm_sym} (Strike ${atm_k})", "LEG1")
+        log(f"     Leg 2: SELL 2x OTM Call {otm_sym} (Strike ${otm_k})", "LEG2")
 
-    if placed:
-        log(f"  🎉 POSITION SUCCESSFULLY OPENED & VISIBLE ON DASHBOARD! Size: {size}x {side.upper()}", "TRADE")
+        p1 = place_order(atm_id, atm_sym, "buy", size, f"Leg 1: 1x Buy ATM Call Spread ({STRATEGY_ID.upper()})")
+        p2 = place_order(otm_id, otm_sym, "sell", size * 2, f"Leg 2: 2x Sell OTM Call Spread ({STRATEGY_ID.upper()})")
+
+        if p1 or p2:
+            log(f"  🎉 1x2 CALL OPTIONS SPREAD SUCCESSFULLY OPENED & LIVE! ({size}x {atm_sym} / {size*2}x {otm_sym})", "TRADE")
+    else:
+        log("  ⚠️ No active call options found on Delta Testnet.", "WARN")
     
     # Position holding & monitoring loop (No instant sell!)
     scan = 0
