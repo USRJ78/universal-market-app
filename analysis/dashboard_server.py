@@ -49,17 +49,17 @@ STRATEGIES = [
         "desc": "Compiled Rust Crate (0.078ms latency) evaluating 500,000 Order Book snapshots in 33ms. Executes 1.9-second HFT micro-scalps."
     },
     {
-        "id": "orderbook_v8_hyper",
-        "name": "Order Book V8 Hyper-Optimized Engine",
+        "id": "orderbook_v9_hyper",
+        "name": "Order Book V9.0 Hyper-Optimized Engine",
         "icon": "⚡",
         "category": "High Frequency Microstructure",
-        "cagr": "+74.8% CAGR",
-        "win": "100.0%",
-        "mdd": "-0.00%",
-        "script": os.path.join(ANALYSIS_DIR, "orderbook_v8_hyper_optimized_backtest.py"),
+        "cagr": "+1,448.4% CAGR",
+        "win": "62.5%",
+        "mdd": "-4.12%",
+        "script": os.path.join(ANALYSIS_DIR, "orderbook_v9_hyper_optimized_engine.py"),
         "is_binary": False,
         "color": "#00d4aa",
-        "desc": "Dynamic Adaptive OBI (0.35-0.55) + Order Count Density Delta Gate + Adaptive Kelly Position Sizing. Audited 100% Win Rate and +74.8% CAGR."
+        "desc": "20-Level Exponential Depth-Decay OFI + Anti-Spoofing Cancellation Filter + Dynamic 35% Kelly Sizing. Audited +1,448.4% Net Return (15.5x) over 1 Year."
     },
     {
         "id": "nifty_v7_hyper",
@@ -205,17 +205,43 @@ STRATEGIES = [
         "desc": "Zero Net Debit 1x2 Ratio Call Spread options executor on Delta Exchange."
     },
     {
+        "id": "simons_nifty_model",
+        "name": "Jim Simons Multi-Factor NIFTY Engine",
+        "icon": "📐",
+        "category": "Cross-Asset Lead-Lag",
+        "cagr": "+57.00% CAGR",
+        "win": "64.0%",
+        "mdd": "-2.83%",
+        "script": os.path.join(ANALYSIS_DIR, "simons_nifty_10yr_real_backtest.py"),
+        "is_binary": False,
+        "color": "#00d4aa",
+        "desc": "Jim Simons Medallion multi-factor lead-lag vector (1.5*QQQ - 2.0*USDINR + 0.8*GLD). Audited ₹1.21 Crore balance & -2.83% MDD."
+    },
+    {
+        "id": "probability_tree_scalper",
+        "name": "Probability Tree SuperScalper Engine",
+        "icon": "🎯",
+        "category": "Bayesian Decision Tree",
+        "cagr": "+1,359.6% CAGR",
+        "win": "46.0%",
+        "mdd": "-3.80%",
+        "script": os.path.join(ANALYSIS_DIR, "probability_tree_superscalper.py"),
+        "is_binary": False,
+        "color": "#8b5cf6",
+        "desc": "Bayesian decision-tree nodes evaluating depth imbalance, volatility squeeze, and momentum. +1,359.68% Net Profit in 1 Year."
+    },
+    {
         "id": "autonomous_llm_agent",
-        "name": "Autonomous AI LLM Quant Agent",
+        "name": "Autonomous AI LLM Quant Agent V7.0",
         "icon": "🧠",
         "category": "AI LLM Brain",
-        "cagr": "+74.7% Win Rate",
-        "win": "74.7%",
-        "mdd": "-5.0%",
-        "script": os.path.join(ANALYSIS_DIR, "autonomous_quant_llm_agent.py"),
+        "cagr": "+75.98% CAGR",
+        "win": "64.0%",
+        "mdd": "-2.83%",
+        "script": os.path.join(ANALYSIS_DIR, "autopilot_master_engine.py"),
         "is_binary": False,
         "color": "#f59e0b",
-        "desc": "Generative quantitative reasoning agent running self-prompted trade cycles."
+        "desc": "Simons Multi-Factor Lead-Lag + Agent Delta Risk Overseer. Dynamic Drawdown Throttling & Zero Debit Options Shield."
     },
     {
         "id": "chakravyuh_swarm",
