@@ -1,0 +1,68 @@
+{
+  "wallet": 32922.979372024536,
+  "open_positions": [
+    {
+      "ticker": "21STCENMGM.NS",
+      "strategy": "MARKET_GEOMETRY",
+      "entry_price": 42.59000015258789,
+      "stop_price": 40.460500144958495,
+      "tp_price": 53.23750019073486,
+      "shares": 469,
+      "invested": 19974.71007156372,
+      "geometry_score": 0.8,
+      "entry_time": "2026-08-26 15:08:25.143822",
+      "order_id": "GROWW_PAPER_1787737105"
+    },
+    {
+      "ticker": "3IINFOLTD.NS",
+      "strategy": "MARKET_GEOMETRY",
+      "entry_price": 24.1200008392334,
+      "stop_price": 22.914000797271726,
+      "tp_price": 30.150001049041748,
+      "shares": 663,
+      "invested": 15991.560556411743,
+      "geometry_score": 0.8,
+      "entry_time": "2026-08-26 15:08:25.145404",
+      "order_id": "GROWW_PAPER_1787737105"
+    },
+    {
+      "ticker": "AAREYDRUGS.NS",
+      "strategy": "MARKET_GEOMETRY",
+      "entry_price": 80.75,
+      "stop_price": 76.71249999999999,
+      "tp_price": 100.9375,
+      "shares": 158,
+      "invested": 12758.5,
+      "geometry_score": 0.8,
+      "entry_time": "2026-08-26 15:08:25.146686",
+      "order_id": "GROWW_PAPER_1787737105"
+    },
+    {
+      "ticker": "AARTECH.NS",
+      "strategy": "MARKET_GEOMETRY",
+      "entry_price": 47.75,
+      "stop_price": 45.3625,
+      "tp_price": 59.6875,
+      "shares": 214,
+      "invested": 10218.5,
+      "geometry_score": 0.8,
+      "entry_time": "2026-08-26 15:08:25.147889",
+      "order_id": "GROWW_PAPER_1787737105"
+    },
+    {
+      "ticker": "AARTIIND.NS",
+      "strategy": "MARKET_GEOMETRY",
+      "entry_price": 542.25,
+      "stop_price": 515.1374999999999,
+      "tp_price": 677.8125,
+      "shares": 15,
+      "invested": 8133.75,
+      "geometry_score": 0.8,
+      "entry_time": "2026-08-26 15:08:25.149053",
+      "order_id": "GROWW_PAPER_1787737105"
+    }
+  ],
+  "closed_trades": [],
+  "total_trades": 0,
+  "winning_trades": 0
+}

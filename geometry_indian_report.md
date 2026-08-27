@@ -12,28 +12,28 @@
 | Stock | Buy & Hold Value | Return | CAGR | Max DD |
 |:---|:---|:---|:---|:---|
 | SOLARINDS | INR 2,930,819 | 29x | 40% | -34% |
-| DIXON | INR 2,525,218 | 25x | 44% | -54% |
-| DEEPAKNTR | INR 1,990,344 | 20x | 34% | -56% |
-| NAVINFLUOR | INR 1,982,903 | 20x | 34% | -38% |
+| DIXON | INR 2,579,255 | 26x | 44% | -54% |
+| DEEPAKNTR | INR 2,023,370 | 20x | 35% | -56% |
+| NAVINFLUOR | INR 1,991,268 | 20x | 34% | -38% |
 | LAURUSLABS | INR 1,695,460 | 17x | 34% | -58% |
 | PERSISTENT | INR 1,638,516 | 16x | 32% | -44% |
-| TANLA | INR 1,637,905 | 16x | 32% | -80% |
+| TANLA | INR 1,637,904 | 16x | 32% | -80% |
 | POLYCAB | INR 1,514,957 | 15x | 45% | -44% |
-| ANGELONE | INR 1,423,288 | 14x | 58% | -48% |
-| ALKYLAMINE | INR 1,336,585 | 13x | 29% | -70% |
-| FINEORG | INR 633,339 | 6x | 26% | -50% |
+| ANGELONE | INR 1,423,289 | 14x | 58% | -48% |
+| ALKYLAMINE | INR 1,359,910 | 14x | 30% | -70% |
+| FINEORG | INR 650,430 | 7x | 26% | -50% |
 | ASTRAL | INR 631,909 | 6x | 20% | -48% |
 | CDSL | INR 604,024 | 6x | 22% | -63% |
 | TATAELXSI | INR 455,069 | 5x | 16% | -64% |
-| AARTIIND | INR 388,589 | 4x | 14% | -68% |
+| AARTIIND | INR 402,787 | 4x | 15% | -68% |
 
 ## Geometry Rotation Engine Results
 
 | Metric | Value |
 |:---|:---|
-| **Final Portfolio** | **INR 778,115** |
-| **CAGR** | **22.5%** |
-| **Sharpe Ratio** | **0.41** |
+| **Final Portfolio** | **INR 806,547** |
+| **CAGR** | **23.0%** |
+| **Sharpe Ratio** | **0.42** |
 | **Max Drawdown** | **-58.8%** |
 | **Total Return** | **8x** |
 | **Doublings** | **3/10** |

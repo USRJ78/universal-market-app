@@ -1,0 +1,63 @@
+Uday Singh Rathore 
+Bengaluru, Karnataka | +91 91139 97369 | udaysinghrathore09@gmail.com | LinkedIn 
+P R O F E S S I O N A L  S U M M A R Y 
+CFA Level 1 certified  finance professional with hands -on experience in financial modelling, equity research tool development , and 
+data-driven investment analysis. Built and deployed a production-ready AI-powered stock valuation platform  integrating Graham and 
+Lynch frameworks. Skilled in Python, R, Tableau, and Power BI for quantitative research and business intelligence. Brings a rare 
+interdisciplinary edge - combining life sciences analytical training with finance and data engineering expertise. 
+ 
+C E R T I F I C A T I O N S 
+ CFA Level 1  (CFA Institute) 
+ Blockchain Fundamentals  (Great Learning) 
+ Genome Informatics  - (Sciomics) 
+ 
+C O R E  C O M P E T E N C I E S 
+Financial Modelling  ·  Equity Research & Stock Valuation  ·  Quantitative Analysis  ·  EDA & Statistical Analysis  ·  Python (Pandas, NumPy, 
+Stream lit)  ·  R  ·  Tableau  ·  Power BI  ·  Yahoo Finance API  ·  KPI Dashboa rd Design  ·  AI-Augmented Research  ·  Prompt Engineering  ·  
+Blockchain Fundamentals 
+ 
+K E Y  P R O J E C T 
+AI-Enabled Stock Valuation Platform (Stocklord)  ·  Personal Project 2024 
+ Designed and deployed a full-stack equity valuation  web app using Python and Streamlit, integrating Yahoo Finance API for live 
+market data retrieval. 
+ Implemented valuation frameworks inspired by Benjamin Graham (margin of safety, intrinsic value) and Peter Lynch (PEG ratio, 
+growth-at-a-reasonable-price) for automated stock screening. 
+ Live deployment: Stocklord— demonstrating end-to-end product ownership from research to release. 
+ 
+P R O F E S S I O N A L  E X P E R I E N C E 
+Data Analyst Intern · Unified Mentor, Bengaluru Nov 2024 – Dec 2024 
+ Cleaned and t ransformed large -scale datasets  using Pandas and NumPy , automating data workflows  to significantly reduce 
+processing time. 
+ Conducted rigorous Exploratory Data Analysis (EDA) to identify key trends, outlie rs, and statistical correlations relevant to business 
+decisions. 
+ Designed and deployed interactive Tableau dashboards  tracking real -time KPIs, enabling stakeholders to access actionable 
+business intelligence. 
+ Produced executive -level analytical reports tra nslating complex datasets into investment -grade insights using the Python data 
+stack. 
+ Built static visualizations in Matplotlib and Seaborn to communicate statistical findings to technical and non -technical audiences. 
+ 
+Technical Training Executive · OneSource Specialty Pharma Ltd., Bengaluru Nov 2024 – Nov 2025 
+ Managed full SOP lifecycle - drafting, revision, and controlled distribution - via Electronic Learning Management System (ELMS)  
+and Electronic Document Management System (EDMS) in compliance with GxP practices. 
+ Performed competency mapping by linking SOPs to role families within EDMS, ensuring workforce compliance and structured skill  
+gap identification across Quality Management Systems (QMS). 
+ Conducted regulatory gap assessments by critically revi ewing FDA 483 Observation Letters, aligning quality systems with cross -
+industry standards and identifying non-conformance risks. 
+ Coordinated audit and compliance activities for FDA, CDSCO, and customer audits; maintained complete document readiness and 
+traceable audit trails via structured Excel tracking tools. 
+ Reviewed and verified training completion records organisation -wide to ensure adherence to GxP -mandated learning outcomes 
+and regulatory timelines. 
+ Developed and deployed learning modules as part of QMS-driven training programs , improving staff competency in regulatory 
+compliance requirements. 
+ Supported CAPA processes by drafting SOPs for revisions triggered by QMS events, deviations, and corrective action requiremen ts. 
+ 
+E D U C A T I O N 
+MSc Biotechnology  —  Jain University, Bengaluru 2022 – 2024 
+BSc Life Sciences  —  Jain University, Bengaluru 2019 – 2022 
+ 
+P U B L I C A T I O N S 
+Published a peer -reviewed book chapter  in an academic research publication — reflecting competency in structured scientific writing, 
+evidence synthesis, and quality-driven documentation.  
+Traditional Food and Cultural Significance  - Insights of the Ancient Wisdom: A Collate of Research Articles based on Indian Knowledge 
+System, The Indological Research Foundation Publications, 2023 (ISBN: 81-87786-01-10). 
+ 
