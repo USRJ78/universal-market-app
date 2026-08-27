@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ChronoPulse — Time & Activity Tracker</title>
+  <link rel="stylesheet" href="styles.css">
+  <!-- Chart.js for Visual Analytics -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="navbar">
+      <div class="brand">
+        <i data-lucide="clock" class="brand-icon"></i>
+        <h1>ChronoPulse</h1>
+        <span class="badge">Live Tracker</span>
+      </div>
+      <div class="header-actions">
+        <button id="btn-manual" class="btn btn-secondary"><i data-lucide="plus-circle"></i> Log Manual Entry</button>
+        <button id="btn-clear-all" class="btn btn-danger-ghost"><i data-lucide="trash-2"></i> Reset Data</button>
+      </div>
+    </header>
+
+    <!-- Main Grid -->
+    <main class="dashboard-grid">
+      
+      <!-- Left Column: Active Timer & Tracker Controls -->
+      <section class="card timer-card">
+        <h2><i data-lucide="play-circle"></i> Active Activity Timer</h2>
+        
+        <div class="timer-display">
+          <div id="digital-clock">00:00:00</div>
+          <div id="active-status" class="status-indicator idle">IDLE</div>
+        </div>
+
+        <form id="timer-form" class="timer-controls">
+          <div class="input-group">
+            <label for="activity-name">What are you working on?</label>
+            <input type="text" id="activity-name" placeholder="e.g., Backtesting Options Strategy / Reading Book..." required>
+          </div>
+
+          <div class="input-group">
+            <label>Select Category</label>
+            <div class="category-pills" id="category-picker">
+              <button type="button" class="pill active" data-category="Coding & Dev"><i data-lucide="code"></i> Coding & Dev</button>
+              <button type="button" class="pill" data-category="Trading & Markets"><i data-lucide="trending-up"></i> Trading & Markets</button>
+              <button type="button" class="pill" data-category="Learning & Books"><i data-lucide="book-open"></i> Learning & Books</button>
+              <button type="button" class="pill" data-category="Fitness & Health"><i data-lucide="dumbbell"></i> Fitness & Health</button>
+              <button type="button" class="pill" data-category="Rest & Recovery"><i data-lucide="coffee"></i> Rest & Recovery</button>
+              <button type="button" class="pill" data-category="Admin & Personal"><i data-lucide="user"></i> Admin & Personal</button>
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label for="task-notes">Notes / Details (Optional)</label>
+            <input type="text" id="task-notes" placeholder="e.g., Tested 1x2 ratio call spread backtest parameters...">
+          </div>
+
+          <div class="btn-group">
+            <button type="button" id="btn-start" class="btn btn-primary"><i data-lucide="play"></i> Start Timer</button>
+            <button type="button" id="btn-stop" class="btn btn-danger" disabled><i data-lucide="square"></i> Stop & Save Task</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- Right Column: Analytics & Time Distribution -->
+      <section class="card analytics-card">
+        <h2><i data-lucide="pie-chart"></i> Time Breakdown & Analytics</h2>
+        <div class="stats-overview">
+          <div class="stat-box">
+            <span class="stat-label">Total Time Tracked</span>
+            <span id="stat-total-time" class="stat-value">0h 0m</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-label">Total Tasks Completed</span>
+            <span id="stat-total-tasks" class="stat-value">0</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-label">Top Category</span>
+            <span id="stat-top-category" class="stat-value">—</span>
+          </div>
+        </div>
+
+        <div class="chart-wrapper">
+          <canvas id="categoryChart"></canvas>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Activity Log History Table -->
+    <section class="card history-card">
+      <div class="card-header">
+        <h2><i data-lucide="history"></i> Activity Log Journal</h2>
+        <input type="text" id="search-log" placeholder="Search activities or categories..." class="search-input">
+      </div>
+
+      <div class="table-responsive">
+        <table class="log-table">
+          <thead>
+            <tr>
+              <th>Date & Time</th>
+              <th>Category</th>
+              <th>Activity / Task</th>
+              <th>Duration</th>
+              <th>Notes</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="log-table-body">
+            <tr>
+              <td colspan="6" class="empty-msg">No activity logged yet. Start a timer above to track your time!</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Manual Entry Modal -->
+  <div id="manual-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Log Manual Time Entry</h3>
+        <button id="modal-close" class="close-btn">&times;</button>
+      </div>
+      <form id="manual-form">
+        <div class="input-group">
+          <label>Activity Title</label>
+          <input type="text" id="manual-activity" required placeholder="e.g., Morning Workout">
+        </div>
+        <div class="input-group">
+          <label>Category</label>
+          <select id="manual-category">
+            <option value="Coding & Dev">Coding & Dev</option>
+            <option value="Trading & Markets">Trading & Markets</option>
+            <option value="Learning & Books">Learning & Books</option>
+            <option value="Fitness & Health">Fitness & Health</option>
+            <option value="Rest & Recovery">Rest & Recovery</option>
+            <option value="Admin & Personal">Admin & Personal</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <label>Duration (Minutes)</label>
+          <input type="number" id="manual-duration" required min="1" value="30">
+        </div>
+        <div class="input-group">
+          <label>Notes</label>
+          <input type="text" id="manual-notes" placeholder="Optional notes...">
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Save Entry</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    lucide.createIcons();
+  </script>
+</body>
+</html>
