@@ -247,7 +247,7 @@ def main():
     print("  " + "-" * 93)
 
     for rank, (_, r) in enumerate(df_res.head(5).iterrows(), 1):
-        print(f"  #{rank:<4d} {r['TakeProfit']*100:<5.0f}% {r['StopLoss']*100:<5.0f}% {r['MaxSlots']:<6.0d} "
+        print(f"  #{rank:<4d} {r['TakeProfit']*100:<5.0f}% {r['StopLoss']*100:<5.0f}% {r['MaxSlots']:<6.0f} "
               f"₹{r['FinalCapital']:>17,.2f} +{r['Return%']:>11,.1f}% {r['WinRate%']:>8.1f}% -{r['MaxDD%']:>8.1f}% {r['Trades']:>8.0f}")
     print("=" * 95)
 
