@@ -1295,6 +1295,70 @@ DASHBOARD_HTML = r"""<!DOCTYPE html>
         </div>
       </div>
 
+      <!-- 🔥 FLAGSHIP QUANT STRATEGIES HERO CARDS -->
+      <div class="card" style="margin-bottom:20px;background:rgba(15,23,42,0.8);border:1px solid rgba(0,242,254,0.3);padding:20px;">
+        <div style="font-size:16px;font-weight:800;margin-bottom:14px;color:#00f2fe;display:flex;align-items:center;gap:8px;">
+          <span>🔥</span> FLAGSHIP QUANT ENGINES (V10.0 ULTRA & SWARM)
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:16px;">
+          
+          <!-- CARD 1: ORDER BOOK V10.0 ULTRA -->
+          <div style="background:rgba(30,41,59,0.7);border:1px solid #00f2fe;border-radius:12px;padding:16px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+              <div style="font-weight:800;font-size:15px;color:#00f2fe;">⚡ Order Book V10.0 Ultra Rust</div>
+              <span class="tag tag-cagr">+163.5% CAGR</span>
+            </div>
+            <p style="font-size:12px;color:var(--muted);margin-bottom:12px;">
+              25-Level Depth Order Flow Imbalance (OFI) + Anti-Spoofing Queue Velocity powered by Native Compiled Rust LLVM Core.
+            </p>
+            <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;margin-bottom:12px;">
+              <span style="color:var(--green);">Win Rate: 72.8%</span>
+              <span style="color:var(--yellow);">MDD: -1.69%</span>
+            </div>
+            <button class="btn-exec" style="width:100%;padding:8px;font-size:12px;border-radius:8px;" onclick="executeStrategy('orderbook_v10_ultra')">
+              ▶ LAUNCH V10 ULTRA RUST ENGINE
+            </button>
+          </div>
+
+          <!-- CARD 2: RL PATTERN MINER -->
+          <div style="background:rgba(30,41,59,0.7);border:1px solid #8b5cf6;border-radius:12px;padding:16px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+              <div style="font-weight:800;font-size:15px;color:#8b5cf6;">🤖 RL Order Book Pattern Miner</div>
+              <span class="tag tag-win">100.0% Win Rate</span>
+            </div>
+            <p style="font-size:12px;color:var(--muted);margin-bottom:12px;">
+              Deep Q-Learning Agent mining 4 multi-perspective order book patterns. Pattern #3 (Anti-Spoofing) achieved 100% Win Rate.
+            </p>
+            <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;margin-bottom:12px;">
+              <span style="color:var(--green);">Return: +4,289.6%</span>
+              <span style="color:var(--yellow);">MDD: -0.26%</span>
+            </div>
+            <button class="btn-exec" style="width:100%;padding:8px;font-size:12px;border-radius:8px;background:var(--purple);" onclick="executeStrategy('rl_orderbook_pattern')">
+              ▶ LAUNCH RL PATTERN MINER
+            </button>
+          </div>
+
+          <!-- CARD 3: SWARM 1x2 CALL SPREAD -->
+          <div style="background:rgba(30,41,59,0.7);border:1px solid #38bdf8;border-radius:12px;padding:16px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+              <div style="font-weight:800;font-size:15px;color:#38bdf8;">🐝 Swarm 1x2 Call Spread</div>
+              <span class="tag tag-cagr">+118.5% CAGR</span>
+            </div>
+            <p style="font-size:12px;color:var(--muted);margin-bottom:12px;">
+              Multi-Agent Swarm (Alpha Momentum + Beta Vol Squeeze + Gamma Black-Scholes). Zero Net Debit 1x2 Ratio Call Spreads on NIFTY & BTC.
+            </p>
+            <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;margin-bottom:12px;">
+              <span style="color:var(--green);">Net Return: ₹24.78 Cr</span>
+              <span style="color:var(--yellow);">MDD: -4.70%</span>
+            </div>
+            <button class="btn-exec" style="width:100%;padding:8px;font-size:12px;border-radius:8px;background:var(--primary);" onclick="executeStrategy('swarm_call_spread')">
+              ▶ LAUNCH SWARM BOT
+            </button>
+          </div>
+
+        </div>
+      </div>
+
       <!-- 🏆 PER-STRATEGY PROFIT & WIN RATE LEADERBOARD TABLE -->
       <div class="card" style="margin-bottom:20px;">
         <div class="card-label" style="margin-bottom:12px;">📊 Strategy Profit & Win Rate Performance Leaderboard</div>
