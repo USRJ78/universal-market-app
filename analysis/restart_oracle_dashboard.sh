@@ -1,17 +1,18 @@
 #!/bin/bash
 # ==============================================================================
-#   ORACLE CLOUD — HARD RESTART & V10 DASHBOARD ACTIVATION SCRIPT V4.0
+#   ORACLE CLOUD — HARD RESTART & DASHBOARD ACTIVATION SCRIPT V5.0
 # ==============================================================================
 
 echo "==========================================================================="
-echo "  🚀 ACTIVATING AUTONOMOUS QUANT DASHBOARD ON ORACLE CLOUD"
+echo "  🚀 ACTIVATING AUTONOMOUS QUANT DASHBOARD ON PORT 8085 & PORT 80"
 echo "==========================================================================="
 
-# 1. Kill any stale old dashboard processes and free ports 8080 & 80
-echo "  [1/6] Stopping old processes and freeing port 8080 & 80..."
+# 1. Kill any stale old processes on port 8085, 8080 & 80
+echo "  [1/6] Stopping old processes and freeing ports 8085, 8080 & 80..."
 sudo systemctl stop antigravity_dashboard 2>/dev/null || true
 sudo systemctl stop nginx 2>/dev/null || true
 sudo pkill -9 -f dashboard_server.py 2>/dev/null || true
+sudo fuser -k 8085/tcp 2>/dev/null || true
 sudo fuser -k 8080/tcp 2>/dev/null || true
 sudo fuser -k 80/tcp 2>/dev/null || true
 sleep 1
@@ -29,11 +30,11 @@ pip install flask numpy pandas yfinance ccxt requests scikit-learn matplotlib --
 echo "  [3/6] Testing Dashboard Server Module Imports..."
 python3 -c "import analysis.dashboard_server; print('  [✓] Dashboard Module Verification Passed!')"
 
-# 4. Create & Enable Systemd Service for Port 8080
-echo "  [4/6] Updating Systemd Service..."
+# 4. Create & Enable Systemd Service for Port 8085
+echo "  [4/6] Updating Systemd Service for Port 8085..."
 sudo bash -c 'cat <<EOF > /etc/systemd/system/antigravity_dashboard.service
 [Unit]
-Description=Antigravity AI Brain Master Web Dashboard (Port 8080)
+Description=Antigravity AI Brain Master Web Dashboard (Port 8085)
 After=network.target
 
 [Service]
@@ -49,14 +50,16 @@ RestartSec=3
 WantedBy=multi-user.target
 EOF'
 
-# 5. Open IPTables & UFW Firewall Ports (8080 & 80)
-echo "  [5/6] Opening Firewall Ports (8080 & 80)..."
+# 5. Open IPTables & UFW Firewall Ports (8085, 8080 & 80)
+echo "  [5/6] Opening Firewall Ports (8085, 8080 & 80)..."
+sudo iptables -I INPUT 6 -m state --state NEW -p tcp --dport 8085 -j ACCEPT 2>/dev/null || true
 sudo iptables -I INPUT 6 -m state --state NEW -p tcp --dport 8080 -j ACCEPT 2>/dev/null || true
 sudo iptables -I INPUT 6 -m state --state NEW -p tcp --dport 80 -j ACCEPT 2>/dev/null || true
+sudo ufw allow 8085/tcp 2>/dev/null || true
 sudo ufw allow 8080/tcp 2>/dev/null || true
 sudo ufw allow 80/tcp 2>/dev/null || true
 
-# 6. Configure Nginx Reverse Proxy
+# 6. Configure Nginx Reverse Proxy to Port 8085
 sudo bash -c 'cat <<EOF > /etc/nginx/sites-available/default
 server {
     listen 80 default_server;
@@ -64,7 +67,7 @@ server {
     server_name _;
 
     location / {
-        proxy_pass http://127.0.0.1:8080;
+        proxy_pass http://127.0.0.1:8085;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
@@ -73,7 +76,7 @@ server {
 EOF'
 
 # 7. Start Dashboard Service & Nginx
-echo "  [6/6] Launching Master Web Dashboard V3.6..."
+echo "  [6/6] Launching Master Web Dashboard..."
 sudo systemctl daemon-reload
 sudo systemctl enable antigravity_dashboard
 sudo systemctl restart antigravity_dashboard
@@ -87,7 +90,7 @@ echo "==========================================================================
 echo "  🏆 SUCCESS! AUTONOMOUS QUANT DASHBOARD IS LIVE ON ORACLE CLOUD!"
 echo "==========================================================================="
 echo "  [PUBLIC MAIN URL]            : http://$PUBLIC_IP"
-echo "  [DIRECT DASHBOARD PORT 8080] : http://$PUBLIC_IP:8080"
+echo "  [DIRECT DASHBOARD PORT 8085] : http://$PUBLIC_IP:8085"
 echo "  [AUTONOMOUS PAGE URL]        : http://$PUBLIC_IP/autonomous-intelligence"
 echo "==========================================================================="
 
