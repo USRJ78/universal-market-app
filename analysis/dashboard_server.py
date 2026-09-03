@@ -977,8 +977,7 @@ def autonomous_intelligence_page():
 @app.route("/api/autonomous/status")
 def api_autonomous_status():
     if HAS_QUANT_ENGINE:
-        step_res = master_quant_controller.run_single_step("BTC-USD")
-        return jsonify(step_res)
+        return jsonify(master_quant_controller.get_cached_state())
     return jsonify({"status": "LOADING", "regime": "BULL_LOW_VOL", "predictions": {"prob_up": 0.55, "expected_return": 1.2}})
 
 @app.route("/api/autonomous/start", methods=["POST"])
