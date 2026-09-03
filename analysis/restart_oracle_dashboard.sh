@@ -7,11 +7,14 @@ echo "==========================================================================
 echo "  🚀 ACTIVATING AUTONOMOUS QUANT DASHBOARD ON ORACLE CLOUD"
 echo "==========================================================================="
 
-# 1. Kill any stale old dashboard processes
-echo "  [1/6] Stopping old dashboard server processes..."
-sudo pkill -9 -f dashboard_server.py 2>/dev/null || true
+# 1. Kill any stale old dashboard processes and free ports 8080 & 80
+echo "  [1/6] Stopping old processes and freeing port 8080 & 80..."
 sudo systemctl stop antigravity_dashboard 2>/dev/null || true
 sudo systemctl stop nginx 2>/dev/null || true
+sudo pkill -9 -f dashboard_server.py 2>/dev/null || true
+sudo fuser -k 8080/tcp 2>/dev/null || true
+sudo fuser -k 80/tcp 2>/dev/null || true
+sleep 1
 
 # 2. Ensure virtualenv has Flask and required dependencies
 echo "  [2/6] Checking Python virtual environment dependencies..."
