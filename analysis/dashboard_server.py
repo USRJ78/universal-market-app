@@ -23,6 +23,10 @@ DELTA_BASE_URL   = "https://cdn-ind.testnet.deltaex.org"
 
 ANALYSIS_DIR     = os.path.dirname(os.path.abspath(__file__))
 BASE_DIR         = os.path.dirname(ANALYSIS_DIR)
+
+if BASE_DIR not in sys.path:
+    sys.path.insert(0, BASE_DIR)
+
 RUST_DIR         = os.path.join(BASE_DIR, "rust_swarm_engine")
 RUNNER_SCRIPT    = os.path.join(ANALYSIS_DIR, "live_strategy_runner.py")
 MASTER_LOG       = os.path.join(ANALYSIS_DIR, "master_live.log")

@@ -37,6 +37,7 @@ After=network.target
 Type=simple
 User=ubuntu
 WorkingDirectory=/home/ubuntu/universal-market-app
+Environment=PYTHONPATH=/home/ubuntu/universal-market-app
 ExecStart=/home/ubuntu/universal-market-app/venv/bin/python analysis/dashboard_server.py
 Restart=always
 RestartSec=3
