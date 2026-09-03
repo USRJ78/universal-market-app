@@ -1,7 +1,7 @@
 """
 ==============================================================================
   DEDICATED SEPARATE PAGE: AUTONOMOUS INTELLIGENCE DASHBOARD
-  REAL-TIME DATA STREAMING, LEVERAGE SIMULATOR & PAPER TRADING ENGINE
+  J.A.R.V.I.S. QUANTITATIVE COMMANDER & REAL-TIME PAPER TRADING ENGINE
 ==============================================================================
 """
 
@@ -10,7 +10,7 @@ AUTONOMOUS_INTELLIGENCE_HTML = r"""<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Autonomous Intelligence - Real-Time Paper Trading & Leverage Engine</title>
+<title>J.A.R.V.I.S. Autonomous Quantitative Commander</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -31,8 +31,8 @@ AUTONOMOUS_INTELLIGENCE_HTML = r"""<!DOCTYPE html>
   /* HEADER & LIVE TICKER BAR */
   .header { display:flex; justify-content:space-between; align-items:center; padding-bottom:14px; border-bottom:1px solid var(--border); margin-bottom:14px; }
   .logo { display:flex; align-items:center; gap:10px; font-size:19px; font-weight:800; color:#fff; }
-  .live-status-pill { padding:5px 12px; border-radius:20px; font-size:12px; font-weight:700; background:rgba(16,185,129,0.15); color:var(--green); border:1px solid rgba(16,185,129,0.3); display:flex; align-items:center; gap:6px; }
-  .dot { width:7px; height:7px; border-radius:50%; background:var(--green); box-shadow:0 0 8px var(--green); animation:pulse 1.4s infinite; }
+  .live-status-pill { padding:5px 12px; border-radius:20px; font-size:12px; font-weight:700; background:rgba(0,242,254,0.15); color:var(--accent); border:1px solid rgba(0,242,254,0.3); display:flex; align-items:center; gap:6px; }
+  .dot { width:7px; height:7px; border-radius:50%; background:var(--accent); box-shadow:0 0 8px var(--accent); animation:pulse 1.4s infinite; }
   @keyframes pulse { 0%,100%{opacity:1;transform:scale(1);} 50%{opacity:0.3;transform:scale(0.85);} }
   
   .ticker-bar { display:flex; gap:12px; overflow-x:auto; padding:10px 14px; background:rgba(255,255,255,0.02); border:1px solid var(--border); border-radius:10px; margin-bottom:16px; align-items:center; }
@@ -56,17 +56,23 @@ AUTONOMOUS_INTELLIGENCE_HTML = r"""<!DOCTYPE html>
   .grid3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; margin-bottom:16px; }
   .grid4 { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:16px; }
   .card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:18px; position:relative; }
-  .card-title { font-size:12px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:12px; display:flex; justify-content:space-between; }
+  .card-title { font-size:12px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; }
   .metric-val { font-size:26px; font-weight:800; color:#fff; font-family:'JetBrains Mono',monospace; }
   .label { font-size:11px; color:var(--muted); margin-bottom:4px; font-weight:600; }
+  
+  /* JARVIS HOLOGRAPHIC TERMINAL */
+  .jarvis-terminal { background:rgba(0,242,254,0.03); border:1px solid rgba(0,242,254,0.25); border-radius:12px; padding:20px; position:relative; margin-bottom:16px; overflow:hidden; }
+  .jarvis-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
+  .jarvis-briefing-text { font-family:'JetBrains Mono',monospace; font-size:14px; line-height:1.6; color:#e0f7fa; min-height:60px; }
+  .jarvis-glow-ring { display:inline-block; width:12px; height:12px; border-radius:50%; background:var(--accent); box-shadow:0 0 15px var(--accent); margin-right:8px; }
   
   /* FORMS & BUTTONS */
   input, select { width:100%; background:rgba(255,255,255,0.06); border:1px solid var(--border); border-radius:8px; padding:9px 12px; color:#fff; font-size:13px; font-family:'JetBrains Mono',monospace; outline:none; }
   input:focus, select:focus { border-color:var(--accent); }
-  .btn { padding:11px 18px; border-radius:8px; font-weight:700; font-size:13px; cursor:pointer; border:none; transition:all 0.2s; width:100%; }
+  .btn { padding:10px 18px; border-radius:8px; font-weight:700; font-size:13px; cursor:pointer; border:none; transition:all 0.2s; }
   .btn-long { background:rgba(16,185,129,0.2); color:var(--green); border:1px solid var(--green); }
   .btn-short { background:rgba(239,68,68,0.2); color:var(--red); border:1px solid var(--red); }
-  .btn-primary { background:var(--accent); color:#000; }
+  .btn-primary { background:var(--accent); color:#000; font-weight:800; }
   .btn-outline { background:transparent; color:#fff; border:1px solid var(--border); }
   .btn:hover { opacity:0.85; transform:translateY(-1px); }
   
@@ -95,6 +101,8 @@ AUTONOMOUS_INTELLIGENCE_HTML = r"""<!DOCTYPE html>
   .tag-long { background:rgba(16,185,129,0.15); color:var(--green); }
   .tag-short { background:rgba(239,68,68,0.15); color:var(--red); }
   .tag-liq { background:rgba(239,68,68,0.25); color:var(--red); border:1px solid var(--red); }
+  .tag-approved { background:rgba(16,185,129,0.2); color:var(--green); border:1px solid var(--green); }
+  .tag-vetoed { background:rgba(239,68,68,0.2); color:var(--red); border:1px solid var(--red); }
   
   /* TOAST NOTIFICATION */
   #toast { position:fixed; bottom:24px; right:24px; padding:12px 20px; border-radius:8px; font-size:13px; font-weight:700; display:none; z-index:9999; box-shadow:0 10px 30px rgba(0,0,0,0.5); }
@@ -112,16 +120,18 @@ AUTONOMOUS_INTELLIGENCE_HTML = r"""<!DOCTYPE html>
 
 <!-- HEADER -->
 <div class="header">
-  <div class="logo">&#x1F916; AUTONOMOUS INTELLIGENCE QUANT ENGINE V2.0</div>
+  <div class="logo">
+    <span style="color:var(--accent);font-size:22px;">&#x25C7;</span> J.A.R.V.I.S. AUTONOMOUS QUANTITATIVE COMMANDER
+  </div>
   <div style="display:flex;gap:10px;align-items:center;">
-    <div class="live-status-pill" id="conn-pill"><div class="dot"></div><span id="conn-text">STREAMING REAL-TIME DATA</span></div>
+    <div class="live-status-pill" id="conn-pill"><div class="dot"></div><span id="conn-text">J.A.R.V.I.S. 24/7 ONLINE</span></div>
     <a href="/" style="color:var(--muted);text-decoration:none;font-size:12px;font-weight:600;">&#8592; Main Dashboard</a>
   </div>
 </div>
 
 <!-- REAL-TIME TICKER STREAM BAR -->
 <div class="ticker-bar">
-  <span style="font-size:11px;color:var(--muted);font-weight:700;">LIVE FEEDS:</span>
+  <span style="font-size:11px;color:var(--muted);font-weight:700;">ORACLE STREAM:</span>
   <div class="ticker-pill">
     <span class="ticker-sym">BTC/USDT</span>
     <span class="ticker-price" id="tick-btc">$---</span>
@@ -141,16 +151,90 @@ AUTONOMOUS_INTELLIGENCE_HTML = r"""<!DOCTYPE html>
 
 <!-- TABS -->
 <div class="tabs">
-  <div class="tab active" onclick="switchTab('leverage')">&#x26A1; Leverage Simulator</div>
+  <div class="tab active" onclick="switchTab('jarvis')">&#x1F916; J.A.R.V.I.S. Command Center</div>
+  <div class="tab" onclick="switchTab('leverage')">&#x26A1; Leverage Simulator</div>
   <div class="tab" onclick="switchTab('paper')">&#x1F4CB; Real-Time Paper Trades (<span id="tab-trade-count">0</span>)</div>
-  <div class="tab" onclick="switchTab('risk')">&#x1F6E1; Risk & Liquidation Analysis</div>
+  <div class="tab" onclick="switchTab('risk')">&#x1F6E1; Guardian Risk & Sentry</div>
   <div class="tab" onclick="switchTab('neural')">&#x1F9E0; Neural Engine & Regimes</div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════════════ -->
+<!-- TAB 0: J.A.R.V.I.S. COMMAND CENTER (FLAGSHIP) -->
+<!-- ════════════════════════════════════════════════════════════════════════════ -->
+<div id="tab-jarvis" class="tab-content active">
+  <!-- J.A.R.V.I.S. HOLOGRAPHIC EXECUTIVE TERMINAL -->
+  <div class="jarvis-terminal">
+    <div class="jarvis-header">
+      <div style="display:flex;align-items:center;">
+        <span class="jarvis-glow-ring"></span>
+        <span style="font-size:13px;font-weight:800;color:var(--accent);letter-spacing:0.8px;">J.A.R.V.I.S. TACTICAL BRIEFING CONSOLE</span>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button class="btn btn-outline" style="padding:4px 12px;font-size:11px;" id="voice-btn" onclick="toggleVoice()">&#x1F50A; Voice Speech: OFF</button>
+        <button class="btn btn-primary" style="padding:4px 14px;font-size:11px;" onclick="triggerRadarSweep()">&#x26A1; Sweep Radar Now</button>
+      </div>
+    </div>
+    <div class="jarvis-briefing-text" id="jarvis-briefing">
+      Sir, J.A.R.V.I.S. tactical systems are fully operational. Guardian Sentry is armed. All setups are being screened for asymmetric 1:2+ Risk/Reward. Unbounded or steamroller risks are strictly prohibited.
+    </div>
+  </div>
+
+  <!-- GUARDIAN PROTOCOL SENTRY PANEL -->
+  <div class="grid4">
+    <div class="card">
+      <div class="card-title">Guardian Protocol</div>
+      <div class="metric-val green" style="font-size:18px;">ARMED & ACTIVE</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px;">Zero unhedged/naked risk permitted</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Steamroller Filter</div>
+      <div class="metric-val accent" style="font-size:18px;">ENGAGED</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px;">Auto-vetoes any trade with Loss &gt; Gain</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Hard Risk Ceiling</div>
+      <div class="metric-val yellow" style="font-size:18px;">1.5% MAX EQUITY</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px;">Mandatory Stop-Loss on every position</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Min Asymmetry Floor</div>
+      <div class="metric-val" style="font-size:18px;color:#fff;">1:2.0+ R:R</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px;">Risk $1 to make $2 to $3 minimum</div>
+    </div>
+  </div>
+
+  <!-- 5-DIMENSIONAL OPPORTUNITY RADAR -->
+  <div class="card">
+    <div class="card-title">
+      <span>&#x1F4CA; 5-Dimensional Asymmetric Opportunity Radar</span>
+      <span style="font-size:11px;color:var(--muted);" id="radar-updated">Updated: Just now</span>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Asset</th>
+          <th>Side</th>
+          <th>Regime</th>
+          <th>Order Flow</th>
+          <th>Conviction</th>
+          <th>Risk (SL)</th>
+          <th>Reward (TP)</th>
+          <th>Asymmetry (R:R)</th>
+          <th>Guardian Verdict</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="jarvis-radar-body">
+        <tr><td colspan="10" style="text-align:center;color:var(--muted);padding:20px;">Scanning multi-asset order flow...</td></tr>
+      </tbody>
+    </table>
+  </div>
 </div>
 
 <!-- ════════════════════════════════════════════════════════════════════════════ -->
 <!-- TAB 1: LEVERAGE SIMULATOR -->
 <!-- ════════════════════════════════════════════════════════════════════════════ -->
-<div id="tab-leverage" class="tab-content active">
+<div id="tab-leverage" class="tab-content">
   <div class="grid2">
     <!-- LEFT: INPUTS -->
     <div class="card">
@@ -340,7 +424,7 @@ AUTONOMOUS_INTELLIGENCE_HTML = r"""<!DOCTYPE html>
 </div>
 
 <!-- ════════════════════════════════════════════════════════════════════════════ -->
-<!-- TAB 3: RISK & LIQUIDATION ANALYSIS -->
+<!-- TAB 3: RISK & GUARDIAN SENTRY -->
 <!-- ════════════════════════════════════════════════════════════════════════════ -->
 <div id="tab-risk" class="tab-content">
   <div class="grid4">
@@ -415,7 +499,7 @@ AUTONOMOUS_INTELLIGENCE_HTML = r"""<!DOCTYPE html>
 <div id="toast"></div>
 
 <!-- ════════════════════════════════════════════════════════════════════════════ -->
-<!-- SCRIPT: REAL-TIME STREAMING & PAPER TRADE ENGINE -->
+<!-- SCRIPT: J.A.R.V.I.S. COMMANDER & REAL-TIME ENGINE -->
 <!-- ════════════════════════════════════════════════════════════════════════════ -->
 <script>
 let currentLev = 10;
@@ -423,6 +507,8 @@ let paperTrades = JSON.parse(localStorage.getItem('paperTrades_v2') || '[]');
 let closedTrades = JSON.parse(localStorage.getItem('closedTrades_v2') || '[]');
 let startingCapital = 10000.0;
 let tickCount = 0;
+let voiceEnabled = false;
+let lastSpokenText = '';
 
 // Live Real-Time Ticker Prices Cache
 const livePrices = {
@@ -434,7 +520,7 @@ const livePrices = {
 // ─── TABS ────────────────────────────────────────────────────────────────────
 function switchTab(name) {
   document.querySelectorAll('.tab, .tab-content').forEach(el => el.classList.remove('active'));
-  const idx = ['leverage','paper','risk','neural'].indexOf(name);
+  const idx = ['jarvis','leverage','paper','risk','neural'].indexOf(name);
   if(idx >= 0) document.querySelectorAll('.tab')[idx].classList.add('active');
   const target = document.getElementById('tab-' + name);
   if(target) target.classList.add('active');
@@ -442,31 +528,148 @@ function switchTab(name) {
   if(name === 'risk') renderRiskDashboard();
 }
 
+// ─── VOICE SPEECH SYNTHESIS (J.A.R.V.I.S. VOICE) ─────────────────────────────
+function toggleVoice() {
+  voiceEnabled = !voiceEnabled;
+  const btn = document.getElementById('voice-btn');
+  if(voiceEnabled) {
+    btn.textContent = '🔊 Speech Audio: ON';
+    btn.style.color = 'var(--accent)';
+    speakJarvis("J.A.R.V.I.S. vocal synthesis online, Sir. Capital preservation protocols active.");
+  } else {
+    btn.textContent = '🔇 Speech Audio: OFF';
+    btn.style.color = '#fff';
+    if(window.speechSynthesis) window.speechSynthesis.cancel();
+  }
+}
+
+function speakJarvis(text) {
+  if(!voiceEnabled || !('speechSynthesis' in window)) return;
+  if(text === lastSpokenText) return;
+  lastSpokenText = text;
+
+  window.speechSynthesis.cancel();
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.rate = 1.05;
+  utter.pitch = 0.95;
+  
+  // Try finding an English British or polished voice
+  const voices = window.speechSynthesis.getVoices();
+  const preferred = voices.find(v => v.lang.includes('en-GB') || v.name.includes('Daniel') || v.name.includes('George') || v.name.includes('David') || v.name.includes('Google UK English Male'));
+  if(preferred) utter.voice = preferred;
+
+  window.speechSynthesis.speak(utter);
+}
+
+// ─── J.A.R.V.I.S. TACTICAL RADAR & TELEMETRY ─────────────────────────────────
+async function fetchJarvisStatus() {
+  try {
+    const res = await fetch('/api/jarvis/status');
+    const data = await res.json();
+    if(data.briefing) {
+      document.getElementById('jarvis-briefing').textContent = data.briefing;
+      speakJarvis(data.briefing);
+    }
+    if(data.radar && data.radar.length) {
+      renderJarvisRadar(data.radar);
+    }
+    document.getElementById('radar-updated').textContent = 'Updated: ' + new Date().toLocaleTimeString();
+  } catch(e) {}
+}
+
+function renderJarvisRadar(radar) {
+  const tbody = document.getElementById('jarvis-radar-body');
+  tbody.innerHTML = radar.map(item => {
+    const isApproved = item.guardian && item.guardian.approved;
+    return `<tr>
+      <td class="mono" style="font-weight:700;">${item.symbol}/USDT</td>
+      <td><span class="tag tag-${item.side.toLowerCase()}">${item.side}</span></td>
+      <td class="mono accent">${item.regime}</td>
+      <td class="mono green">${item.flow_status || 'AUTHENTIC'}</td>
+      <td class="mono ${(item.conviction >= 0.70 ? 'green' : 'yellow')}" style="font-weight:800;">${(item.conviction*100).toFixed(0)}%</td>
+      <td class="mono red">-$${fmt(item.max_loss)} (${item.sl_pct}%)</td>
+      <td class="mono green">+$${fmt(item.max_gain)} (${item.tp_pct}%)</td>
+      <td class="mono accent" style="font-weight:800;">1 : ${item.rr_ratio}</td>
+      <td><span class="tag ${isApproved ? 'tag-approved' : 'tag-vetoed'}">${isApproved ? 'GUARDIAN APPROVED' : 'VETOED'}</span></td>
+      <td>
+        <button class="btn ${isApproved ? 'btn-primary' : 'btn-outline'}" style="padding:4px 10px;font-size:11px;width:auto;" onclick="executeJarvisTrade('${item.symbol}', '${item.side}', ${item.leverage}, ${item.entry_price}, ${item.margin}, ${item.sl_pct}, ${item.tp_pct})" ${isApproved ? '' : 'disabled'}>
+          ${isApproved ? '🎯 EXECUTE SNIPER' : '⛔ VETOED'}
+        </button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+async function triggerRadarSweep() {
+  showToast('⚡ J.A.R.V.I.S. scanning multi-asset order books across 5 dimensions...', 'info');
+  try {
+    const res = await fetch('/api/jarvis/scan', {method: 'POST'});
+    const data = await res.json();
+    if(data.briefing) {
+      document.getElementById('jarvis-briefing').textContent = data.briefing;
+      speakJarvis(data.briefing);
+    }
+    if(data.radar) renderJarvisRadar(data.radar);
+    showToast('Radar sweep complete. Telemetry updated.', 'success');
+  } catch(e) {}
+}
+
+function executeJarvisTrade(symbol, side, leverage, entry, margin, slPct, tpPct) {
+  const mmRate = 0.004;
+  const liqPrice = side === 'LONG'
+    ? entry * (1 - 1/leverage + mmRate)
+    : entry * (1 + 1/leverage - mmRate);
+  const slPrice = side === 'LONG' ? entry * (1 - slPct/100) : entry * (1 + slPct/100);
+  const tpPrice = side === 'LONG' ? entry * (1 + tpPct/100) : entry * (1 - tpPct/100);
+
+  const trade = {
+    id: Date.now(),
+    symbol: symbol,
+    side: side,
+    leverage: leverage,
+    entry: entry,
+    curPrice: entry,
+    capital: margin,
+    position: margin * leverage,
+    liqPrice: liqPrice,
+    slPrice: slPrice,
+    tpPrice: tpPrice,
+    slPct: slPct,
+    tpPct: tpPct,
+    openTime: new Date().toLocaleTimeString(),
+    pnl: 0,
+    roe: 0
+  };
+
+  paperTrades.push(trade);
+  saveTrades();
+  showToast(`🎯 J.A.R.V.I.S. Executed ${leverage}x ${side} on ${symbol} with strict 1:${(tpPct/slPct).toFixed(1)} R:R!`, 'success');
+  speakJarvis(`Order executed, Sir. Initiated ${leverage}x ${side} position on ${symbol}. Maximum risk strictly capped by Guardian Protocol.`);
+  switchTab('paper');
+}
+
 // ─── REAL-TIME DATA STREAMING (WEBSOCKET + POLLING FALLBACK) ──────────────────
 function initPriceStream() {
-  // 1. Direct Binance Ticker WebSocket
   try {
     const ws = new WebSocket('wss://stream.binance.com:9443/ws/btcusdt@ticker/ethusdt@ticker/solusdt@ticker');
     ws.onmessage = (event) => {
       const data = JSON.parse(event.data);
       if(data && data.s && data.c) {
         const sym = data.s === 'BTCUSDT' ? 'BTC' : data.s === 'ETHUSDT' ? 'ETH' : data.s === 'SOLUSDT' ? 'SOL' : null;
-        if(sym) {
-          updateLivePrice(sym, parseFloat(data.c));
-        }
+        if(sym) updateLivePrice(sym, parseFloat(data.c));
       }
     };
     ws.onopen = () => {
-      document.getElementById('conn-text').textContent = 'WEBSOCKET REAL-TIME STREAM ACTIVE';
-      document.getElementById('conn-pill').style.background = 'rgba(16,185,129,0.15)';
+      document.getElementById('conn-text').textContent = 'ORACLE REAL-TIME STREAM ACTIVE';
+      document.getElementById('conn-pill').style.background = 'rgba(0,242,254,0.15)';
     };
     ws.onerror = () => fallbackPolling();
   } catch(e) {
     fallbackPolling();
   }
 
-  // 2. Local Proxy Server Polling Fallback (ensures 100% uptime on all networks)
   setInterval(fetchServerPrices, 1500);
+  setInterval(fetchJarvisStatus, 4000);
 }
 
 async function fetchServerPrices() {
@@ -492,13 +695,12 @@ function updateLivePrice(sym, newPrice) {
     setTimeout(() => { if(el) el.className = 'ticker-price'; }, 400);
   }
 
-  // If currently simulating this symbol, update current price & recalculate
-  const currentSel = document.getElementById('lev-symbol').value;
-  if(currentSel === sym) {
-    document.getElementById('lev-entry').dataset.live = newPrice;
+  const currentSel = document.getElementById('lev-symbol');
+  if(currentSel && currentSel.value === sym) {
+    const entryEl = document.getElementById('lev-entry');
+    if(entryEl) entryEl.dataset.live = newPrice;
   }
 
-  // RUN REAL-TIME AUTO-MONITOR ON ALL OPEN PAPER TRADES
   processRealTimePaperTrades(sym, newPrice);
 }
 
@@ -535,7 +737,7 @@ function calcLeverage() {
   currentLev = lev;
   const position = capital * lev;
   const units    = entry > 0 ? (position / entry) : 0;
-  const mmRate   = 0.004; // 0.4% maintenance margin
+  const mmRate   = 0.004;
 
   const liqLong  = entry * (1 - 1/lev + mmRate);
   const liqShort = entry * (1 + 1/lev - mmRate);
@@ -568,7 +770,6 @@ function calcLeverage() {
     badge.textContent = 'LEVERAGE ' + lev + 'x';
   }
 
-  // P&L Scenarios table
   const scenarios = [-10, -5, -3, -2, -1, 1, 2, 3, 5, 10];
   let rows = '';
   scenarios.forEach(pct => {
@@ -591,12 +792,8 @@ function calcLeverage() {
 function applyStressTest(val) {
   const pct = parseFloat(val);
   document.getElementById('stress-pct-label').textContent = (pct >= 0 ? '+' : '') + pct.toFixed(1) + '% Move';
-  const entry = parseFloat(document.getElementById('lev-entry').value) || 0;
   const capital = parseFloat(document.getElementById('lev-capital').value) || 0;
-  const pnl = capital * (pct/100) * currentLev;
-  const roe = pct * currentLev;
   const isLiq = (pct < 0 && Math.abs(pct) >= (100/currentLev));
-  
   if(isLiq) {
     showToast(`🚨 STRESS TEST: ${pct}% move causes LIQUIDATION! Total Loss: -$${fmt(capital)}`, 'danger');
   }
@@ -611,39 +808,9 @@ function openPaperTrade(side) {
   const slPct   = parseFloat(document.getElementById('lev-sl').value) || 2.0;
   const tpPct   = parseFloat(document.getElementById('lev-tp').value) || 4.0;
 
-  const mmRate  = 0.004;
-  const liqPrice = side === 'LONG'
-    ? entry * (1 - 1/lev + mmRate)
-    : entry * (1 + 1/lev - mmRate);
-  const slPrice = side === 'LONG' ? entry * (1 - slPct/100) : entry * (1 + slPct/100);
-  const tpPrice = side === 'LONG' ? entry * (1 + tpPct/100) : entry * (1 - tpPct/100);
-
-  const trade = {
-    id: Date.now(),
-    symbol: sym,
-    side: side,
-    leverage: lev,
-    entry: entry,
-    curPrice: entry,
-    capital: capital,
-    position: capital * lev,
-    liqPrice: liqPrice,
-    slPrice: slPrice,
-    tpPrice: tpPrice,
-    slPct: slPct,
-    tpPct: tpPct,
-    openTime: new Date().toLocaleTimeString(),
-    pnl: 0,
-    roe: 0
-  };
-
-  paperTrades.push(trade);
-  saveTrades();
-  showToast(`⚡ Opened ${lev}x PAPER ${side} on ${sym} at $${fmt(entry)}!`, 'success');
-  switchTab('paper');
+  executeJarvisTrade(sym, side, lev, entry, capital, slPct, tpPct);
 }
 
-// Continuous Real-Time Price Processing Loop
 function processRealTimePaperTrades(sym, livePrice) {
   let stateChanged = false;
   
@@ -652,36 +819,37 @@ function processRealTimePaperTrades(sym, livePrice) {
     if(t.symbol !== sym) continue;
 
     t.curPrice = livePrice;
-    
-    // Mark-to-market P&L calculation
     const priceDiff = t.side === 'LONG' ? (livePrice - t.entry) : (t.entry - livePrice);
     t.pnl = (priceDiff / t.entry) * t.capital * t.leverage;
     t.roe = (t.pnl / t.capital) * 100;
     stateChanged = true;
 
-    // 1. CHECK LIQUIDATION
+    // 1. LIQUIDATION CHECK
     const isLiquidated = t.side === 'LONG' ? (livePrice <= t.liqPrice) : (livePrice >= t.liqPrice);
     if(isLiquidated) {
       closeTradeWithReason(i, -t.capital, -100.0, 'LIQUIDATED (Margin Wiped)');
       showToast(`🚨 TRADE LIQUIDATED! ${t.side} ${t.symbol} breached $${fmt(t.liqPrice)}!`, 'danger');
+      speakJarvis(`Sir, trade liquidation detected on ${t.symbol}. Position margin has been closed.`);
       continue;
     }
 
-    // 2. CHECK STOP-LOSS
+    // 2. STOP-LOSS CHECK
     const slHit = t.side === 'LONG' ? (livePrice <= t.slPrice) : (livePrice >= t.slPrice);
     if(slHit) {
       const slLoss = -t.capital * (t.slPct / 100) * t.leverage;
       closeTradeWithReason(i, slLoss, -t.slPct * t.leverage, 'STOP LOSS HIT');
       showToast(`🛑 STOP LOSS TRIGGERED for ${t.symbol} at $${fmt(livePrice)}! Loss: -$${fmt(Math.abs(slLoss))}`, 'danger');
+      speakJarvis(`Stop-loss triggered on ${t.symbol}. Capital loss successfully capped by Guardian.`);
       continue;
     }
 
-    // 3. CHECK TAKE-PROFIT
+    // 3. TAKE-PROFIT CHECK
     const tpHit = t.side === 'LONG' ? (livePrice >= t.tpPrice) : (livePrice <= t.tpPrice);
     if(tpHit) {
       const tpGain = t.capital * (t.tpPct / 100) * t.leverage;
       closeTradeWithReason(i, tpGain, t.tpPct * t.leverage, 'TAKE PROFIT HIT');
       showToast(`🎯 TAKE PROFIT TRIGGERED for ${t.symbol} at $${fmt(livePrice)}! Gain: +$${fmt(tpGain)}`, 'success');
+      speakJarvis(`Take-profit secured on ${t.symbol}, Sir. Capital compounded.`);
       continue;
     }
   }
@@ -733,7 +901,7 @@ function renderPaperTrades() {
   const tbody = document.getElementById('paper-trades-body');
   
   if(!paperTrades.length) {
-    tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;color:var(--muted);padding:24px;">No active paper trades. Open a trade in the Leverage Simulator to start real-time tracking!</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;color:var(--muted);padding:24px;">No active paper trades. J.A.R.V.I.S. is monitoring markets. Open a trade above or click "Execute Sniper" on the radar!</td></tr>';
   } else {
     tbody.innerHTML = paperTrades.map(t => {
       const isProfitable = t.pnl >= 0;
@@ -753,7 +921,6 @@ function renderPaperTrades() {
     }).join('');
   }
 
-  // Closed Trades Log
   const cbody = document.getElementById('closed-trades-body');
   if(!closedTrades.length) {
     cbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:18px;">No closed trades yet.</td></tr>';
@@ -774,7 +941,6 @@ function renderPaperTrades() {
     }).join('');
   }
 
-  // Header Metrics
   const unrealizedPnl = paperTrades.reduce((acc, t) => acc + t.pnl, 0);
   const realizedPnl   = closedTrades.reduce((acc, t) => acc + t.pnl, 0);
   const currentEquity = startingCapital + realizedPnl + unrealizedPnl;
@@ -848,6 +1014,7 @@ calcKelly();
 renderPaperTrades();
 initPriceStream();
 syncWithLiveTicker();
+fetchJarvisStatus();
 </script>
 </body>
 </html>

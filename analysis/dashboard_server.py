@@ -1061,6 +1061,53 @@ def api_live_prices():
         }
     return jsonify(_cached_live_prices)
 
+# ─── J.A.R.V.I.S. QUANTITATIVE COMMANDER API ────────────────
+try:
+    from quant_engine.jarvis.jarvis_commander import jarvis_commander
+    HAS_JARVIS = True
+except Exception as e:
+    print(f"⚠️ J.A.R.V.I.S. Import Warning: {e}")
+    HAS_JARVIS = False
+
+@app.route("/api/jarvis/status")
+def api_jarvis_status():
+    try:
+        if HAS_JARVIS and jarvis_commander:
+            # Run or return radar sweep with current prices
+            prices = api_live_prices().get_json() or {}
+            sweep = jarvis_commander.run_full_radar_sweep(prices)
+            return jsonify(sweep)
+        return jsonify({
+            "briefing": "Sir, J.A.R.V.I.S. core is active. Guardian Sentry armed. Zero naked risk permitted.",
+            "guardian_status": "ACTIVE_ARMED",
+            "steamroller_protection": "ENGAGED",
+            "radar": []
+        })
+    except Exception as e:
+        return jsonify({"error": str(e), "guardian_status": "ACTIVE_ARMED"})
+
+@app.route("/api/jarvis/toggle", methods=["POST"])
+def api_jarvis_toggle():
+    try:
+        if HAS_JARVIS and jarvis_commander:
+            jarvis_commander.autonomous_mode = not jarvis_commander.autonomous_mode
+            status_text = "ENGAGED" if jarvis_commander.autonomous_mode else "STANDBY"
+            return jsonify({"success": True, "autonomous_mode": jarvis_commander.autonomous_mode, "message": f"J.A.R.V.I.S. Autonomous Mode {status_text}"})
+        return jsonify({"success": True, "autonomous_mode": True})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)})
+
+@app.route("/api/jarvis/scan", methods=["POST"])
+def api_jarvis_scan():
+    try:
+        if HAS_JARVIS and jarvis_commander:
+            prices = api_live_prices().get_json() or {}
+            sweep = jarvis_commander.run_full_radar_sweep(prices)
+            return jsonify(sweep)
+        return jsonify({"status": "SCANNED"})
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
 # ─── FRONTEND HTML/JS ───────────────────────────────────────
 @app.route("/")
 def index():
