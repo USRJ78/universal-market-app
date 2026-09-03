@@ -1,0 +1,122 @@
+symbol,name,sector,category,price,eps,graham_value,graham_number,discount_pct,is_undervalued
+HDFCBANK.NS,HDFC BANK LTD,Financial Services,Large Cap,708.45,45.06,1266.06,631.88,78.7,True
+GRASIM.NS,GRASIM INDUSTRIES LTD,Basic Materials,Large Cap,3295.2,83.95,2559.28,1697.51,-22.3,False
+CIPLA.NS,CIPLA LTD,Healthcare,Large Cap,1397.5,41.69,379.97,632.33,-72.8,False
+ADANIENT.NS,ADANI ENTERPRISES LIMITED,Energy,Large Cap,2904.6,58.13,1772.13,904.88,-39.0,False
+EICHERMOT.NS,EICHER MOTORS LTD,Consumer Cyclical,Large Cap,7629.5,203.58,6206.28,2047.26,-18.7,False
+LT.NS,LARSEN & TOUBRO LTD.,Industrials,Large Cap,3996.7,120.62,2767.37,1468.38,-30.8,False
+KOTAKBANK.NS,KOTAK MAHINDRA BANK LTD,Financial Services,Large Cap,423.3,20.4,621.91,289.19,46.9,True
+RELIANCE.NS,RELIANCE INDUSTRIES LTD,Energy,Large Cap,1308.5,55.41,505.02,912.62,-61.4,False
+SBIN.NS,STATE BANK OF INDIA,Financial Services,Large Cap,1030.2,92.29,1641.71,1182.84,59.4,True
+HINDALCO.NS,HINDALCO  INDUSTRIES  LTD,Basic Materials,Large Cap,1006.2,73.41,2237.96,1008.11,122.4,True
+ADANIPORTS.NS,ADANI PORT & SEZ LTD,Industrials,Large Cap,1704.4,59.55,542.76,747.03,-68.2,False
+AXISBANK.NS,AXIS BANK LIMITED,Financial Services,Large Cap,1272.9,88.81,2707.44,1197.42,112.7,True
+MARUTI.NS,MARUTI SUZUKI INDIA LTD.,Consumer Cyclical,Large Cap,12868.0,452.28,4122.21,5889.27,-68.0,False
+WIPRO.NS,WIPRO LTD,Technology,Large Cap,176.8,12.27,111.83,147.04,-36.7,False
+TECHM.NS,TECH MAHINDRA LIMITED,Technology,Large Cap,1596.5,57.29,1746.53,656.55,9.4,True
+NTPC.NS,NTPC LTD,Utilities,Large Cap,330.85,32.97,300.5,394.17,-9.2,False
+TATASTEEL.NS,TATA STEEL LIMITED,Basic Materials,Large Cap,182.64,8.84,173.92,127.59,-4.8,False
+HEROMOTOCO.NS,HERO MOTOCORP LIMITED,Consumer Cyclical,Large Cap,5292.0,259.7,2366.98,2512.2,-55.3,False
+HDFCLIFE.NS,HDFC LIFE INS CO LTD,Financial Services,Large Cap,534.7,9.01,182.93,134.93,-65.8,False
+SBILIFE.NS,SBI LIFE INSURANCE CO LTD,Financial Services,Large Cap,1723.1,25.63,781.35,340.18,-54.7,False
+BRITANNIA.NS,BRITANNIA INDUSTRIES LTD,Consumer Defensive,Large Cap,5135.0,107.2,2405.57,715.09,-53.2,False
+INDUSINDBK.NS,INDUSIND BANK LIMITED,Financial Services,Large Cap,995.3,16.72,509.72,563.55,-48.8,False
+BEL.NS,BHARAT ELECTRONICS LTD,Industrials,Large Cap,409.45,8.28,130.63,78.19,-68.1,False
+DIVISLAB.NS,DIVI S LABORATORIES LTD,Healthcare,Large Cap,9234.0,97.15,2961.69,1174.78,-67.9,False
+JSWSTEEL.NS,JSW STEEL LIMITED,Basic Materials,Large Cap,1299.2,100.82,3073.57,964.3,136.6,True
+PFC.NS,POWER FIN CORP LTD.,Financial Services,Large Cap,346.1,79.11,721.03,878.03,108.3,True
+NMDC.NS,NMDC LTD.,Basic Materials,Large Cap,84.61,8.49,77.38,86.11,-8.5,False
+NATIONALUM.NS,NATIONAL ALUMINIUM CO LTD,Basic Materials,Large Cap,371.4,36.56,1114.56,311.09,200.1,True
+M&M.NS,MAHINDRA & MAHINDRA LTD,Consumer Cyclical,Large Cap,3180.0,160.78,4901.49,1735.95,54.1,True
+DRREDDY.NS,DR. REDDY S LABORATORIES,Healthcare,Large Cap,1161.3,39.7,361.84,641.22,-68.8,False
+TCS.NS,TATA CONSULTANCY SERV LT,Technology,Large Cap,2328.0,136.42,1517.77,964.41,-34.8,False
+ICICIBANK.NS,ICICI BANK LTD.,Financial Services,Large Cap,1440.2,76.75,1741.57,957.02,20.9,True
+ULTRACEMCO.NS,ULTRATECH CEMENT LIMITED,Basic Materials,Large Cap,11342.0,290.52,7687.99,4126.59,-32.2,False
+POWERGRID.NS,POWER GRID CORP. LTD.,Utilities,Large Cap,268.15,20.6,187.75,223.79,-30.0,False
+BAJFINANCE.NS,BAJAJ FINANCE LIMITED,Financial Services,Large Cap,1048.4,32.63,994.75,366.88,-5.1,False
+HCLTECH.NS,HCL TECHNOLOGIES LTD,Technology,Large Cap,1315.5,63.25,1005.86,624.1,-23.5,False
+ONGC.NS,OIL AND NATURAL GAS CORP.,Energy,Large Cap,235.6,34.75,1059.38,480.67,349.7,True
+GAIL.NS,GAIL (INDIA) LTD,Utilities,Large Cap,173.32,15.02,457.9,214.03,164.2,True
+SUNPHARMA.NS,SUN PHARMACEUTICAL IND L,Healthcare,Large Cap,1919.4,50.42,1537.09,628.6,-19.9,False
+ITC.NS,ITC LTD,Consumer Defensive,Large Cap,264.8,15.82,144.19,143.52,-45.5,False
+BPCL.NS,BHARAT PETROLEUM CORP  LT,Energy,Large Cap,319.5,40.33,1229.49,461.17,284.8,True
+HINDUNILVR.NS,HINDUSTAN UNILEVER LTD.,Consumer Defensive,Large Cap,1963.7,44.64,709.9,456.45,-63.8,False
+TATACONSUM.NS,TATA CONSUMER PRODUCT LTD,Consumer Defensive,Large Cap,1017.9,16.19,493.56,283.2,-51.5,False
+NESTLEIND.NS,NESTLE INDIA LIMITED,Consumer Defensive,Large Cap,1411.1,19.7,600.57,108.88,-57.4,False
+BHARTIARTL.NS,BHARTI AIRTEL LIMITED,Communication Services,Large Cap,1862.3,47.5,1448.07,526.61,-22.2,False
+INFY.NS,INFOSYS LIMITED,Technology,Large Cap,1128.5,76.15,914.24,623.31,-19.0,False
+COALINDIA.NS,COAL INDIA LTD,Energy,Large Cap,418.6,52.61,479.5,478.32,14.5,True
+MOIL.NS,MOIL LIMITED,Basic Materials,Mid Cap,250.47,14.93,455.15,211.45,81.7,True
+APOLLOHOSP.NS,APOLLO HOSPITALS ENTER. L,Healthcare,Large Cap,8693.5,144.74,4412.5,1465.33,-49.2,False
+BAJAJFINSV.NS,BAJAJ FINSERV LTD.,Financial Services,Large Cap,1971.1,63.1,1344.57,831.82,-31.8,False
+OIL.NS,OIL INDIA LTD,Energy,Large Cap,492.85,52.21,1591.66,647.25,223.0,True
+NHPC.NS,NHPC LTD,Utilities,Large Cap,76.74,2.73,24.88,50.28,-67.6,False
+BHEL.NS,BHEL,Industrials,Large Cap,428.75,7.01,213.7,108.83,-50.2,False
+CHENNPETRO.NS,CHENNAI PETROLEUM CORP LT,Energy,Large Cap,1440.0,280.31,8545.45,2169.11,493.4,True
+PETRONET.NS,PETRONET LNG LIMITED,Energy,Large Cap,291.35,28.06,855.43,306.29,193.6,True
+MRPL.NS,MRPL,Energy,Large Cap,178.71,18.31,558.19,183.02,212.3,True
+IRFC.NS,INDIAN RAILWAY FIN CORP L,Financial Services,Large Cap,83.01,5.48,96.1,73.21,15.8,True
+HAL.NS,HINDUSTAN AERONAUTICS LTD,Industrials,Large Cap,4787.0,139.42,3356.44,1387.47,-29.9,False
+HUDCO.NS,HSG & URBAN DEV CORPN LTD,Financial Services,Large Cap,181.43,21.22,646.91,228.97,256.6,True
+TITAN.NS,TITAN COMPANY LIMITED,Consumer Cyclical,Large Cap,4955.5,64.64,1970.6,507.2,-60.2,False
+IOC.NS,INDIAN OIL CORP LTD,Energy,Large Cap,136.66,24.52,747.51,296.57,447.0,True
+GNFC.NS,GUJ NAR VAL FER & CHEM L,Basic Materials,Mid Cap,587.0,70.73,2156.25,993.4,267.3,True
+GSFC.NS,GUJ STATE FERT & CHEM LTD,Basic Materials,Mid Cap,161.44,17.38,407.49,345.96,152.4,True
+RCF.NS,RASHTRIYA CHEMICALS & FER,Basic Materials,Mid Cap,114.72,8.08,246.32,129.82,114.7,True
+RAILTEL.NS,RAILTEL CORP OF IND LTD,Communication Services,Mid Cap,271.4,10.54,321.32,129.27,18.4,True
+SJVN.NS,SJVN LTD,Utilities,Large Cap,65.39,1.76,16.04,37.87,-75.5,False
+DIXON.NS,DIXON TECHNO (INDIA) LTD,Technology,Large Cap,14625.0,344.32,10496.84,2637.21,-28.2,False
+JNJ,Johnson & Johnson,Healthcare,Large Cap,275.21,8.75,132.92,83.35,-51.7,False
+GRSE.NS,GARDEN REACH SHIP&ENG LTD,Industrials,Large Cap,2521.0,68.86,2099.25,596.0,-16.7,False
+LODHA.NS,LODHA DEVELOPERS LIMITED,Real Estate,Large Cap,1228.2,41.69,1270.95,467.62,3.5,True
+GODREJPROP.NS,GODREJ PROPERTIES LTD,Real Estate,Large Cap,2011.9,53.01,483.15,870.93,-76.0,False
+MAZDOCK.NS,MAZAGON DOCK SHIPBUIL LTD,Industrials,Large Cap,2481.0,65.66,2001.69,597.72,-19.3,False
+PG,Procter & Gamble Company (The),Consumer Defensive,Large Cap,147.64,6.69,101.62,58.77,-31.2,False
+NFL.NS,NATIONAL FERT. LTD,Basic Materials,Small Cap,70.42,7.36,224.37,97.94,218.6,True
+META,"Meta Platforms, Inc.",Communication Services,Large Cap,592.85,27.21,413.33,250.53,-30.3,False
+AMZN,"Amazon.com, Inc.",Consumer Cyclical,Large Cap,254.98,12.44,632.07,119.66,147.9,True
+TSLA,"Tesla, Inc.",Consumer Cyclical,Large Cap,357.01,1.07,16.25,23.01,-95.4,False
+DLF.NS,DLF LIMITED,Real Estate,Large Cap,680.6,17.96,190.79,272.46,-72.0,False
+ENGINERSIN.NS,ENGINEERS INDIA LTD,Industrials,Mid Cap,280.9,13.77,419.79,131.51,49.4,True
+NVDA,NVIDIA Corporation,Technology,Large Cap,224.41,7.91,401.9,41.08,79.1,True
+V,Visa Inc.,Financial Services,Large Cap,378.4,11.92,360.89,71.14,-4.6,False
+BRK-B,Berkshire Hathaway Inc. New,Financial Services,Large Cap,505.24,40.02,2033.4,21684.98,302.5,True
+JPM,JP Morgan Chase & Co.,Financial Services,Large Cap,356.22,23.44,1190.98,264.85,234.3,True
+MSFT,Microsoft Corporation,Technology,Large Cap,496.82,17.79,903.9,154.41,81.9,True
+GOOGL,Alphabet Inc.,Communication Services,Large Cap,337.12,20.06,1019.24,151.56,202.3,True
+POLYCAB.NS,POLYCAB INDIA LIMITED,Industrials,Large Cap,8903.0,189.47,5776.13,1850.59,-35.1,False
+KIOCL.NS,KIOCL LIMITED,Basic Materials,Large Cap,382.35,0.65,19.82,20.44,-94.8,False
+C,"Citigroup, Inc.",Financial Services,Large Cap,134.34,9.4,477.61,155.78,255.5,True
+WFC,Wells Fargo & Company,Financial Services,Large Cap,89.27,7.05,358.21,91.86,301.3,True
+VZ,Verizon Communications Inc.,Communication Services,Large Cap,50.22,3.83,58.18,46.43,15.8,True
+TRENT.NS,TRENT LTD,Consumer Cyclical,Large Cap,2852.7,33.94,1034.69,316.27,-63.7,False
+MA,Mastercard Incorporated,Financial Services,Large Cap,588.14,18.41,935.4,51.47,59.0,True
+PFE,"Pfizer, Inc.",Healthcare,Mid Cap,29.02,0.77,11.7,16.09,-59.7,False
+DIS,Walt Disney Company (The),Communication Services,Mid Cap,107.98,4.93,74.89,83.99,-30.6,False
+CVX,Chevron Corporation,Energy,Large Cap,211.78,10.42,529.44,150.65,150.0,True
+BAC,Bank of America Corporation,Financial Services,Large Cap,62.6,4.37,222.04,62.2,254.7,True
+AAPL,Apple Inc.,Technology,Large Cap,324.96,8.71,442.55,37.98,36.2,True
+XOM,ExxonMobil Holdings Corporation,Energy,Large Cap,164.15,7.75,393.77,104.88,139.9,True
+COCHINSHIP.NS,COCHIN SHIPYARD LIMITED,Industrials,Large Cap,1486.2,25.6,233.33,358.59,-84.3,False
+HD,"Home Depot, Inc. (The)",Consumer Cyclical,Large Cap,318.51,14.24,264.05,73.04,-17.1,False
+GM,General Motors Company,Consumer Cyclical,Mid Cap,84.87,2.22,33.72,59.42,-60.3,False
+UNH,UnitedHealth Group Incorporated,Healthcare,Large Cap,399.66,15.71,798.22,196.09,99.7,True
+MO,"Altria Group, Inc.",Consumer Defensive,Mid Cap,69.56,4.75,72.15,0.0,3.7,True
+CSCO,"Cisco Systems, Inc.",Technology,Large Cap,109.455,3.32,168.69,30.84,54.1,True
+VALE,VALE S.A.,Basic Materials,Mid Cap,15.73,0.52,7.9,10.11,-49.8,False
+BTI,British American Tobacco  Indus,Consumer Defensive,Mid Cap,55.68,3.92,59.55,22.69,6.9,True
+MRK,"Merck & Company, Inc.",Healthcare,Large Cap,151.64,1.26,24.68,21.94,-83.7,False
+WMT,Walmart Inc.,Consumer Defensive,Large Cap,106.09,2.77,42.08,27.17,-60.3,False
+AMD,"Advanced Micro Devices, Inc.",Technology,Large Cap,457.06,3.89,197.65,60.04,-56.8,False
+QCOM,QUALCOMM Incorporated,Technology,Mid Cap,169.96,8.92,135.5,72.47,-20.3,False
+ABBV,AbbVie Inc.,Healthcare,Large Cap,261.72,3.56,180.88,0.0,-30.9,False
+PEP,"Pepsico, Inc.",Consumer Defensive,Mid Cap,140.52,7.67,389.71,52.84,177.3,True
+RIO,Rio Tinto Plc,Basic Materials,Mid Cap,102.75,7.45,378.53,82.15,268.4,True
+MCD,McDonald's Corporation,Consumer Cyclical,Mid Cap,260.95,12.29,256.22,0.0,-1.8,False
+T,AT&T Inc.,Communication Services,Mid Cap,25.95,3.02,66.12,33.03,154.8,True
+COST,Costco Wholesale Corporation,Consumer Defensive,Large Cap,928.48,19.59,995.36,128.18,7.2,True
+CRM,"Salesforce, Inc.",Technology,Large Cap,256.93,10.87,552.3,106.79,115.0,True
+TXN,Texas Instruments Incorporated,Technology,Large Cap,254.8,6.62,336.36,54.2,32.0,True
+GE,GE Aerospace,Industrials,Large Cap,329.5,8.48,420.2,56.95,27.5,True
+AVGO,Broadcom Inc.,Technology,Large Cap,367.24,5.99,304.35,49.84,-17.1,False
+KO,Coca-Cola Company (The),Consumer Defensive,Large Cap,88.24,3.34,148.01,25.13,67.7,True

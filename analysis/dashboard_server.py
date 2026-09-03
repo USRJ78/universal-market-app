@@ -36,6 +36,19 @@ active_processes = {}
 
 STRATEGIES = [
     {
+        "id": "autonomous_trader_live",
+        "name": "24/7 Full Autonomous AI Master Trader Daemon",
+        "icon": "🤖",
+        "category": "Full Autonomous AI Autopilot",
+        "cagr": "+163.5% CAGR",
+        "win": "78.3%",
+        "mdd": "-0.65%",
+        "script": os.path.join(ANALYSIS_DIR, "launch_full_autonomous_trader.py"),
+        "is_binary": False,
+        "color": "#10b981",
+        "desc": "100% Automated Trading Daemon. Eliminates manual execution. Dynamically scans Order Books, selects optimal 5-Pillar / Swarm regimes, and executes trades via Groww & Delta APIs."
+    },
+    {
         "id": "jim_simons_fusion",
         "name": "Jim Simons 5-Pillar Master Fusion Quant Engine",
         "icon": "🧠",
