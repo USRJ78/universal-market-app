@@ -1023,6 +1023,44 @@ def api_autonomous_step():
     except Exception as e:
         return jsonify({"status": "ERROR", "error": str(e)})
 
+# ─── REAL-TIME MARKET PRICES API ────────────────────────────
+_cached_live_prices = {}
+_last_price_fetch = 0
+
+@app.route("/api/live_prices")
+def api_live_prices():
+    global _cached_live_prices, _last_price_fetch
+    now = time.time()
+    if now - _last_price_fetch < 1.0 and _cached_live_prices:
+        return jsonify(_cached_live_prices)
+    
+    try:
+        r = requests.get("https://api.binance.com/api/v3/ticker/price", timeout=2.0)
+        if r.status_code == 200:
+            prices = {item["symbol"]: float(item["price"]) for item in r.json() if item["symbol"] in ["BTCUSDT", "ETHUSDT", "SOLUSDT", "BNBUSDT", "DOGEUSDT", "XRPUSDT"]}
+            _cached_live_prices = {
+                "BTC": prices.get("BTCUSDT", 60000.0),
+                "ETH": prices.get("ETHUSDT", 3500.0),
+                "SOL": prices.get("SOLUSDT", 150.0),
+                "BNB": prices.get("BNBUSDT", 580.0),
+                "DOGE": prices.get("DOGEUSDT", 0.12),
+                "XRP": prices.get("XRPUSDT", 0.58),
+                "timestamp": now,
+                "status": "LIVE"
+            }
+            _last_price_fetch = now
+            return jsonify(_cached_live_prices)
+    except Exception:
+        pass
+    
+    if not _cached_live_prices:
+        _cached_live_prices = {
+            "BTC": 64500.0, "ETH": 3480.0, "SOL": 146.5,
+            "BNB": 580.0, "DOGE": 0.12, "XRP": 0.58,
+            "timestamp": now, "status": "BASELINE"
+        }
+    return jsonify(_cached_live_prices)
+
 # ─── FRONTEND HTML/JS ───────────────────────────────────────
 @app.route("/")
 def index():
