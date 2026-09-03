@@ -1988,9 +1988,9 @@ updateClock();
 </body>
 </html>"""
 
-def find_free_port(preferred_port=8085):
+def find_free_port(preferred_port=9999):
     import socket
-    for p in [preferred_port, 8086, 8087, 8088, 8090, 8000]:
+    for p in [preferred_port, 9998, 9997, 9990, 9000]:
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 s.bind(('0.0.0.0', p))
@@ -2000,7 +2000,7 @@ def find_free_port(preferred_port=8085):
     return preferred_port
 
 if __name__ == "__main__":
-    target_port = find_free_port(8085)
+    target_port = find_free_port(9999)
     print("=" * 70)
     print("  ⚡ ANTIGRAVITY AI BRAIN — PRODUCTION WEB DASHBOARD V3.2")
     print("=" * 70)
