@@ -54,38 +54,44 @@ WantedBy=multi-user.target
 EOF'
 
 # 6. Open IPTables & UFW Firewall Ports
-echo "  [5/6] Opening Firewall Ports (8085, 8080 & 80)..."
+echo "  [5/6] Opening Firewall Ports..."
+sudo iptables -I INPUT 6 -m state --state NEW -p tcp --dport 8086 -j ACCEPT 2>/dev/null || true
 sudo iptables -I INPUT 6 -m state --state NEW -p tcp --dport 8085 -j ACCEPT 2>/dev/null || true
-sudo iptables -I INPUT 6 -m state --state NEW -p tcp --dport 8080 -j ACCEPT 2>/dev/null || true
 sudo iptables -I INPUT 6 -m state --state NEW -p tcp --dport 80 -j ACCEPT 2>/dev/null || true
+sudo ufw allow 8086/tcp 2>/dev/null || true
 sudo ufw allow 8085/tcp 2>/dev/null || true
-sudo ufw allow 8080/tcp 2>/dev/null || true
 sudo ufw allow 80/tcp 2>/dev/null || true
 
-# 7. Configure Nginx Reverse Proxy to Port 8085
-sudo bash -c 'cat <<EOF > /etc/nginx/sites-available/default
-server {
-    listen 80 default_server;
-    listen [::]:80 default_server;
-    server_name _;
-
-    location / {
-        proxy_pass http://127.0.0.1:8085;
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-    }
-}
-EOF'
-
-# 8. Start Dashboard Service & Nginx
+# 7. Start Dashboard via Systemd
 echo "  [6/6] Launching Master Web Dashboard..."
 sudo systemctl daemon-reload
 sudo systemctl enable antigravity_dashboard
 sudo systemctl start antigravity_dashboard
-sudo systemctl restart nginx
 
-sleep 3
+# 8. Wait for Flask to bind and detect actual port
+echo "  Waiting for Flask to start and detecting port..."
+sleep 8
+FLASK_PORT=$(sudo ss -tlnp | grep python | grep -oP ':\K[0-9]+' | head -1)
+if [ -z "$FLASK_PORT" ]; then
+    FLASK_PORT=8086
+fi
+echo "  Flask detected on port: $FLASK_PORT"
+
+# 8. Update Nginx to point to actual Flask port
+sudo bash -c "cat > /etc/nginx/sites-available/default << EOF
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
+    server_name _;
+    location / {
+        proxy_pass http://127.0.0.1:${FLASK_PORT};
+        proxy_set_header Host \\\$host;
+        proxy_set_header X-Real-IP \\\$remote_addr;
+        proxy_set_header X-Forwarded-For \\\$proxy_add_x_forwarded_for;
+    }
+}
+EOF"
+sudo nginx -t && sudo systemctl restart nginx
 
 PUBLIC_IP=$(curl -s ifconfig.me 2>/dev/null || echo "140.245.195.162")
 
@@ -93,12 +99,14 @@ echo "==========================================================================
 echo "  🏆 SUCCESS! AUTONOMOUS QUANT DASHBOARD IS LIVE ON ORACLE CLOUD!"
 echo "==========================================================================="
 echo "  [PUBLIC MAIN URL]            : http://$PUBLIC_IP"
-echo "  [DIRECT DASHBOARD PORT 8085] : http://$PUBLIC_IP:8085"
+echo "  [DIRECT DASHBOARD PORT]      : http://$PUBLIC_IP:$FLASK_PORT"
 echo "  [AUTONOMOUS PAGE URL]        : http://$PUBLIC_IP/autonomous-intelligence"
 echo "==========================================================================="
 
-echo "\n  📡 Verifying Live Service Response (HTTP GET):"
-curl -I http://127.0.0.1:8085 2>/dev/null || curl -I http://127.0.0.1:8086 2>/dev/null || echo "  Checking background service status..."
+echo ""
+echo "  📡 Live HTTP Verification:"
+curl -s -o /dev/null -w "  HTTP Status: %{http_code}\n" http://127.0.0.1:${FLASK_PORT}/ || echo "  Service starting..."
 
-echo "\n  📡 Systemd Service Status:"
-sudo systemctl status antigravity_dashboard --no-pager | head -n 12
+echo ""
+echo "  📡 Systemd Service Status:"
+sudo systemctl status antigravity_dashboard --no-pager | head -n 10
