@@ -319,6 +319,30 @@ let closedTrades = JSON.parse(localStorage.getItem('closedTrades') || '[]');
 
 const LIVE_PRICES = { BTC: 60000, ETH: 3500, SOL: 150, CUSTOM: 0 };
 
+async function fetchLivePrice() {
+  const symEl = document.getElementById('lev-symbol');
+  if(!symEl) return;
+  const sym = symEl.value;
+  if(sym === 'CUSTOM') return;
+  const pairMap = { BTC: 'BTCUSDT', ETH: 'ETHUSDT', SOL: 'SOLUSDT' };
+  try {
+    const pair = pairMap[sym];
+    if(pair) {
+      const res = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${pair}`);
+      const data = await res.json();
+      if(data.price) {
+        document.getElementById('lev-entry').value = parseFloat(data.price).toFixed(2);
+        calcLeverage();
+        return;
+      }
+    }
+  } catch(e) {}
+  if(LIVE_PRICES[sym]) {
+    document.getElementById('lev-entry').value = LIVE_PRICES[sym];
+    calcLeverage();
+  }
+}
+
 // ─── TABS ────────────────────────────────────────────────────────────────────
 function switchTab(name) {
   document.querySelectorAll('.tab, .tab-content').forEach(el => el.classList.remove('active'));
@@ -576,6 +600,7 @@ function fmt(n) {
 // ─── INIT ────────────────────────────────────────────────────────────────────
 calcLeverage();
 calcKelly();
+fetchLivePrice();
 fetchStatus();
 setInterval(fetchStatus, 5000);
 </script>
