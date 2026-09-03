@@ -955,6 +955,35 @@ def api_close_all():
                 closed += 1
     return jsonify({"success": True, "closed": closed})
 
+# ─── AUTONOMOUS INTELLIGENCE QUANT ENGINE ROUTES ───────────
+from quant_engine.master_controller import master_quant_controller
+from analysis.autonomous_page import AUTONOMOUS_INTELLIGENCE_HTML
+
+@app.route("/autonomous-intelligence")
+@app.route("/autonomous-intelligence/")
+def autonomous_intelligence_page():
+    return AUTONOMOUS_INTELLIGENCE_HTML
+
+@app.route("/api/autonomous/status")
+def api_autonomous_status():
+    step_res = master_quant_controller.run_single_step("BTC-USD")
+    return jsonify(step_res)
+
+@app.route("/api/autonomous/start", methods=["POST"])
+def api_autonomous_start():
+    master_quant_controller.start_247_loop()
+    return jsonify({"success": True, "message": "24/7 Autonomous Neural Loop Started"})
+
+@app.route("/api/autonomous/stop", methods=["POST"])
+def api_autonomous_stop():
+    master_quant_controller.stop_247_loop()
+    return jsonify({"success": True, "message": "24/7 Autonomous Neural Loop Paused"})
+
+@app.route("/api/autonomous/step", methods=["POST"])
+def api_autonomous_step():
+    step_res = master_quant_controller.run_single_step("BTC-USD")
+    return jsonify(step_res)
+
 # ─── FRONTEND HTML/JS ───────────────────────────────────────
 @app.route("/")
 def index():
