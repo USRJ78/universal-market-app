@@ -1964,11 +1964,22 @@ updateClock();
 </body>
 </html>"""
 
+def find_free_port(preferred_port=8085):
+    import socket
+    for p in [preferred_port, 8086, 8087, 8088, 8090, 8000]:
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.bind(('0.0.0.0', p))
+                return p
+        except OSError:
+            continue
+    return preferred_port
+
 if __name__ == "__main__":
+    target_port = find_free_port(8085)
     print("=" * 70)
     print("  ⚡ ANTIGRAVITY AI BRAIN — PRODUCTION WEB DASHBOARD V3.2")
     print("=" * 70)
-    print(f"  Public URL : http://140.245.195.162:8085")
-    print(f"  Local URL  : http://localhost:8085")
+    print(f"  Binding to Port: {target_port}")
     print("=" * 70)
-    app.run(host="0.0.0.0", port=8085, debug=False, threaded=True)
+    app.run(host="0.0.0.0", port=target_port, debug=False, threaded=True)
