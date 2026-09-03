@@ -20,7 +20,7 @@ if [ ! -d "venv" ]; then
     python3 -m venv venv
 fi
 source venv/bin/activate
-pip install flask numpy pandas yfinance ccxt requests --quiet
+pip install flask numpy pandas yfinance ccxt requests scikit-learn matplotlib --quiet
 
 # 3. Create & Enable Systemd Service for Port 8080
 echo "  [3/5] Updating Systemd Service..."
