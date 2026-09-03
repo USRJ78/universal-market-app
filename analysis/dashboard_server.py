@@ -960,44 +960,68 @@ def api_close_all():
     return jsonify({"success": True, "closed": closed})
 
 # ─── AUTONOMOUS INTELLIGENCE QUANT ENGINE ROUTES ───────────
+HAS_QUANT_ENGINE = False
+master_quant_controller = None
+AUTONOMOUS_INTELLIGENCE_HTML = "<h1>Autonomous Quant Engine Loading...</h1>"
+
 try:
     from quant_engine.master_controller import master_quant_controller
-    from analysis.autonomous_page import AUTONOMOUS_INTELLIGENCE_HTML
     HAS_QUANT_ENGINE = True
 except Exception as e:
-    print(f"⚠️ Quant Engine Import Warning: {e}")
-    HAS_QUANT_ENGINE = False
-    AUTONOMOUS_INTELLIGENCE_HTML = "<h1>Autonomous Quant Engine Loading...</h1>"
+    print(f"⚠️ master_quant_controller Import Error: {e}")
+
+try:
+    from autonomous_page import AUTONOMOUS_INTELLIGENCE_HTML
+except Exception:
+    try:
+        from analysis.autonomous_page import AUTONOMOUS_INTELLIGENCE_HTML
+    except Exception as e2:
+        print(f"⚠️ autonomous_page Import Error: {e2}")
 
 @app.route("/autonomous-intelligence")
 @app.route("/autonomous-intelligence/")
 def autonomous_intelligence_page():
-    return AUTONOMOUS_INTELLIGENCE_HTML
+    try:
+        return AUTONOMOUS_INTELLIGENCE_HTML
+    except Exception as e:
+        return f"<h1>Error loading page: {e}</h1>", 500
 
 @app.route("/api/autonomous/status")
 def api_autonomous_status():
-    if HAS_QUANT_ENGINE:
-        return jsonify(master_quant_controller.get_cached_state())
-    return jsonify({"status": "LOADING", "regime": "BULL_LOW_VOL", "predictions": {"prob_up": 0.55, "expected_return": 1.2}})
+    try:
+        if HAS_QUANT_ENGINE and master_quant_controller:
+            return jsonify(master_quant_controller.get_cached_state())
+        return jsonify({"status": "LOADING", "regime": "BULL_LOW_VOL", "predictions": {"prob_up": 0.55, "expected_return": 1.2}})
+    except Exception as e:
+        return jsonify({"status": "ERROR", "error": str(e)})
 
 @app.route("/api/autonomous/start", methods=["POST"])
 def api_autonomous_start():
-    if HAS_QUANT_ENGINE:
-        master_quant_controller.start_247_loop()
-    return jsonify({"success": True, "message": "24/7 Autonomous Neural Loop Started"})
+    try:
+        if HAS_QUANT_ENGINE and master_quant_controller:
+            master_quant_controller.start_247_loop()
+        return jsonify({"success": True, "message": "24/7 Autonomous Neural Loop Started"})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)})
 
 @app.route("/api/autonomous/stop", methods=["POST"])
 def api_autonomous_stop():
-    if HAS_QUANT_ENGINE:
-        master_quant_controller.stop_247_loop()
-    return jsonify({"success": True, "message": "24/7 Autonomous Neural Loop Paused"})
+    try:
+        if HAS_QUANT_ENGINE and master_quant_controller:
+            master_quant_controller.stop_247_loop()
+        return jsonify({"success": True, "message": "24/7 Autonomous Neural Loop Paused"})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)})
 
 @app.route("/api/autonomous/step", methods=["POST"])
 def api_autonomous_step():
-    if HAS_QUANT_ENGINE:
-        step_res = master_quant_controller.run_single_step("BTC-USD")
-        return jsonify(step_res)
-    return jsonify({"status": "LOADING"})
+    try:
+        if HAS_QUANT_ENGINE and master_quant_controller:
+            step_res = master_quant_controller.run_single_step("BTC-USD")
+            return jsonify(step_res)
+        return jsonify({"status": "LOADING"})
+    except Exception as e:
+        return jsonify({"status": "ERROR", "error": str(e)})
 
 # ─── FRONTEND HTML/JS ───────────────────────────────────────
 @app.route("/")
