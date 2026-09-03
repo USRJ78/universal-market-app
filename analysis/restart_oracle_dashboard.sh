@@ -68,15 +68,15 @@ sudo iptables -I INPUT 1 -p tcp --dport 80 -j ACCEPT 2>/dev/null || true
 sudo ufw allow 9999/tcp 2>/dev/null || true
 sudo ufw allow 80/tcp 2>/dev/null || true
 
-# 8. Configure Nginx → Port 9999
-echo "  [8] Configuring Nginx → Port 9999..."
-sudo bash -c 'cat > /etc/nginx/sites-available/default << NGXEOF
+# 8. Write clean Nginx proxy config (clears any old static file configs)
+echo "  [8] Writing clean Nginx proxy config → Port 9998..."
+sudo bash -c 'cat > /etc/nginx/sites-available/default << EOF
 server {
     listen 80 default_server;
     listen [::]:80 default_server;
     server_name _;
     location / {
-        proxy_pass http://127.0.0.1:9999;
+        proxy_pass http://127.0.0.1:9998;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
@@ -84,7 +84,9 @@ server {
         proxy_connect_timeout 300;
     }
 }
-NGXEOF'
+EOF'
+sudo rm -f /etc/nginx/sites-enabled/*
+sudo ln -sf /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
 sudo nginx -t && sudo systemctl restart nginx
 
 # 9. Start dashboard
