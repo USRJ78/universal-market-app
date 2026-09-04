@@ -233,26 +233,37 @@ class SimonsCompositeEdge:
         else:
             rmt_res = {"signal_ratio": 0.25, "noise_ratio": 0.75, "is_signal_strong": True}
 
-        # Composite Edge Formula (Weighted Renaissance Model)
-        # Bull/Trend bias from HMM + Squeeze from CS + RMT signal purity
-        trend_score = 0.85 if hmm_res["active_state"] in ["STEADY_BULL", "EXPANSION_BULL"] else 0.35
-        curvature_boost = 0.15 if cs_invariant > 0.65 else 0.05
-        signal_purity = rmt_res["signal_ratio"]
+        # Composite Edge Formula (Bidirectional Renaissance Model)
+        is_bull_regime = hmm_res["active_state"] in ["STEADY_BULL", "EXPANSION_BULL"]
+        is_bear_regime = hmm_res["active_state"] in ["PANIC_BEAR"]
 
-        composite_conviction = float(np.clip(
-            0.50 * trend_score + 0.25 * cs_invariant + 0.25 * (signal_purity * 2.0),
-            0.10, 0.95
-        ))
+        bull_score = 0.85 if is_bull_regime else 0.25
+        bear_score = 0.85 if is_bear_regime else 0.25
+        
+        signal_purity = min(1.0, rmt_res["signal_ratio"] * 2.5)
+        curvature_boost = 0.15 if cs_invariant > 0.60 else 0.05
+
+        # Directional conviction: strongest conviction wins
+        if is_bull_regime:
+            preferred_side = "LONG"
+            composite_conviction = float(np.clip(0.55 * bull_score + 0.25 * cs_invariant + 0.20 * signal_purity, 0.20, 0.95))
+        elif is_bear_regime:
+            preferred_side = "SHORT"
+            composite_conviction = float(np.clip(0.55 * bear_score + 0.25 * cs_invariant + 0.20 * signal_purity, 0.20, 0.95))
+        else: # CHOP_EQUILIBRIUM
+            preferred_side = "MEAN_REVERSION"
+            composite_conviction = float(np.clip(0.60 if ou_res["is_mean_reverting"] else 0.35 + 0.20 * signal_purity, 0.20, 0.85))
 
         briefing_sentence = (
             f"Simons Math: HMM confirms {hmm_res['active_state']} (conf {hmm_res['confidence']*100:.0f}%); "
-            f"Chern-Simons manifold curvature={cs_invariant:.2f}; "
+            f"Direction={preferred_side}; Curvature={cs_invariant:.2f}; "
             f"OU Half-Life={ou_res['half_life_days']:.1f}D; "
-            f"RMT de-noised signal={rmt_res['signal_ratio']*100:.0f}%."
+            f"RMT De-noised={rmt_res['signal_ratio']*100:.0f}%."
         )
 
         return {
             "composite_conviction": round(composite_conviction, 3),
+            "preferred_side": preferred_side,
             "chern_simons_invariant": cs_invariant,
             "hmm_state": hmm_res["active_state"],
             "hmm_confidence": hmm_res["confidence"],
