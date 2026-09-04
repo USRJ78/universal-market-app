@@ -203,10 +203,40 @@ AUTONOMOUS_INTELLIGENCE_HTML = r"""<!DOCTYPE html>
     </div>
   </div>
 
+  <!-- JIM SIMONS MATHEMATICAL ENGINE (MEDALLION SUITE) -->
+  <div class="card" style="margin-bottom:16px;background:rgba(0,242,254,0.02);border-color:rgba(0,242,254,0.2);">
+    <div class="card-title">
+      <span style="color:var(--accent);">&#x1D544; JIM SIMONS MATHEMATICAL CORE — MEDALLION DE-NOISING SUITE</span>
+      <span style="font-size:11px;color:var(--muted);">Fields Medal Differential Geometry & RMT</span>
+    </div>
+    <div class="grid4" style="margin-bottom:0;">
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;">
+        <div class="label">Baum-Welch HMM State</div>
+        <div class="metric-val green" style="font-size:16px;" id="simons-hmm-state">STEADY_BULL</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:2px;">Hidden Markov Regime Solver</div>
+      </div>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;">
+        <div class="label">Chern-Simons Curvature</div>
+        <div class="metric-val accent" style="font-size:16px;" id="simons-cs-curvature">0.74 Inv</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:2px;">Manifold Topological Invariant</div>
+      </div>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;">
+        <div class="label">Ornstein-Uhlenbeck Half-Life</div>
+        <div class="metric-val yellow" style="font-size:16px;" id="simons-ou-halflife">4.2 Days</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:2px;">Continuous SDE Mean Reversion</div>
+      </div>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;">
+        <div class="label">Marcenko-Pastur De-noising</div>
+        <div class="metric-val" style="font-size:16px;color:#fff;" id="simons-rmt-denoised">82.0% Noise Filtered</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:2px;">Random Matrix Spectral Cutoff</div>
+      </div>
+    </div>
+  </div>
+
   <!-- 5-DIMENSIONAL OPPORTUNITY RADAR -->
   <div class="card">
     <div class="card-title">
-      <span>&#x1F4CA; 5-Dimensional Asymmetric Opportunity Radar</span>
+      <span>&#x1F4CA; 5-Dimensional Asymmetric Opportunity Radar (Simons Math + Guardian)</span>
       <span style="font-size:11px;color:var(--muted);" id="radar-updated">Updated: Just now</span>
     </div>
     <table>
@@ -572,6 +602,14 @@ async function fetchJarvisStatus() {
     }
     if(data.radar && data.radar.length) {
       renderJarvisRadar(data.radar);
+      // Populate Simons Math Telemetry from top radar item
+      const top = data.radar[0];
+      if(top && top.simons) {
+        document.getElementById('simons-hmm-state').textContent = top.simons.hmm_state;
+        document.getElementById('simons-cs-curvature').textContent = top.simons.chern_simons_invariant.toFixed(2) + ' Inv';
+        document.getElementById('simons-ou-halflife').textContent = top.simons.ou_half_life_days.toFixed(1) + ' Days';
+        document.getElementById('simons-rmt-denoised').textContent = top.simons.rmt_noise_filtered + '% Noise Filtered';
+      }
     }
     document.getElementById('radar-updated').textContent = 'Updated: ' + new Date().toLocaleTimeString();
   } catch(e) {}
